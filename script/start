@@ -1,0 +1,5 @@
+svc -u /service/tripplanner-one
+svc -u /service/tripplanner-two
+svc -u /service/tripplanner-three
+svc -u /service/tripplanner-four
+

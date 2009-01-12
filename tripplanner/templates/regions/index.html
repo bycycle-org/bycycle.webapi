@@ -1,0 +1,45 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+
+<%def name="input_container()">
+  <%call expr="parent.input_container()">
+
+    <div id="region-search">
+      ${h.form(h.url_for('/regions/find'), method='get', id='query_form')}
+        % for p in request.params:
+          ${h.hidden_field(p, value=request.params[p])}
+        % endfor
+
+      <div>
+        Select a region from the list or click one of the <big><b>X</b></big>s on the map:
+      </div>
+
+      <div style="margin-bottom: 5px;">
+        <select id="regions" name="region">
+          <%
+            values = [(r.title, r.slug) for r in c.regions if c.regions]
+            values = [('- Select a region -', '')] + values
+          %>
+          ${h.options_for_select(values)}
+        </select>
+        ${h.submit(value='Go to region', title='Go to the selected region', tabindex='2')}
+      </div>
+
+      <div>
+        Optionally, enter something to search for:
+      </div>
+
+      <div>
+        ${h.text_field('q', id='q', value=c.q, title='Enter an address or route', tabindex='1')}
+      </div>
+
+      <div class="input_label">
+        Address (<i>NE 6th and Irving</i>) or route (<i>301 W Burnside to SE 3rd &amp; Main</i>)
+      </div>
+
+      ${h.end_form()}
+    </div>
+
+  </%call>
+</%def>

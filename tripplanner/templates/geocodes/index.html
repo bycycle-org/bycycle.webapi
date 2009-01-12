@@ -1,0 +1,11 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+
+<%namespace name="show" file="show.html" import="*"/>
+
+
+% for code in c.geocodes:
+    <% c.geocode = code %>
+    ${show.body()}
+% endfor

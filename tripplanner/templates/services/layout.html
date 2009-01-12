@@ -1,0 +1,184 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="/layout.html" />
+
+
+<%def name="stylesheet_links()">
+  ${h.stylesheet_link_tag('tab-control.css')}
+  ${h.stylesheet_link_tag('fixed-pane.css')}
+</%def>
+
+
+<%def name="input_container()">
+  <%call expr="parent.input_container(classes=['tab-control'])">
+
+    <!-- Input Tab Buttons -->
+    <ul id="input_tab_buttons" class="tab-buttons">
+      <!-- <li>s have class `tab-button` -->
+      ${h.make_tab_buttons(('search-the-map', 'find-a-route'))}
+    </ul>
+    <!-- /Input Tab Buttons -->
+
+    <!-- Input Tab Contents -->
+    <div id="input_tab_contents" class="tab-contents">
+
+      <!-- Query Pane -->
+      <div id="search-the-map" class="tab-content">
+        ${h.form(h.url_for('/regions/%s/services/find' % c.region.slug), method='get', id='query_form')}
+          <div>
+            ${h.text_field('q', id='q', value=c.q, title='Enter an address or route', tabindex='1')}
+            ${h.submit(value='Search Map', title='Click to search the map', tabindex='2')}
+          </div>
+          <div class="input_label">
+            Enter an address or intersection -OR- pick a location from the map.
+          </div>
+        ${h.end_form()}
+      </div>
+      <!-- /Query Pane -->
+
+      <!-- Route Pane -->
+      <div id="find-a-route" class="tab-content">
+        ${h.form(h.url_for('/regions/%s/routes/find' % c.region.slug), method='get', id='route_form')}
+          <div>
+            ${h.text_field('s', id='s', value=c.s, title='Enter start address', tabindex='3')}<a
+              id="swap_s_and_e"
+              href="#swap-start-and-end"
+              onclick="return false;"
+              title="Swap start and end addresses"
+              tabindex="4"
+              style="text-decoration: none;"
+            > &laquo;-&raquo; </a>${h.text_field('e', id='e', value=c.e, title='Enter end address', tabindex='5')}
+            ${self.route_pref()}
+            ${h.submit(value='Find Route', title='Click to find a route', tabindex='9')}
+          </div>
+
+          <div class="input_label">
+            Enter your start and end addresses and, optionally, select a route type.
+          </div>
+        ${h.end_form()}
+      </div>
+      <!-- /Route Pane -->
+
+    </div>
+    <!-- /Input Tab Contents -->
+
+  </%call>
+</%def>
+
+
+<!-- Route preference form control -->
+<%def name='route_pref()'>
+  % if c.region.slug == 'portlandor':
+    <select id="pref" name="pref" tabindex="8">
+      <option value="default">- Route Type -</option>
+      <option value="default">Normal</option>
+      <option value="safer">Safer</option>
+    </select>
+  % endif
+</%def>
+
+
+<!-- Bar links -->
+<%def name="links()">
+  <a id="bookmark" href=""
+     title="Link to the current result &amp; view"
+     >Link to last result</a>
+</%def>
+
+
+<%def name="result_pane()">
+  <%call expr="parent.result_pane(classes=['tab-control'])">
+    <ul id="result_tab_buttons" class="tab-buttons">
+      <% selected = 'routes' if c.service == 'routes' else 'locations' %>
+      ${h.make_tab_buttons(('locations', 'routes'), selected=selected)}
+    </ul>
+
+    <div class="tab-contents">
+      <div id="locations"
+           class="${'selected-' if c.service == 'geocodes' else ''}tab-content">
+        % if c.service == 'geocodes' and c.http_status == 200:
+          <div class="fragment">
+            ${self.json()}
+            ${self.body()}
+          </div>
+        % endif
+        <ul id="location_list" class="result_list"><!-- INTENTIONALLY EMPTY --></ul>
+      </div>
+
+      <div id="routes"
+           class="${'selected-' if c.service == 'routes' else ''}tab-content">
+        % if c.service == 'routes' and c.http_status == 200:
+          <div class="fragment">
+            ${self.json()}
+            ${self.body()}
+          </div>
+        % endif
+        <ul id="route_list" class="result_list"><!-- INTENTIONALLY EMPTY --></ul>
+        <p>
+          <b>Disclaimer</b>: As you are riding, please keep in mind that you
+          don't <i>have</i> to follow the suggested route. <i>It may not be
+          safe at any given point.</i> If you see what looks like an unsafe or
+          undesirable stretch in the suggested route, you can decide to walk,
+          ride on the sidewalk, or go a different way.
+        </p>
+        <p>
+          Users should independently verify all information presented here.
+          This service is provided <b>AS IS</b> with <b>NO WARRANTY</b> of any
+          kind.
+        </p>
+      </div>
+    </div>
+  </%call>
+</%def>
+
+
+<%def name="map_controls()">
+  <!-- Map Menu -->
+  <div id="map-controls" class="noprint">
+    <!--<select id="map_mode">-->
+      <!--<option value="">- Map Mode -</option>-->
+      <!--<option value="">Normal</option>-->
+      <!--<option value="identifyIntersection">Identify Intersection</option>-->
+      <!--<option value="identifyStreet">Identify Street</option>-->
+    <!--</select>-->
+    <input type="button"
+      id="find-at-center-link"
+      title="Find address nearest to red dot at center of map"
+      value="Find address at center"
+      />
+
+    <% region_ns = self.get_namespace('/regions/%s.html' % c.region.slug) %>
+    % if hasattr(region_ns, 'map_controls'):
+      ${region_ns.map_controls()}
+    % endif
+
+    <input type="button"
+      id="clear-map-link"
+      title="Clear all results and map"
+      value="Clear all"
+      />
+  </div>
+  <!-- /Map Menu -->
+</%def>
+
+
+<%def name="javascript_includes()">
+  <% js = ('services', 'query', 'result', 'widgets/tab_control', 'widgets/fixed_pane') %>
+  ${h.javascript_include_tag(*js)}
+</%def>
+
+
+<%def name="javascript()">
+  byCycle.UI.service = '${c.service}';
+  byCycle.UI.member_name = '${c.member_name}';
+  byCycle.UI.collection_name = '${c.collection_name}';
+  byCycle.UI.region_id = '${c.region.slug if c.region else ""}';
+  byCycle.UI.http_status = ${'%i' % c.http_status if c.http_status else 'undefined'};
+  byCycle.UI.q = '${c.q}';
+</%def>
+
+
+<%def name="json()">
+  % if c.format != 'json':
+    ${h.hidden_field(None, value=c.json, class_='json')}
+  % endif
+</%def>

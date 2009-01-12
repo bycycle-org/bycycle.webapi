@@ -1,0 +1,11 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+
+<%namespace name="show" file="show.html" import="*"/>
+
+
+% for r in c.routes:
+    <% c.route = r %>
+    ${show.body()}
+% endfor

@@ -1,0 +1,71 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+
+<%!
+  from urllib import unquote_plus
+  from byCycle.model.geocode import Geocode
+%>
+
+
+<%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
+
+
+${self.json()}
+<h2>${c.exception.title}</h2>
+<h3>Select a location</h3>
+
+
+<% first_ul = True %>
+% for i, geocodes in enumerate(c.choices):
+  % if not isinstance(geocodes, Geocode):
+    <%
+      if not first_ul:
+        ul_style = 'style="display: none;"'
+      else:
+        ul_style = ''
+    %>
+    <ul class="result_list multi-list" ${ul_style}>
+      <% last = len(geocodes) - 1 %>
+        % for j, code in enumerate(geocodes):
+          <%
+            if j == last:
+              style = 'style="margin-bottom: 0;"'
+            else:
+               style = ''
+          %>
+          <li class="${h.cycle('b', 'a')}" ${style}>
+            ${self.geocode(code, i, j)}
+          </li>
+        % endfor
+    </ul>
+    <% first_ul = False %>
+  % endif
+% endfor
+
+
+<%def name="geocode(geocode, i, j)">
+  <%
+    str_addr = str(geocode.address)
+    xy_ll = geocode.xy_ll
+    x, y = xy_ll.x, xy_ll.y
+    html_addr = str_addr.replace('\n', '<br />')
+    field_addr = unquote_plus(geocode.urlStr())
+  %>
+  <%call expr="fixed_pane(title_bar_style={'display': 'none'}, )">
+    <div class="address">${html_addr}</div>
+    <div class="multi-select-links">
+      <a class="show-on-map-link"
+         href="#show-location-on-map"
+         title="Show this location on the map"
+         onclick="byCycle.UI.map.setCenter({x: ${x}, y: ${y}}); return false;"
+         >Show on map</a>
+      |
+      <a class="select-geocode-link"
+         href="${h.url_for('find_geocodes', region_id=c.region.slug, q=field_addr)}#select-this-location"
+         title="Select this location"
+         onclick="byCycle.UI.selectRouteGeocode(this, ${i}, ${j}); return false;"
+         >Select</a>
+    </div>
+  </%call>
+</%def>

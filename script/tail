@@ -1,0 +1,2 @@
+tail -f /service/tripplanner-one/log/main/current | tai64nlocal
+

@@ -1,0 +1,18 @@
+html, body {
+  overflow: visible;
+}
+html, body, #col-a, #col-b, #message_pane, #result_pane, #map_pane {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+#col-a, #col-b {
+  float: none;
+}
+#message_pane, #result_pane, #map_pane {
+  height: auto;
+}
+.gmnoprint, .noprint {
+  display: none;
+}
+
