@@ -1,5 +1,5 @@
 import paste.deploy
-from byCycle import model
+from bycycle.core import model
 
 
 def setup_config(command, filename, section, vars):

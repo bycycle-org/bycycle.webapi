@@ -7,9 +7,9 @@ from pylons.templating import render_mako as render
 
 import restler as _restler
 
-from byCycle import model
+from bycycle.core import model
 
-import tripplanner.lib.helpers as h
+import bycycle.tripplanner.lib.helpers as h
 
 
 RestController = _restler.RestController(model)

@@ -1,4 +1,4 @@
-from tripplanner.tests import *
+from bycycle.tripplanner.tests import *
 
 class TestRegionsController(TestController):
     def test_index(self):

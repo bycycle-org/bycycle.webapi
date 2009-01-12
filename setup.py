@@ -50,10 +50,10 @@ setup(
         'Pylons>=0.9.7rc4',
     ),
     test_suite = 'nose.collector',
-    package_data={'tripplanner': ['i18n/*/LC_MESSAGES/*.mo']},
+    package_data={'bycycle.tripplanner': ['i18n/*/LC_MESSAGES/*.mo']},
     entry_points="""
     [paste.app_factory]
-    main=tripplanner:make_app
+    main=bycycle.tripplanner:make_app
 
     [paste.app_install]
     main=paste.script.appinstall:Installer

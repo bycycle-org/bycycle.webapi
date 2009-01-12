@@ -1,5 +1,5 @@
 import paste.fixture
-from tripplanner.tests import *
+from bycycle.tripplanner.tests import *
 
 class TestGeocodesController(TestController):
     def test_find_member(self):

@@ -1,8 +1,8 @@
-from byCycle.services.exceptions import InputError, NotFoundError
-from byCycle.model import regions
-from byCycle.model.entities.public import Region
+from bycycle.core.services.exceptions import InputError, NotFoundError
+from bycycle.core.model import regions
+from bycycle.core.model.entities.public import Region
 
-from tripplanner.lib.base import *
+from bycycle.tripplanner.lib.base import *
 
 
 class RegionsController(RestController):

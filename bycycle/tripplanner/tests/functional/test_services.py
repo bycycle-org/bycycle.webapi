@@ -1,4 +1,4 @@
-from tripplanner.tests import *
+from bycycle.tripplanner.tests import *
 
 class TestServiceController(TestController):
     def test_find_member(self):
