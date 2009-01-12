@@ -1,0 +1,3 @@
+% for route in c.collection:
+    ${route}
+% endfor

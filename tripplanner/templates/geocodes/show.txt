@@ -1,0 +1,2 @@
+${c.member.address}
+${c.member.xy.y}, ${c.member.xy.x}

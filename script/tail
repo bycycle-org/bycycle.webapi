@@ -1,0 +1,5 @@
+tail -f /service/tripplanner-beta-one/log/main/current | tai64nlocal
+tail -f /service/tripplanner-beta-two/log/main/current | tai64nlocal
+tail -f /service/tripplanner-beta-three/log/main/current | tai64nlocal
+tail -f /service/tripplanner-beta-four/log/main/current | tai64nlocal
+
