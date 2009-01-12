@@ -1,0 +1,125 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+<%! from urllib import unquote_plus %>
+
+<%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
+
+<%
+    route = c.route
+    distance = route.distance
+    total_mi = distance['miles']
+    total_km = distance['kilometers']
+    start = route.start['geocode']
+    s_addr = start.address
+    end = route.end['geocode']
+    e_addr = end.address
+    directions = route.directions
+    linestring = route.linestring_ll
+    centroid = linestring.centroid()
+    s_addr = str(s_addr).replace('\n', '<br/>')
+    e_addr = str(e_addr).replace('\n', '<br/>')
+    last_street = e_addr.split('<br/>', 1)[0]
+    s_url_str = start.urlStr()
+    e_url_str = end.urlStr()
+    tab = '&nbsp;&nbsp;&nbsp;&nbsp;'
+    set_center_onclick = 'byCycle.UI.map.setCenter({x: %s, y: %s}); return false;'
+    map_blowup_href = "#show-map-blowup"
+    map_blowup_onclick = "byCycle.UI.map.showMapBlowup({x: %s, y: %s}); return false;"
+%>
+
+<%call expr="fixed_pane()">
+    <%def name="title()">
+        Route
+        <span class="small">
+          <a class="show-on-map-link"
+             href="#show-route-on-map"
+             title="Show this route on the map"
+             onclick="${set_center_onclick % (centroid.x, centroid.y)}"
+             >show on map</a>
+        </span>
+    </%def>
+    <div class="start">
+        <a href="${map_blowup_href}"
+           title="Start of route"
+           onclick="${map_blowup_onclick % (start.xy_ll.x, start.xy_ll.y)}"
+           >${s_addr}</a>
+    </div>
+    <div class="end">
+        <a href="${map_blowup_href}"
+           title="End of route"
+           onclick="${map_blowup_onclick % (end.xy_ll.x, end.xy_ll.y)};"
+           >${e_addr}</a>
+    </div>
+    <div class="total-distance">
+        ${'%.2f' % total_mi} miles / ${'%.2f' % total_km} km
+    </div>
+    <div class="noprint reverse-directions">
+        <a href="/regions/${c.region.slug}/routes/find?q=${e_url_str}+to+${s_url_str}"
+           onclick="byCycle.UI.reverseDirections('${unquote_plus(e_url_str)}', '${unquote_plus(s_url_str)}'); return false;"
+           >Reverse Directions</a>
+    </div>
+    <div class="directions">
+        % for i, d in enumerate(directions):
+            <%
+                row_class = h.cycle('a', 'b')
+                turn = d['turn']
+                street = d['street']
+                point = linestring.pointN(d['linestring_index'])
+                if turn == 'straight':
+                    turn = 'cont.'
+                    street = street[1]
+                if street == 'None':
+                    street = '[No name]'
+                street = ' - '.join([s.strip() for s in street.split('-') if s])
+                if i == 0:
+                    street = street #'%s toward %s' % (street, d['toward'])
+                jogs = d['jogs']
+                if jogs:
+                    J = ['%sJogs...' % tab]
+                    for j in jogs:
+                        J.append('<br/>%s%s&middot; <i>%s</i> at %s' %
+                                 (tab, tab, j['turn'], j['street']))
+                    jogs = ''.join(J)
+                else:
+                    jogs = ''
+                ls_index = d['linestring_index']
+                distance = d['distance']
+                mi = '%.2f' % distance['miles']
+                km = '%.2f' % distance['kilometers']
+                #bms = d['bikemode']
+                #bms = ' [%s]' % ', '.join([b for b in bms]) if bms else ''
+            %>
+                <div class="direction ${row_class}">
+                    <span class="count">
+                        <a href="${map_blowup_href}"
+                           onclick="${map_blowup_onclick % (point.x, point.y)}"
+                           >${i + 1}</a>
+                    </span>
+                    -
+                    <span class="turn">${turn.title()}</span>
+                    -
+                    <span class="direction">${street}</span>
+                    -
+                    <span class="segment_distance">${mi} mi</span>
+                    % if jogs:
+                        <div class="jogs">
+                            ${jogs}
+                        </div>
+                    % endif
+                </div>
+        % endfor
+        <% row_class = h.cycle('a', 'b') %>
+        <div class="direction ${row_class}">
+            <span class="count">
+                <a href="${map_blowup_href}"
+                   onclick="${map_blowup_onclick % (end.xy_ll.x, end.xy_ll.y)}"
+                   >${i + 2}</a>
+            </span>
+            -
+            <span class="turn">End</span>
+            -
+            <span class="direction">${last_street}</span>
+        </div>
+    </div>
+</%call>
