@@ -10,8 +10,8 @@ from pylons.middleware import ErrorHandler, StatusCodeRedirect
 from pylons.wsgiapp import PylonsApp
 from routes.middleware import RoutesMiddleware
 
-from tripplanner.config.environment import load_environment
-from tripplanner.lib.middleware import RedirectMiddleware
+from bycycle.tripplanner.config.environment import load_environment
+from bycycle.tripplanner.lib.middleware import RedirectMiddleware
 
 
 def make_app(global_conf, full_stack=True, **app_conf):

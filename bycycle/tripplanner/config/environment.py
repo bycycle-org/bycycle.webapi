@@ -4,11 +4,11 @@ from pylons import config
 
 from mako.lookup import TemplateLookup
 
-from tripplanner.config.routing import make_map
+from bycycle.tripplanner.config.routing import make_map
 
-import tripplanner.lib.app_globals as app_globals
-import tripplanner.lib.helpers
-from tripplanner.config.routing import make_map
+from bycycle.tripplanner.lib.app_globals import Globals
+import bycycle.tripplanner.lib.helpers
+from bycycle.tripplanner.config.routing import make_map
 
 
 def load_environment(global_conf, app_conf):
@@ -21,12 +21,13 @@ def load_environment(global_conf, app_conf):
                  templates=[os.path.join(root, 'templates')])
 
     # Initialize config with the basic options
-    config.init_app(global_conf, app_conf, package='tripplanner', paths=paths)
+    config.init_app(
+        global_conf, app_conf, package='bycycle.tripplanner', paths=paths)
 
     # The following template options are passed to your template engines
     config['routes.map'] = make_map()
-    config['pylons.app_globals'] = app_globals.Globals()
-    config['pylons.h'] = tripplanner.lib.helpers
+    config['pylons.app_globals'] = Globals()
+    config['pylons.h'] = bycycle.tripplanner.lib.helpers
 
     # Create the Mako TemplateLookup, with the default auto-escaping
     config['pylons.app_globals'].mako_lookup = TemplateLookup(

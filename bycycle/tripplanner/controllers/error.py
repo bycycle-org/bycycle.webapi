@@ -11,7 +11,7 @@ from mako.exceptions import TopLevelLookupException
 
 from webhelpers.html.builder import literal
 
-from tripplanner.lib.base import BaseController
+from bycycle.tripplanner.lib.base import BaseController
 
 
 class ErrorController(BaseController):

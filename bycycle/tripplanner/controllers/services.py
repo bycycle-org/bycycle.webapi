@@ -4,12 +4,12 @@ import logging
 
 import simplejson
 
-from byCycle.services.exceptions import *
-from byCycle.model.geocode import Geocode
+from bycycle.core.services.exceptions import *
+from bycycle.core.model.geocode import Geocode
 
-from tripplanner.lib.base import *
-from tripplanner.lib.base import __all__ as base__all__
-from tripplanner.controllers.regions import RegionsController
+from bycycle.tripplanner.lib.base import *
+from bycycle.tripplanner.lib.base import __all__ as base__all__
+from bycycle.tripplanner.controllers.regions import RegionsController
 
 __all__ = base__all__ + ['ServicesController']
 

@@ -1,39 +1,39 @@
-import os
-import sys
+"""Pylons application test package
+
+This package assumes the Pylons environment is already loaded, such as
+when this script is imported from the `nosetests --with-pylons=test.ini`
+command.
+
+This module initializes the application via ``websetup`` (`paster
+setup-app`) and provides the base testing objects.
+"""
 from unittest import TestCase
 
-here_dir = os.path.dirname(os.path.abspath(__file__))
-conf_dir = os.path.dirname(os.path.dirname(here_dir))
+from paste.deploy import loadapp
+from paste.fixture import TestApp
+from paste.script.appinstall import SetupCommand
 
-sys.path.insert(0, conf_dir)
+from pylons import config, url
 
-import pkg_resources
+from routes import url_for
+from routes.util import URLGenerator
 
-pkg_resources.working_set.add_entry(conf_dir)
+import pylons.test
 
-pkg_resources.require('Paste')
-pkg_resources.require('PasteScript')
+__all__ = ['environ', 'url', 'url_for', 'TestController']
 
-from paste.deploy import loadapp, CONFIG
-import paste.deploy
-import paste.fixture
-import paste.script.appinstall
+# Invoke websetup with the current config file
+SetupCommand('setup-app').run([config['__file__']])
 
-from tripplanner.config.routing import *
-from routes import request_config, url_for
-
-test_file = os.path.join(conf_dir, 'test.ini')
-conf = paste.deploy.appconfig('config:' + test_file)
-CONFIG.push_process_config({'app_conf': conf.local_conf,
-                            'global_conf': conf.global_conf}) 
-
-cmd = paste.script.appinstall.SetupCommand('setup-app')
-cmd.run([test_file])
+environ = {}
 
 class TestController(TestCase):
-    def __init__(self, *args):
-        wsgiapp = loadapp('config:test.ini', relative_to=conf_dir)
-        self.app = paste.fixture.TestApp(wsgiapp)
-        TestCase.__init__(self, *args)
 
-__all__ = ['url_for', 'TestController']
+    def __init__(self, *args, **kwargs):
+        if pylons.test.pylonsapp:
+            wsgiapp = pylons.test.pylonsapp
+        else:
+            wsgiapp = loadapp('config:%s' % config['__file__'])
+        self.app = TestApp(wsgiapp)
+        url._push_object(URLGenerator(config['routes.map'], environ))
+        TestCase.__init__(self, *args, **kwargs)
