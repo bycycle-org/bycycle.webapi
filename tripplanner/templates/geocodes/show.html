@@ -1,0 +1,39 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+<%! from urllib import unquote_plus %>
+
+<%
+   geocode = c.member
+   x, y = geocode.xy.x, geocode.xy.y
+   str_addr = str(geocode.address)
+   html_addr = str_addr.replace('\n', '<br />')
+   field_addr = unquote_plus(geocode.urlStr())
+%>
+
+<div class="query-result">
+  <div class="address">${html_addr | n}</div>
+
+  <div class="set_as_s_or_e">
+    Set as
+    <a class="set-as-start"
+       href="#set-as-start"
+       title="Use this as the starting point of a route"
+       onclick='app.ui.setAsStart("${field_addr}"); return false;'
+       ><i>start</i></a> or
+    <a class="set-as-end"
+       href="#set-as-end"
+       title="Use this as the end point of a route"
+       onclick='app.ui.setAsEnd("${field_addr}"); return false;'
+       ><i>end</i></a>
+    of route
+  </div>
+
+  <div>
+    <a class="show-on-map-link"
+      href="#show-location-on-map"
+      title="Show this location on the map"
+      onclick="app.ui.map.setCenter({x: ${x}, y: ${y}}); return false;"
+      >Show on map</a>
+  </div>
+</div>

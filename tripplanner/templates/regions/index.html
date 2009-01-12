@@ -1,0 +1,47 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="layout.html"/>
+
+<%def name="controls_nav()">
+  <li class="selected"><a href="#select-region"><em></em></a></li>
+  ${parent.controls_nav()}
+</%def>
+
+<%def name="controls()">
+  <%call expr="self.make_panel('select-region', title='Select a Region!')">
+    <form action="${h.url_for('/regions/find')}">
+      <div>
+        % for p in request.params:
+          ${h.hidden(p, request.params[p])}
+        % endfor
+
+        <p>
+          <%
+            options = [('all', '- Select Region -')]
+            options += [(r.slug, r.title) for r in c.regions if c.regions]
+          %>
+          ${h.select('region', '', options, id='regions')}
+        </p>
+
+        <p>
+          <b>Optional</b> search:
+          <br />
+
+          ${h.text('q', id='q', value=c.q, title='Enter an address or route')}
+          <br />
+
+          <label for="q" class="input_label">
+            <b>Address</b> (ex: <i>NE 6th and Irving</i>) or
+            <b>route</b> (ex: <i>301 W Burnside to SE 3rd &amp; Main</i>)
+          </label>
+        </p>
+
+        <p>
+          ${h.submit(
+            'commit', 'Go to Region', title='Go to the selected region')}
+        </p>
+      </div>
+    </form>
+  </%call>
+
+  ${parent.controls()}
+</%def>

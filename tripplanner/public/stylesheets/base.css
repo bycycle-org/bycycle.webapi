@@ -1,0 +1,198 @@
+/* Layout */
+
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
+#loading_panel table {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  z-index: 9999999;
+  border-collapse: collapse;
+}
+#loading_panel table td {
+  text-align: center;
+  vertical-align: middle;
+  width: 100%;
+  height: 100%;
+}
+
+#top {
+  padding: 4px;
+  text-align: right;
+  font-size: 12px;
+  line-height: 12px;
+}
+
+#left,
+#controls,
+#controls .yui-panel-container,
+#controls .yui-panel,
+#center,
+#map_pane
+{
+  height: 100%;
+}
+
+#controls .yui-panel-container {
+  width: 95%;
+}
+#controls .yui-panel .bd {
+  height: 100%;
+}
+#controls .yui-panel-container {
+  margin-right: 4px;
+}
+#controls .yui-panel,
+#controls .yui-panel .hd,
+#controls .yui-panel .bd
+{
+  border: none;
+}
+
+#controls {
+
+}
+
+
+/* Style */
+
+a {
+  color: #46d;
+}
+a:hover {
+  color: orange;
+}
+
+.yui-layout .yui-layout-doc .yui-layout-unit div.yui-layout-bd {
+  background-color: #fff;
+}
+
+/* Input Controls */
+#q {
+  width: 95%;
+}
+#route_form table {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  border: none;
+  border-collapse: collapse;
+}
+#route_form table td {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+#s, #e {
+  width: 95%;
+}
+#swap_s_and_e a {
+  text-decoration: none;
+  outline: none;
+  display: block;
+  width: 10px;
+  height: 30px;
+}
+/* Input Labels */
+.input_label {
+  font-size: 85%;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Content Column A -- Results and Messages */
+#spinner {
+  position: absolute;
+  right: 50%;
+  top: 50%;
+  z-index: 99999;
+}
+.spinner {
+  float: left;
+  width: 32px;
+  height: 32px;
+  background: white;
+  padding: .5em;
+  border: 1px solid #000;
+}
+
+.query-result {
+  position: relative;
+}
+.yui-skin-sam .query-result .yui-button.yui-button-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+/* Choices list (HTTP status == 300) */
+ul.result_list {
+  padding: 0;
+  margin: 0;
+}
+ul.result_list li {
+  list-style-type: none;
+  padding: .25em;
+}
+ul.result_list li.a {
+  background-color: white;
+}
+
+/* Errors */
+ul.errors {
+  text-align: left;
+}
+ul.errors li {
+  list-style-type: none;
+}
+ul.errors li.error {
+  color: red;
+}
+ul.errors li.error.a {
+  background-color: #fff;
+}
+ul.errors li.error.b {
+  background-color: #ddd;
+}
+
+
+/* The map object is inserted here */
+#map_pane {
+  background: #ccdafc;
+  height: 100%;
+}
+.olControlMousePosition {
+  right: .4em;
+  bottom: .2em;
+}
+
+
+/* Route Summary & Directions */
+div.start,
+div.end,
+div.total-distance,
+div.reverse-directions,
+div.directions div {
+  border-bottom: 1px solid #888;
+  padding: 2px;
+}
+div.start a {
+  color: green;
+}
+div.end a {
+  color: red;
+}
+div.directions div.direction div.jogs {
+  border-bottom: none;
+}
+div.a { background: #ddd; }
+div.b { background: #fff; }
+span.count { text-align: right; }
+span.turn { font-weight: bold; }
+span.segment_distance { font-style: italic; }

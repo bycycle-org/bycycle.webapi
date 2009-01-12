@@ -1,0 +1,14 @@
+## -*- coding: UTF-8 -*-
+<%inherit file="show.html" />
+
+<!-- Route preference form control -->
+<%def name='route_pref()'>
+  <div>
+    <select id="pref" tabindex="8" name="pref">
+      <option value="default">- Route Type -</option>
+      <option value="default">Normal</option>
+      <option value="safer">Safer</option>
+    </select>
+    <b>(optional)</b>
+  </div>
+</%def>
