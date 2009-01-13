@@ -284,7 +284,7 @@
       % endfor
     % else:
       <p class="error">
-        ${c.exception.description}
+        ${c.exception.description.decode('utf-8')}
       </p>
     % endif
     <% explanation = getattr(c.exception, 'explanation', None) %>
