@@ -15,16 +15,15 @@ from setuptools import setup, find_packages
 
 setup(
     name='byCycleTripPlanner',
-    version='0.4a0',
+    version='0.5',
     description='byCycle Trip Planner',
-    long_description='byCycle Trip Planner Web Application',
+    long_description='byCycle Bicycle Trip Planner Web Application',
     license='GNU General Public License (GPL)',
     author='Wyatt L Baldwin, byCycle.org',
-    author_email='wyatt@byCycle.org',
+    author_email='wyatt@bycycle.org',
     keywords='bicycle bike cycyle trip planner route finder',
     url='http://bycycle.org/',
-    # This, in effect, creates an alias to the latest 0.4 dev version
-    download_url='http://guest:guest@code.bycycle.org/apps/web/tripplanner/trunk#egg=byCycleTripPlanner-dev',
+    download_url='http://guest:guest@code.bycycle.org/TripPlanner/trunk#egg=byCycleTripPlanner-dev',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
