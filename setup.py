@@ -44,7 +44,7 @@ setup(
         'WebHelpers==0.3',
         'Routes>=1.10.2',
         'Beaker==0.7.2',
-        'Mako==0.2.2',
+        'Mako>=0.2.4',
         'Restler==0.1.1.1',
         'Pylons==0.9.5',
     ),
