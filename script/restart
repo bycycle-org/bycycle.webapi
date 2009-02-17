@@ -1,5 +1,5 @@
-svc -t /service/tripplanner-one
-svc -t /service/tripplanner-two
-svc -t /service/tripplanner-three
-svc -t /service/tripplanner-four
+/usr/local/bin/svc -t /service/tripplanner-one
+/usr/local/bin/svc -t /service/tripplanner-two
+/usr/local/bin/svc -t /service/tripplanner-three
+/usr/local/bin/svc -t /service/tripplanner-four
 
