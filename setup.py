@@ -42,7 +42,7 @@ setup(
     install_requires=(
         'byCycleCore>=0.4a0.dev,==dev',
         'Beaker==0.7.2',
-        'decorator==2.2.0',
+        'decorator==2.3.2',
         'FormEncode==1.0.1',
         'Mako>=0.2.2',
         'Paste==1.7',
