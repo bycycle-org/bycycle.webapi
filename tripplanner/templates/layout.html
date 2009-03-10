@@ -126,16 +126,25 @@
               % if c.info:
                 ${c.info}
               % else:
-                <p class="no-top-margin">
-                  byCycle needs your support. Spread the word. Make a donation if you can. Thanks.
+                <%include file="/news.html" />
+
+                <hr />
+
+                <p>
+                  byCycle needs your support. Spread the word. Make a donation if you can. Thanks.<br />
+                  <%include file="/widgets/paypal-button.html" />
                 </p>
 
-                <%include file="/widgets/paypal-button.html" />
+                <hr />
 
                 <p class="noprint">
                   Users should independently verify all information presented here. This
                   service is provided <b>AS IS</b> with <b>NO WARRANTY</b> of any kind.
                   <em>Please be careful out there.</em>
+                </p>
+
+                <p>
+                  <a href="http://info.bycycle.org/contact/">Contact us</a><br />
                 </p>
 
                 <p class="no-bottom-margin">
