@@ -85,7 +85,7 @@ a:hover { color: orange; }
 /* Masthead */
 #masthead {
   float: left;
-  width: 150px;
+  width: 141px;
   text-align: right;
 }
 #masthead h1, #masthead h2, #masthead h3, #masthead h4 {
@@ -121,7 +121,7 @@ a:hover { color: orange; }
 
 /* Input */
 #input_container {
-  margin-left: 155px;
+  margin-left: 146px;
 }
 #region-search {
   border: 1px solid #99b3cc;
@@ -149,9 +149,21 @@ a:hover { color: orange; }
 /* Status & Links */
 #bar {
   position: relative;
-  background: #d1ffba;
-  border: solid #a7cc95;
+  color: #eee;
+  background: #444;
+  border: solid #99b3cc;
   border-width: 1px 0;
+  font-weight: bold;
+}
+#bar a {
+  color: #eef;
+  text-decoration: underline;
+}
+#bar a:visited {
+  color: #aab;
+}
+#bar a:hover {
+  color: #ff8800;
 }
 #status {
   float: left;
@@ -159,10 +171,6 @@ a:hover { color: orange; }
 /* Loading */
 #loading-status {
   color: red;
-  background: white;
-  font-weight: bold;
-  padding: 1px 2px;
-  border: 1px solid red;
 }
 #links {
   float: right;
