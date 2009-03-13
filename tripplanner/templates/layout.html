@@ -48,7 +48,7 @@
       <div id="masthead" class="noprint">
         <h1 id="logo">
           <a href="http://bycycle.org/" title="byCycle.org Home Page">
-          ${h.image_tag('logo.png', title='byCycle.org Home Page', width=150, height=25, alt='byCycle.org')}
+          ${h.image_tag('logo.png', title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
           </a>
         </h1>
 
@@ -82,11 +82,7 @@
           % if c.status:
             ${c.status}
           % else:
-            Welcome to the
-            <a href="http://bycycle.org/"
-               title="byCycle Home Page (opens in new window)"
-               target="_blank"
-               >byCycle.org</a> bicycle trip planner.
+            Welcome to the byCycle.org bicycle trip planner.
           % endif
           <span id="loading-status">Loading...</span>
         </div>
