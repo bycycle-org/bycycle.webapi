@@ -36,7 +36,7 @@ setup(
         'Programming Language :: Python',
         'Topic :: Education',
         'Topic :: Scientific/Engineering :: GIS',
-    ],
+        ],
     packages=find_packages(),
     zip_safe=False,
     install_requires=(
@@ -44,7 +44,7 @@ setup(
         'Beaker==0.7.2',
         'decorator==2.3.2',
         'FormEncode==1.0.1',
-        'Mako>=0.2.2',
+        'Mako==0.2.2',
         'Paste==1.7',
         'PasteDeploy==1.3.1',
         'PasteScript==1.6.2',
@@ -52,7 +52,7 @@ setup(
         'Restler==0.1.1.1',
         'Routes==1.10.2',
         'WebHelpers==0.3',
-    ),
+        ),
     test_suite = 'nose.collector',
     package_data={'tripplanner': ['i18n/*/LC_MESSAGES/*.mo']},
     entry_points="""
@@ -62,4 +62,4 @@ setup(
     [paste.app_install]
     main=paste.script.appinstall:Installer
     """,
-    )
+)
