@@ -75,6 +75,9 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
 
   createMap: function(container) {
     var map = new GMap2(container);
+    if (byCycle.UI.region_id === 'portlandor') {
+      map.addMapType(this.makeTriMetMapType());
+    }
     map.setCenter(new GLatLng(0, 0), 7);
     map.addControl(new GLargeMapControl());
     map.addControl(new GMapTypeControl());
@@ -179,7 +182,7 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
   getZoom: function() {
     return this.map.getZoom();
   },
-  
+
   setZoom: function(zoom) {
     this.map.setZoom(zoom);
   },
@@ -200,8 +203,8 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
     this.map.addOverlay(line);
     return line;
   },
-  
-  drawPolyLineFromEncodedPoints: function (points, levels, color, weight, 
+
+  drawPolyLineFromEncodedPoints: function (points, levels, color, weight,
                                            opacity) {
     var line = new GPolyline.fromEncoded({
       points: points,
@@ -213,7 +216,7 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
       numLevels: 4
     });
     this.map.addOverlay(line);
-    return line;  
+    return line;
   },
 
   placeMarker: function(point, icon) {
@@ -383,8 +386,24 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
       return tile_url;
     };
     layer.isPng = function() { return true; };
-    layer.getOpacity = function() { return .625; };
-    
+    layer.getOpacity = function() { return 0.625; };
+
     return new GTileLayerOverlay(layer);
+  },
+
+  makeTriMetMapType: function () {
+    var projection = new GMercatorProjection(10);
+    var copyrights = new GCopyrightCollection('&copy; <a href="http://trimet.org/">TriMet</a>');
+    var wms_url = 'http://tilec.trimet.org/tilecache/tilecache.py?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=currentOSPN&FORMAT=image/pngSRS=EPSG:2913&WIDTH=256&HEIGHT=256';
+    var layer = new GTileLayer(copyrights, 0, 9);
+    layer.isPng = function() { return true; };
+    layer.getOpacity = function() { return 1.0; };
+    layer.getTileUrl = function(tile, zoom) {
+      var bbox = [7628293, 660879, 7632389, 664975].join(',');
+      var tile_url = [wms_url, "&BBOX=", bbox].join('');
+      return tile_url;
+    };
+    var trimet_map_type = new GMapType(layer, projection, 'TriMet');
+    return trimet_map_type;
   }
 });
