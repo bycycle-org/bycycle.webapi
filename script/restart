@@ -1,5 +1,9 @@
-/usr/local/bin/svc -t /service/tripplanner-one
-/usr/local/bin/svc -t /service/tripplanner-two
-/usr/local/bin/svc -t /service/tripplanner-three
-/usr/local/bin/svc -t /service/tripplanner-four
-
+/usr/local/bin/svc -d /service/tripplanner-one
+/usr/local/bin/svc -d /service/tripplanner-two
+/usr/local/bin/svc -d /service/tripplanner-three
+/usr/local/bin/svc -d /service/tripplanner-four
+rm -rf ./service/data
+/usr/local/bin/svc -u /service/tripplanner-one
+/usr/local/bin/svc -u /service/tripplanner-two
+/usr/local/bin/svc -u /service/tripplanner-three
+/usr/local/bin/svc -u /service/tripplanner-four
