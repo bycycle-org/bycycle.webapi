@@ -75,9 +75,9 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
 
   createMap: function(container) {
     var map = new GMap2(container);
-    if (byCycle.UI.region_id === 'portlandor') {
-      map.addMapType(this.makeTriMetMapType());
-    }
+    //if (byCycle.UI.region_id === 'portlandor') {
+    //  map.addMapType(this.makeTriMetMapType());
+    //}
     map.setCenter(new GLatLng(0, 0), 7);
     map.addControl(new GLargeMapControl());
     map.addControl(new GMapTypeControl());
