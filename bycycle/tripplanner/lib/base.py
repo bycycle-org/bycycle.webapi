@@ -5,14 +5,19 @@ from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import validate, jsonify
 from pylons.templating import render_mako as render
 
-import restler as _restler
+import restler.controller
 
 from bycycle.core import model
 
 import bycycle.tripplanner.lib.helpers as h
 
 
-RestController = _restler.RestController(model)
+class RestController(restler.controller.Controller):
+
+    default_format = 'html'
+
+    def get_db_session(self):
+        return model.Session
 
 
 class BaseController(WSGIController): pass
