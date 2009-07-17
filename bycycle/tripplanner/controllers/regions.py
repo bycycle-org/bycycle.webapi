@@ -7,6 +7,8 @@ from bycycle.tripplanner.lib.base import *
 
 class RegionsController(RestController):
 
+    entity = Region
+
     def __before__(self):
         RestController.__before__(self)
         self.service = 'services'
