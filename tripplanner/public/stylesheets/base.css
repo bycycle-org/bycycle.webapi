@@ -53,26 +53,6 @@ a:hover { color: orange; }
 #masthead, #input_container, #bar {
   padding: 5px;
 }
-#input_container, #bar, #content {
-  margin-right: 121px;
-}
-#ads {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 120px;
-  height: 100%;
-  background: white;
-  overflow: hidden;
-  border-left: 1px solid #99b3cc;
-}
-.ad.banner, .ad.banner a, .ad.banner a img {
-  width: 120px;
-  height: 90px;
-}
-.ad.banner a {
-  display: block;
-}
 #footer {
   position: absolute;
   left: 0;

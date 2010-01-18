@@ -126,13 +126,6 @@
 
                 <hr />
 
-                <p>
-                  byCycle needs your support. Spread the word. Make a donation if you can. Thanks.<br />
-                  <%include file="/widgets/paypal-button.html" />
-                </p>
-
-                <hr />
-
                 <p class="noprint">
                   Users should independently verify all information presented here. This
                   service is provided <b>AS IS</b> with <b>NO WARRANTY</b> of any kind.
@@ -144,7 +137,7 @@
                 </p>
 
                 <p class="no-bottom-margin">
-                  &copy; 2004-2008 byCycle.org
+                  &copy; 2004-2009 byCycle.org
                 </p>
               % endif
             </div>
@@ -186,13 +179,6 @@
         <div class="clear"></div>
       </div>
       <!-- /Content -->
-
-
-      <!-- Ads -->
-      <div id="ads" class="noprint">
-        ${self.ads()}
-      </div>
-      <!-- /Ads -->
 
 
     </div>
@@ -267,16 +253,6 @@
 <%def name="map_controls()"></%def>
 <%def name="javascript_includes()"></%def>
 <%def name="javascript()"></%def>
-
-<%def name="ads()">
-  <div class="ad banner">
-    <a href="http://www.myvega.com/" title="Vega - Complete Wholefood Health Optimizer"><img src="${h.url_for('/images/ads/oi_vega.jpg')}" width="120" height="90" alt="Vega - Complete Wholefood Health Optimizer" /></a>
-  </div>
-  <div class="ad banner">
-    <a href="http://www.veganbodybuilding.com/" title="Vegan Body Building and Fitness"><img src="${h.url_for('/images/ads/oi_vbb.jpg')}" width="120" height="90" alt="Vegan Body Building and Fitness" /></a>
-  </div>
-  ${h.javascript_include_tag('ads')}
-</%def>
 
 <%def name="errors()">
   <div class="errors">
