@@ -27,7 +27,6 @@ def make_map(global_conf={}, app_conf={}):
     mapper.resource('service', 'services', **options)
     mapper.resource('geocode', 'geocodes', **options)
     mapper.resource('route', 'routes', **options)
-    mapper.resource('ad', 'ads', **options)
 
     # This one can be used to display a template directly
     mapper.connect('*url', controller='template', action='view')
