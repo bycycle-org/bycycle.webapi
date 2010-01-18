@@ -394,13 +394,20 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
   makeTriMetMapType: function () {
     var projection = new GMercatorProjection(10);
     var copyrights = new GCopyrightCollection('&copy; <a href="http://trimet.org/">TriMet</a>');
-    var wms_url = 'http://tilec.trimet.org/tilecache/tilecache.py?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=currentOSPN&FORMAT=image/pngSRS=EPSG:2913&WIDTH=256&HEIGHT=256';
-    var layer = new GTileLayer(copyrights, 0, 9);
+    var wms_url = 'http://maps.trimet.org/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=currentOSPN&FORMAT=image/pngSRS=EPSG:4326&WIDTH=256&HEIGHT=256';
+    var layer = new GTileLayer(copyrights, 10, 19);
     layer.isPng = function() { return true; };
     layer.getOpacity = function() { return 1.0; };
     layer.getTileUrl = function(tile, zoom) {
-      var bbox = [7628293, 660879, 7632389, 664975].join(',');
-      var tile_url = [wms_url, "&BBOX=", bbox].join('');
+      var tile_url;
+      var x = tile.x * 256;
+      var y = tile.y * 256;
+      var sw_point = new GPoint(x, y + 255);
+      var ne_point = new GPoint(x + 255, y);
+      var sw = projection.fromPixelToLatLng(sw_point, zoom);
+      var ne = projection.fromPixelToLatLng(ne_point, zoom );
+      var bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()].join(',');
+      tile_url = [wms_url, "&BBOX=", bbox].join('');
       return tile_url;
     };
     var trimet_map_type = new GMapType(layer, projection, 'TriMet');
