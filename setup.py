@@ -14,7 +14,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='byCycleTripPlanner',
+    name='bycycle.tripplanner',
     version='0.4a0',
     description='byCycle Trip Planner',
     long_description='byCycle Trip Planner Web Application',
