@@ -1,4 +1,0 @@
-for server in one two three four; do
-    /usr/local/bin/svc -u /service/tripplanner-beta-${server}
-done
-
