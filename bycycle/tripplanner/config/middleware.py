@@ -11,7 +11,6 @@ from pylons.wsgiapp import PylonsApp
 from routes.middleware import RoutesMiddleware
 
 from bycycle.tripplanner.config.environment import load_environment
-from bycycle.tripplanner.lib.middleware import RedirectMiddleware
 
 
 def make_app(global_conf, full_stack=True, **app_conf):
@@ -44,7 +43,6 @@ def make_app(global_conf, full_stack=True, **app_conf):
     app = PylonsApp()
 
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
-    app = RedirectMiddleware(app, config)
 
     # Routing/Session/Cache Middleware
     app = RoutesMiddleware(app, config['routes.map'])
