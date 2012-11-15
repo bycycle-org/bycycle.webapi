@@ -44,7 +44,7 @@ var byCycle = (function() {
      */
     getParamVal: function(var_name, func) {
       // Override config setting with query string setting
-      var v = byCycle.request_params[var_name];
+      var v = byCycle.request_params.get(var_name);
       if (typeof v === 'undefined') {
       // Query string override not given; use config
         v = byCycle.config[var_name];

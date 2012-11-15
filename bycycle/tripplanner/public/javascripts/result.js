@@ -29,6 +29,6 @@ byCycle.UI.Result.prototype = {
        removeOverlay(this.overlays[i]);
     };
     // Remove this from results list
-    delete byCycle.UI.results[this.service][this.id];
+    delete byCycle.UI.results.get(this.service)[this.id];
   }
 }

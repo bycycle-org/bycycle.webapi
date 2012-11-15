@@ -279,7 +279,7 @@
 
     removeResult: function(result_el) {
       try {
-        self.results[result_el.id].remove();
+        self.results.get(result_el.id).remove();
       } catch (e) {
         if (e instanceof TypeError) {
           // result_el wasn't registered as a `Result` (hopefully intentionally)
