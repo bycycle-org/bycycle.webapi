@@ -163,13 +163,11 @@
     },
 
     runGenericQuery: function(event, input /* =undefined */) {
-      byCycle.logDebug('Entered runGenericQuery...');
       var q = input || self.q_el.value;
       if (q) {
         var query_class;
         // Is the query a route?
         var waypoints = q.toLowerCase().split(' to ');
-        byCycle.logDebug(waypoints);
         if (waypoints.length > 1) {
           // Query looks like a route
           self.s_el.value = waypoints[0];
@@ -187,7 +185,6 @@
         self.q_el.focus();
         self.showErrors('Please enter something to search for!');
       }
-      byCycle.logDebug('Left runGenericQuery');
     },
 
     /* Run all queries through here for consistency. */
@@ -224,7 +221,6 @@
      * Select from multiple matching geocodes
      */
     selectGeocode: function(select_link, i) {
-      byCycle.logDebug('Entered selectGeocode...');
       var response = self.query.response;
       var dom_node = $(select_link).up('.fixed-pane');
       var result = self.query.makeResult(response.results[i], dom_node);
@@ -244,21 +240,18 @@
 
       self.showResultPane(self.location_list);
       self.status.update('Added location to locations list.');
-      
+
       if (self.is_first_result) {
         self.map.setZoom(self.map.default_zoom);
       } else {
         self.is_first_result = false;
       }
-
-      byCycle.logDebug('Left selectGeocode.');
     },
 
     /**
      * Select from multiple matching geocodes for a route
      */
     selectRouteGeocode: function(select_link, i, j) {
-      byCycle.logDebug('Entered selectRouteGeocode...');
       var dom_node = $(select_link).up('ul');
       var next = dom_node.next();
       var choice = self.query.response.choices[i][j];
@@ -284,9 +277,6 @@
         if (e instanceof TypeError) {
           // result_el wasn't registered as a `Result` (hopefully intentionally)
           Element.remove(result_el);
-        } else {
-          byCycle.logDebug('Unhandled Exception in byCycle.UI.removeResult: ',
-                           e.name, e.message);
         }
       }
     },
@@ -313,7 +303,6 @@
     /* Map *******************************************************************/
 
     identifyIntersectionAtCenter: function(event) {
-      byCycle.logDebug('In find-intersection-at-center callback');
       var center = self.map.getCenter();
       self.q_el.value = self.map.getCenterString();
       self.identifyIntersection(center, event);

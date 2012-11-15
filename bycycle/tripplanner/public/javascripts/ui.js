@@ -12,7 +12,6 @@ byCycle.UI = function () {
   var map_type = (byCycle.Map[map_type_name] ||            // URL override
                   byCycle.Map[byCycle.config.map_type] ||  // config setting
                   byCycle.Map.base);                       // default
-  byCycle.logDebug('Map type:', map_type.description);
 
   // public:
   return {
