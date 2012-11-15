@@ -74,16 +74,6 @@
       Event.observe($('clear-map-link'), 'click', self.clearResults);
       Event.observe($('find-at-center-link'), 'click',
                     self.identifyIntersectionAtCenter);
-      Event.observe($('cm-find-at-center-link'), 'click',
-                    self.identifyIntersectionAtCenter);
-      Event.observe($('cm-set-as-start'), 'click', function (event) {
-        Event.stop(event);
-        self.setAsStart(byCycle.UI.map.getCenterString());
-      });
-      Event.observe($('cm-set-as-end'), 'click', function (event) {
-        Event.stop(event);
-        self.setAsEnd(byCycle.UI.map.getCenterString());
-      });
       if (self.bike_overlay_link) {
         Event.observe(self.bike_overlay_link, 'click',
                       self.toggleBikeTileOverlay);

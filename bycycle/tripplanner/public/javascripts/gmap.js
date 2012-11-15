@@ -54,11 +54,6 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
   },
 
   createIcons: function() {
-    // Center icon
-    var center_icon = new GIcon();
-    center_icon.image = byCycle.prefix + 'images/reddot15.png';
-    center_icon.iconSize = new GSize(15, 15);
-    center_icon.iconAnchor = new GPoint(7, 7);
     // Base icon for start and end of route icons
     var base_icon = new GIcon();
     base_icon.shadow = byCycle.prefix + 'images/shadow50.png';
@@ -74,25 +69,12 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
     var end_icon = new GIcon(base_icon);
     end_icon.image = byCycle.prefix + 'images/dd-end.png';
     // Assign icons to self
-    this.center_icon = center_icon;
     this.start_icon = start_icon;
     this.end_icon = end_icon;
   },
 
   createListeners: function() {
     var self = this;
-    GEvent.addListener(self.map, 'moveend', function () {
-      self.center = self.map.getCenter();
-      if (typeof(self.center_marker) == 'undefined') {
-        self.center_marker = new GMarker(self.center, self.center_icon);
-        self.map.addOverlay(self.center_marker);
-        var cm_node = document.getElementById('center-marker-contents');
-        GEvent.addListener(self.center_marker, 'click', function () {
-          self.map.openInfoWindow(self.center, cm_node);
-        });
-      }
-      self.center_marker.setPoint(self.center);
-    });
     GEvent.addListener(self.map, 'click', function (overlay, point) {
       self.map.closeInfoWindow();
       //if (point) {
