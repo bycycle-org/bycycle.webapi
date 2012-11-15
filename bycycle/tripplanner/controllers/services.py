@@ -7,14 +7,11 @@ from pylons.controllers.util import redirect
 
 import simplejson
 
-from bycycle.core.services.exceptions import *
+from bycycle.core.services.exceptions import ByCycleError, InputError, NotFoundError
 from bycycle.core.model.geocode import Geocode
+from bycycle.core.model.entities.public import Region
 
-from bycycle.tripplanner.lib.base import *
-from bycycle.tripplanner.lib.base import __all__ as base__all__
-from bycycle.tripplanner.controllers.regions import RegionsController
-
-__all__ = base__all__ + ['ServicesController']
+from bycycle.tripplanner.lib.base import RestController
 
 
 log = logging.getLogger(__name__)
@@ -34,7 +31,7 @@ class ServicesController(RestController):
     def __before__(self, format='html'):
         RestController.__before__(self, format=format)
         self.service = self.collection_name
-        self.region = model.Region.get_by_slug('portlandor')
+        self.region = Region.get_by_slug('portlandor')
 
     def find(self):
         """Generic find method. Expects ``q`` to be set in GET params.
