@@ -1,26 +1,26 @@
 byCycle.util = {
-  
+
   /** Script Functions **/
-  
+
   writeScript: function(src, type) {
     type = type || 'text/javascript';
     document.write('<script src="' + src + '" type="' + type + '"></script>');
   },
-  
+
   appendScript: function(src, type) {
     var script = document.createElement('script');
     script.type = type || 'text/javascript';
     script.src = src;
     document.body.appendChild(script);
   },
-  
+
   /** String Functions **/
-  
+
   /**
    * Remove leading and trailing whitespace from a string and
    * reduce internal runs of whitespace down to a single space.
    * @param the_string The string to clean
-   * @param keep_newlines If this is set, reduce internal newlines to a single 
+   * @param keep_newlines If this is set, reduce internal newlines to a single
    *        newline instead of a space
    * @return The cleaned string
    */
@@ -40,7 +40,7 @@ byCycle.util = {
     }
     return the_string;
   },
-  
+
   /**
    * Remove leading and trailing whitespace from a string.
    *
@@ -50,13 +50,13 @@ byCycle.util = {
   trim: function(the_string) {
     return the_string.replace(/^\s+|\s+$/g, '');
   },
-  
+
   /**
    * Join a list of strings, separated by the given string, excluding any empty
-   * strings in the input list. 
+   * strings in the input list.
    *
    * @param the_list The list to join
-   * @param the_string The string to insert between each string in the list 
+   * @param the_string The string to insert between each string in the list
    *        (default: ' ')
    * @return The joined string
    */

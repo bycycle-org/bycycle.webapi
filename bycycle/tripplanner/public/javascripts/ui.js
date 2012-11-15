@@ -30,9 +30,9 @@ byCycle.UI = function () {
      * Do stuff that must happen _during_ page load
      */
     beforeLoad: function() {
-	  Element.show('spinner');
+      Element.show('spinner');
       byCycle.UI.setLoadingStatus('Loading...');
-	  byCycle.UI.setLoadingStatus('Initializing map...');
+      byCycle.UI.setLoadingStatus('Initializing map...');
       if (map_state) {
         map_type.beforeLoad();
       }
@@ -60,7 +60,7 @@ byCycle.UI = function () {
         self.map.setZoom(zoom);
       }
       self.spinner.hide();
-	  Element.remove('loading-status');
+      Element.remove('loading-status');
       self.onResize();
     },
 
@@ -78,14 +78,14 @@ byCycle.UI = function () {
       self.info_pane = $('info_pane');
       self.error_pane = $('error_pane');
       self.message_panes = [self.info_pane, self.error_pane];
-	  // Results
+      // Results
       self.result_pane = $('result_pane');
 
       // Map and related
       self.region_el = $('regions');
       self.map_pane = $('map_pane');
     },
-	
+
     _createWidgets: function () {
       // Message fixed pane
       var W = byCycle.widget.FixedPane;
@@ -98,13 +98,13 @@ byCycle.UI = function () {
     _createEventHandlers: function() {
       Event.observe(window, 'resize', self.onResize);
       Event.observe(document.body, 'unload', self.onUnload);
-	  if (self.region_el) {
-		Event.observe(self.region_el, 'change', self.setRegionFromSelectBox);
-	  }
-	  Event.observe('spinner', 'click', function (event) {
-		Event.stop(event);
-		Element.hide(self.spinner);
-	  });
+      if (self.region_el) {
+        Event.observe(self.region_el, 'change', self.setRegionFromSelectBox);
+      }
+      Event.observe('spinner', 'click', function (event) {
+        Event.stop(event);
+        Element.hide(self.spinner);
+      });
     },
 
     onResize: function(event) {
@@ -136,10 +136,10 @@ byCycle.UI = function () {
       sub_pane = sub_pane || self.info_pane;
       self.display_panes.each(Element.hide);
       self.message_panes.each(Element.hide);
-	  if (content) {
-            sub_pane.update(content);
-          }
-	  sub_pane.show();
+      if (content) {
+        sub_pane.update(content);
+      }
+      sub_pane.show();
       self.message_pane.show();
     },
 
@@ -164,16 +164,16 @@ byCycle.UI = function () {
         self._showRegionOverlays(region);
       } else {
         // Show all regions
-		var all_regions = byCycle.regions;
-		self.map.centerAndZoomToBounds(all_regions.bounds, all_regions.center);
+        var all_regions = byCycle.regions;
+        self.map.centerAndZoomToBounds(all_regions.bounds, all_regions.center);
         regions.values().each(function (r) {
           self._showRegionOverlays(r);
         });
       }
     },
 
-	// Show map overlays for a region, creating and caching them first if
-	// necessary
+    // Show map overlays for a region, creating and caching them first if
+    // necessary
     _showRegionOverlays: function(region, use_cached) {
       if (!self.region_id && !region.marker) {
         region.marker = self.map.makeRegionMarker(region);
@@ -188,4 +188,3 @@ byCycle.UI = function () {
     }
   };
 }();
-
