@@ -1,5 +1,6 @@
 from pylons import request
 
+from bycycle.core.model.geocode import Geocode
 from bycycle.core.services.geocode import Service, MultipleMatchingAddressesError
 
 from bycycle.tripplanner.controllers.services import ServicesController
@@ -7,6 +8,8 @@ from bycycle.tripplanner.controllers.services import ServicesController
 
 class GeocodesController(ServicesController):
     """Controller for interfacing with byCycle Geocode service."""
+
+    entity = Geocode
 
     def find(self):
         q = request.params.get('q', '')

@@ -25,8 +25,18 @@ If you want to provide more details about the error, please send email to:
 """
 
 
+class Service(object):
+
+    member_name = 'service'
+    collection_name = 'services'
+    member_title = 'Service'
+    collection_title = 'Services'
+
+
 class ServicesController(RestController):
     """Base class for controllers that interact with back end services."""
+
+    entity = Service
 
     def __before__(self, format='html'):
         RestController.__before__(self, format=format)
@@ -151,7 +161,7 @@ class ServicesController(RestController):
     def _get_json_object(self, action=None, wrap=True, fragment=True, block=None):
         def block(obj):
             result = {
-                'type': self.Entity.__name__,
+                'type': self.entity.__name__,
                 'results': (obj if isinstance(obj, list) else [obj]),
             }
 

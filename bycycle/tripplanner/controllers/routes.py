@@ -1,5 +1,6 @@
 from pylons import request
 
+from bycycle.core.model.route import Route
 from bycycle.core.services.exceptions import InputError
 from bycycle.core.services.route import Service, MultipleMatchingAddressesError
 
@@ -8,6 +9,8 @@ from bycycle.tripplanner.controllers.services import ServicesController
 
 class RoutesController(ServicesController):
     """Controller for interfacing with byCycle Route service."""
+
+    entity = Route
 
     def find(self):
         q = request.params.get('q', '').strip()
