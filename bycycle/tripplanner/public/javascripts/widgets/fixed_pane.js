@@ -16,7 +16,12 @@ byCycle.widget.FixedPane.prototype = {
    * @param dom_node The DOM container for this control
    */
   initialize: function (dom_node, opts) {
-    $H(opts).each((function (item) {this[item.key] = item.value}).bind(this));
+    var k;
+    for (k in opts) {
+      if (opts.hasOwnProperty(k)) {
+        this[k] = opts[k];
+      }
+    }
     this.dom_node = $(dom_node);
     this.title_bar = this.dom_node.getElementsByClassName('title-bar')[0];
     this.title = this.title_bar.getElementsByClassName('title')[0].innerHTML;
