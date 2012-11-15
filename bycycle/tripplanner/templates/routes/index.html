@@ -5,7 +5,7 @@
 <%namespace name="show" file="show.html" import="*"/>
 
 
-% for route in c.collection:
-    <% c.member = route %>
+% for r in c.routes:
+    <% c.route = r %>
     ${show.body()}
 % endfor

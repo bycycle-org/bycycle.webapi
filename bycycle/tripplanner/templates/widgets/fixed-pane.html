@@ -1,0 +1,29 @@
+## -*- coding: UTF-8 -*-
+<%def name="fixed_pane(id='', classes=None, style='', title_bar_style='', title_style='', content_pane_style='')">
+   <%
+      if id:
+         id = 'id="%s"' % id
+      else:
+         id = ''
+      if classes is not None:
+         classes = ' ' + ' '.join(classes)
+      else:
+         classes = ''
+   %>
+   <div ${id} class="fixed-pane${classes}" ${h.make_inline_style(style)}>
+      <div class="title-bar" ${h.make_inline_style(title_bar_style)}>
+         <div class="title" ${h.make_inline_style(title_style)}>
+            % if hasattr(caller, 'title'):
+               ${caller.title()}
+            % else:
+               &nbsp;
+            % endif
+         </div>
+         <div class="control-bar"></div>
+         <div style="clear: both;"></div>
+      </div>
+      <div class="content-pane" ${h.make_inline_style(content_pane_style)}>
+         ${caller.body()}
+      </div>
+   </div>
+</%def>

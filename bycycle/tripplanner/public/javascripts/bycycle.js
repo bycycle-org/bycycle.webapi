@@ -1,64 +1,68 @@
-/** byCycle namespace
- *
- * Depends on `util` module and defines JS-library-specific utility functions.
+/**
+ * byCycle namespace
  */
-NameSpace('app', window, function() {
+var byCycle = (function() {
+  // private:
   var prod_config = {
     local: 0,
+    map_type: 'google',
     map_state: 1
   };
 
   var dev_config = {
     local: 1,
+    map_type: 'base',
     map_state: 1
   };
 
+  var noop = function() {};
+
+  var console_debug = function() {
+	console.debug.apply(console, arguments);
+  }
+
+  var hostname = location.hostname;
+  var port = location.port;
+
+  // public:
   return {
     // `debug` is a global set in the template; it's value is passed from
-    // Pylons as an attribute of the Pylons global `g`.
+    // Pylons as an attribute of the global `g`
     config: debug ? dev_config : prod_config,
 
-    initialize: function () {
-      // Do region-dependent initialization, which includes initializing the
-      // main UI module.
-      Ext.Ajax.request({
-        method: 'GET',
-        url: app.prefix + 'regions',
-        params: {
-          format: 'json',
-          wrap: 'off'
-        },
-        scope: this,
-        success: function (response) {
-          var result = Ext.util.JSON.decode(response.responseText);
+    // Used to look Google API key in gmap.js and to make queries in ui.js
+    domain: (port ? [hostname, port].join(':') : hostname),
 
-          this.regions.initialize(result);
-          if (app.region_id) {
-            this.region = this.regions.regions[this.region_id];
-          } else {
-            this.region_id = 'all';
-            this.region = this.regions[this.region_id];
-          }
+    // Prefix for when app is mounted at other than root (/)
+    prefix: byCycle_prefix,
 
-          var map_state = util.getParamVal('map_state', function (ms) {
-            // Convert `map_state` param value to boolean.
-            return ms === '' || ms == '0' || ms == 'off';
-          });
-          var map_type_name = (util.getParamVal('map_type') || '');
-          map_type_name = map_type_name.toLowerCase();
-          map_type_name = map_type_name || this.region.map_type;
+    // URL query parameters as a Hash
+    request_params: $H(location.search.toQueryParams()),
 
-          this.ui.map_state = map_state;
-          this.ui.map_type = this.Map[map_type_name];
-          this.ui.initialize();
-        }
-      });
+    default_map_type: 'base',
+
+    noop: noop,
+
+    // Namespace for byCycle widgets
+    widget: {},
+
+    /**
+     * Get value for variable from query string if possible, otherwise use the
+     * global config value
+     */
+    getParamVal: function(var_name, func) {
+      // Override config setting with query string setting
+      var v = byCycle.request_params[var_name];
+      if (typeof(v) == 'undefined') {
+	// Query string override not given; use config
+        v = byCycle.config[var_name];
+      } else if (typeof(func) == 'function') {
+        // Process query string value with func, iff given
+        v = func(v);
+      }
+      return v;
     },
 
-    /* Library specific utilities */
-
-    el: function (id) {
-      return Ext.get(id);
-    }
+    logDebug: (debug ? console_debug : noop)
   };
-}());
+})();

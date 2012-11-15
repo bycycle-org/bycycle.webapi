@@ -2,7 +2,10 @@ v\:* {
   behavior:url(#default#VML);
 }
 
-.input_field { 
-  width: 243px;
+#input_container, #bar, #content {
+  margin-right: 120px;
 }
 
+.input_field {
+  width: 243px;
+}
