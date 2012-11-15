@@ -7,54 +7,21 @@
 byCycle.Map.google = {
   description: 'Google Map',
 
-/**
- * Do map initialization that needs to happen before page is done loading.
- * For example, for Google Maps, the API init script needs to be loaded
- * inline because it does a document.write to load the actual API.
- */
+  apiKey: 'AIzaSyD0zDsPxMHaxNgZVNnWmxxDomPT039GJoM',
+
+  /**
+   * Do map initialization that needs to happen before page is done loading.
+   * For example, for Google Maps, the API init script needs to be loaded
+   * inline because it does a document.write to load the actual API.
+   */
   beforeLoad: function() {
-    var api_url = 'http://maps.google.com/maps?file=api&amp;v=2.x&amp;key=';
-    var api_keys = {
-      'tripplanner.bycycle.org': 'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhQ8y5tnWrQRsyOlME1eHkOS3wQveBSeFCpOUAfP10H6ec-HcFWPgiJOCA',
-
-      'satellite.bycycle.org:5000':
-'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhRY_I4CLwGh95qVWYjrRjsuZNzP3BSOxRXLsVSuuatyFhv0hQfFohQxBQ',
-
-      'prototype.bycycle.org': 'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhTPU6PNPDk7LC31EIff_k4JZWpNmBQshai4v8RM5FaT-4FRWeyJA4VHaQ',
-
-      'bycycle.oregonmetro.org':
-'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhR7upyhxOh7UQa5Yu3ebGZe2uQ8SxRPJtyMUYYgIBQsAROpcOySx6G1RQ',
-
-      'dev.bycycle.org': 'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhQSskL_eAzZotWlegWekqLPLda0sxQZNf0_IshFell3z8qP8s0Car117A',
-
-      'dev.bycycle.org:5000': 'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhTkxokDJkt52pLJLqHCpDW3lL7iXBTREVLn9gCRhMUesO754WIidhTq2g',
-
-      'www.bycycle.org': 'ABQIAAAAd_4WmZlgvQzchd_BQM0MPhR8QNZ8KuqqtskDzJsLddnT1fGweRTgDdVI-oPLr79jrZgA_-87uWVc5w',
-
-      'bycycle.org': 'ABQIAAAAupb-OM5MU-8ZDqS4tVNkBBRa1vtdiGjU4Osv1KyKd6Mlr4BuWxQrO1eNXOimVbjcfI1DiLeH-XnIuw'
-    };
-    var api_key = api_keys[byCycle.domain];
-    if (api_key) {
-      byCycle.util.writeScript(api_url + api_key);
-      this.api_loaded = true;
-      byCycle.logDebug('Google Maps API Loaded');
-    } else {
-      byCycle.logDebug('No API key found for ' + byCycle.domain);
-    }
+    byCycle.util.writeScript(
+      'http://maps.google.com/maps?file=api&amp;v=2&amp;key=' +
+      byCycle.Map.google.apiKey);
   },
 
   isLoadable: function() {
-    var is_loadable = false;
-    if (this.api_loaded && GBrowserIsCompatible()) {
-      is_loadable = true;
-    } else {
-      $('map_message').show();
-      if (!this.api_loaded) {
-        $('map_message').update('No Google Maps API key found for ' +
-                                byCycle.domain);
-      }
-    }
-    return is_loadable;
+    return GBrowserIsCompatible();
   }
 };
 
