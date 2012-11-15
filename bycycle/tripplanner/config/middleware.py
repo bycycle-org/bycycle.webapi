@@ -5,7 +5,6 @@ from paste.registry import RegistryManager
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
 
-from pylons import config
 from pylons.middleware import ErrorHandler, StatusCodeRedirect
 from pylons.wsgiapp import PylonsApp
 from routes.middleware import RoutesMiddleware
@@ -35,12 +34,12 @@ def make_app(global_conf, full_stack=True, **app_conf):
     debug = asbool(global_conf.get('debug', False))
 
     # Configure the Pylons environment
-    load_environment(global_conf, app_conf)
+    config = load_environment(global_conf, app_conf)
 
-    g = config['pylons.app_globals']
+    app_globals = config['pylons.app_globals']
 
     # The Pylons WSGI app
-    app = PylonsApp()
+    app = PylonsApp(config=config)
 
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
 
@@ -53,7 +52,7 @@ def make_app(global_conf, full_stack=True, **app_conf):
     if asbool(full_stack):
         # Handle Python exceptions
         app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
-        g.error_handler = app
+        app_globals.error_handler = app
 
     # Establish the Registry for this application
     app = RegistryManager(app)
@@ -64,4 +63,5 @@ def make_app(global_conf, full_stack=True, **app_conf):
         static_app = StaticURLParser(config['pylons.paths']['static_files'])
         app = Cascade([static_app, app])
 
+    app.config = config
     return app

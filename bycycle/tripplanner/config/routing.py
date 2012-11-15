@@ -2,10 +2,11 @@ import os
 from routes import Mapper
 
 
-def make_map(global_conf={}, app_conf={}):
+def make_map(config):
     root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     mapper = Mapper(directory=os.path.join(root_path, 'controllers'))
     mapper.minimization = True
+    mapper.explicit = False
 
     # This route handles displaying the error page and graphics used in the
     # 404/500 error pages. It should likely stay at the top to ensure that the

@@ -2,6 +2,9 @@ import sys, re
 
 import logging
 
+from pylons import app_globals, request, url
+from pylons.controllers.util import redirect
+
 import simplejson
 
 from bycycle.core.services.exceptions import *
@@ -62,11 +65,9 @@ class ServicesController(RestController):
             msg = 'Please enter something to search for.'
             self.exception = InputError(msg)
             return self._render(action=self.http_status, code=self.http_status)
-        redirect_to(
-            h.url_for(
-                region_id=self.region.slug,
-                controller=controller, action='find'),
-            **dict(request.params))
+        redirect(url(
+            region_id=self.region.slug, controller=controller, action='find',
+            **dict(request.params)))
 
     def _find(self, query, service_class, block=None, **params):
         """Show the result of ``query``ing a service.
@@ -133,12 +134,12 @@ class ServicesController(RestController):
             self.exception = self.exception
             template = getattr(self, '_template', 'errors')
             if self.http_status == 500:
-                if g.debug:
+                if app_globals.debug:
                     raise self.exception
                 else:
                     # TODO: Make this send the request details also. Currently,
                     # it doesn't send the request URL, PATH_INFO, etc.
-                    err_handler = g.error_handler.exception_handler
+                    err_handler = app_globals.error_handler.exception_handler
                     err_handler(sys.exc_info(), request.environ)
 
         return self._render(action=template, code=self.http_status)
