@@ -1,175 +1,264 @@
-/* Layout */
-
+html, body, table, td, tr, form {
+  padding: 0;
+  margin: 0;
+}
 html, body {
   overflow: hidden;
   height: 100%;
 }
-
-#loading_panel table {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #fff;
-  z-index: 9999999;
-  border-collapse: collapse;
-}
-#loading_panel table td {
-  text-align: center;
-  vertical-align: middle;
-  width: 100%;
-  height: 100%;
+body { font-size: 80%; }
+body, td {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  background-color: white;
+  color: black;
 }
 
-#top {
-  padding: 4px;
-  text-align: right;
-  font-size: 12px;
-  line-height: 12px;
-}
+td { vertical-align: top; }
 
-#left,
-#controls,
-#controls .yui-panel-container,
-#controls .yui-panel,
-#center,
-#map_pane
-{
-  height: 100%;
-}
+img { border: 0; }
 
-#controls .yui-panel-container {
-  width: 95%;
-}
-#controls .yui-panel .bd {
-  height: 100%;
-}
-#controls .yui-panel-container {
-  margin-right: 4px;
-}
-#controls .yui-panel,
-#controls .yui-panel .hd,
-#controls .yui-panel .bd
-{
-  border: none;
-}
-
-#controls {
-
-}
+a { color: #46d; }
+a:hover { color: orange; }
 
 
-/* Style */
-
-a {
-  color: #46d;
+.clear { clear: both; }
+.no-top-margin { margin-top: 0; }
+.no-bottom-margin { margin-bottom: 0; }
+.small { font-size: 75%; }
+.attention, .attention a {
+  color: red;
+  font-weight: bold;
 }
-a:hover {
+.attention a:hover {
   color: orange;
 }
 
-.yui-layout .yui-layout-doc .yui-layout-unit div.yui-layout-bd {
-  background-color: #fff;
+
+/* Top level */
+#meta, #footer {
+  padding: 2px;
+  font-size: 11px;
+  background: #ddd;
+}
+#meta-left {
+  float: left;
+}
+#meta-right {
+  float: right;
+}
+#wrapper {
+  position: relative;
+  min-width: 600px;
+}
+#masthead, #input_container, #bar {
+  padding: 5px;
+}
+#footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+
+/* Masthead */
+#masthead {
+  float: left;
+  width: 141px;
+  text-align: right;
+}
+#masthead h1, #masthead h2, #masthead h3, #masthead h4 {
+  margin: 0;
+  margin-bottom: 2px;
+  padding: 0;
+  font-weight: normal;
+}
+#masthead h1 { font-size: 128%; }
+#masthead h2 { font-size: 96%; }
+#masthead h3 { font-size: 80%; }
+#masthead h4 { font-size: 72%; }
+#masthead a {
+  text-decoration: none;
+  color: #000;
+}
+#masthead a:hover {
+  color: orange;
+}
+
+
+/* Content Column Layout */
+#col-a {
+  float: left;
+  width: 30%;
+}
+#col-b {
+  float: right;
+  width: 69%;
+  border-left: 1px solid #99b3cc;
+}
+
+
+/* Input */
+#input_container {
+  margin-left: 146px;
+}
+#region-search {
+  border: 1px solid #99b3cc;
+  padding: 5px;
 }
 
 /* Input Controls */
 #q {
-  width: 95%;
-}
-#route_form table {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  border: none;
-  border-collapse: collapse;
-}
-#route_form table td {
-  margin: 0;
-  padding: 0;
-  border: none;
+  width: 368px;
 }
 #s, #e {
-  width: 95%;
+  width: 170px;
 }
 #swap_s_and_e a {
   text-decoration: none;
-  outline: none;
-  display: block;
-  width: 10px;
-  height: 30px;
 }
 /* Input Labels */
 .input_label {
+  margin-top: 5px;
   font-size: 85%;
-  font-weight: bold;
   color: #333;
 }
+
+
+/* Status & Links */
+#bar {
+  position: relative;
+  color: #eee;
+  background: #444;
+  border: solid #99b3cc;
+  border-width: 1px 0;
+  font-weight: bold;
+}
+#bar a {
+  color: #eef;
+  text-decoration: underline;
+}
+#bar a:visited {
+  color: #aab;
+}
+#bar a:hover {
+  color: #ff8800;
+}
+#status {
+  float: left;
+}
+/* Loading */
+#loading-status {
+  color: red;
+}
+#links {
+  float: right;
+  text-align: right;
+}
+
 
 /* Content Column A -- Results and Messages */
 #spinner {
   position: absolute;
-  right: 50%;
-  top: 50%;
-  z-index: 99999;
+  left: -1px;
+  bottom: -22px;
 }
 .spinner {
   float: left;
-  width: 32px;
-  height: 32px;
+  width: 16px;
+  height: 16px;
   background: white;
-  padding: .5em;
-  border: 1px solid #000;
+  margin-right: 2px;
+  padding: 2px;
+  border: 1px solid #a7cc95;
 }
 
-.query-result {
-  position: relative;
+/* Results */
+.display-pane h2 {
+  margin-top: 0;
 }
-.yui-skin-sam .query-result .yui-button.yui-button-button {
-  position: absolute;
-  right: 0;
-  top: 0;
+#message_pane, #result_pane {
+  padding: 5px;
+  overflow: auto;
 }
-
-/* Choices list (HTTP status == 300) */
-ul.result_list {
+#result_pane .tab-contents {
+  padding-bottom: 0;
+}
+.result_list {
+  list-style: none;
   padding: 0;
   margin: 0;
 }
-ul.result_list li {
-  list-style-type: none;
-  padding: .25em;
+.result_list li, .fragment div.fixed-pane {
+  margin-bottom: 5px;
 }
-ul.result_list li.a {
-  background-color: white;
+.multi-list {
+
+}
+.multi-list li {
+  border-top: 1px solid #99b3cc;
+}
+#route_list .fixed-pane .content-pane {
+  padding: 0;
+  border-bottom: none;
+}
+.disclaimer {
+  font-size: 85%;
+  font-style: italic;
+  color: #666;
 }
 
 /* Errors */
-ul.errors {
-  text-align: left;
+.errors .title_bar, .errors .title_bar td {
+  background: #fd766a;
 }
-ul.errors li {
-  list-style-type: none;
-}
-ul.errors li.error {
-  color: red;
-}
-ul.errors li.error.a {
-  background-color: #fff;
-}
-ul.errors li.error.b {
-  background-color: #ddd;
+.errors p.error {
+  padding: 5px;
+  border: 1px solid #fd766a;
 }
 
 
+/* Column B -- Map, map controls, and any other map-related stuff */
+#map-controls {
+  border-bottom: 1px solid #99b3cc;
+  padding: 5px;
+}
 /* The map object is inserted here */
 #map_pane {
-  background: #ccdafc;
-  height: 100%;
+  background: #d0d7de;
 }
-.olControlMousePosition {
-  right: .4em;
-  bottom: .2em;
+#map-buttons {
+  -moz-user-select: none;
+  color: black;
+  font-family: Arial,sans-serif;
+  font-size: small;
+  height: 19px;
+  position: absolute;
+  right: 7px;
+  top: 33px;
+}
+#map-buttons a {
+  color: black;
+  text-decoration: none;
+}
+.map-button {
+  background-color: white;
+  border: 1px solid black;
+  cursor: pointer;
+  text-align: center;
+}
+.map-button-inner {
+  padding: 0 1em;
+  border: 1px solid;
+  border-color: white rgb(176, 176, 176) rgb(176, 176, 176) white;
+}
+#legend-map-button {
+  text-align: center;
+  cursor: pointer;
+}
+.info_win {
+  width: 250px;
 }
 
 
@@ -179,7 +268,7 @@ div.end,
 div.total-distance,
 div.reverse-directions,
 div.directions div {
-  border-bottom: 1px solid #888;
+  border-bottom: 1px solid #99b3cc;
   padding: 2px;
 }
 div.start a {
@@ -196,3 +285,4 @@ div.b { background: #fff; }
 span.count { text-align: right; }
 span.turn { font-weight: bold; }
 span.segment_distance { font-style: italic; }
+

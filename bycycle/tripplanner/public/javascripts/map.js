@@ -1,33 +1,33 @@
 /**
- * Base Map namespace
+ * byCycle Map namespace
  */
-NameSpace('Map', app, {});
-
-
-NameSpace('base', app.Map, {
-  description: 'Default app map type',
-  getLibraryURL: function() {
-    return null;
-  },
-  isLoadable: function() {
-    return true;
+byCycle.Map = {
+  // Mapping of map type to map object
+  base: {
+    description: 'Default byCycle map type',
+    beforeLoad: function() {},
+    isLoadable: function() {
+      return true;
+    }
   }
-});
+  // Other map types will be registered on load
+};
 
 
-Class(app.Map.base, 'Map', null, {
+/**
+ * Base byCycle Map
+ */
+byCycle.Map.base.Map = Class.create();
+byCycle.Map.base.Map.prototype = {
   /**
    * Map Constructor
    *
-   * @param parent UI namespace
-   * @param container Map container -- string or document.getElementById
+   * @param parent UI object
+   * @param container Widget that contains this map
    */
   initialize: function(ui, container) {
     if (arguments.length == 0) return;
     this.ui = ui;
-    if (typeof container == 'string') {
-      container = document.getElementById(container);
-    }
     this.container = container;
     this.createMap(container);
   },
@@ -36,9 +36,9 @@ Class(app.Map.base, 'Map', null, {
     var map = document.createElement('div');
     map.style.height = '100%';
     map.style.overflow = 'auto';
-    this.container.appendChild(map);
+    container.appendChild(map);
     this.map = map;
-    this.put('Default Map Interface');
+    this.put('Default byCycle Map Interface');
   },
 
   put: function(content) {
@@ -52,14 +52,6 @@ Class(app.Map.base, 'Map', null, {
 
   clear: function() {
     this.map.innerHTML = '';
-  },
-
-  get_start_icon: function () {
-    return this.start_icon;
-  },
-
-  get_end_icon: function () {
-    return this.end_icon;
   },
 
   setSize: function(dims) {
@@ -150,7 +142,7 @@ Class(app.Map.base, 'Map', null, {
       x: point.x,
       y: point.y,
       toString: function() {
-        return [this.type, ' at ', this.x, ', ', this.y,
+        return [this.type, ' at ', this.x, ', ', this.y, 
         ' [', node.innerHTML, ']'].join('');
       }
     };
@@ -221,7 +213,7 @@ Class(app.Map.base, 'Map', null, {
     return point;
   },
 
-  addListener: function(id, signal, func) {
-    app.el(id).on(signal, func);
+  addListener: function(obj, signal, func) {
+    Event.observe(obj, signal, func);
   }
-});
+};

@@ -1,216 +1,282 @@
 ## -*- coding: UTF-8 -*-
 % if not c.wrap:
-  ${next.body()}
+  ${self.body()}
 % else:
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   ${h.if_ie('<xml:namespace ns="urn:schemas-microsoft-com:vml" prefix="v"/>')}
 
+
   <head>
     <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-    <meta name="author" content="Wyatt Lee Baldwin, wyatt@byCycle.org" />
+
+    <meta name="author" content="Wyatt Baldwin, wyatt@byCycle.org" />
+
     <meta name="keywords" content="bicycle, bike, bicycle trip planner, bicycle route finder, bike trip planner, bike route finder, bicycle route, bicycle trip, bike route, bike trip, bicycle routing, bike routing, maps, bicycle maps, bike maps, bicycle advocacy, community, sustainability, portland, oregon, milwaukee, wisconsin" />
+
     <meta name="description" content="byCycle.org Bicycle Trip Planner -- A web-based, interactive, bicycle trip planner (route finder) for the Portland, Oregon, Milwaukee, Wisconsin, and, soon, other regions." />
 
     <title>byCycle.org - Bicycle Trip Planner - ${self.region_title()}</title>
 
-    <link rel="shortcut icon" href="${h.url_for('/favicon.ico')}" type="image/x-icon" />
-    <link rel="stylesheet" type="text/css" href="${h.url_for('/ext/resources/css/ext-all.css')}" />
-    <link rel="stylesheet" type="text/css" href="${h.url_for('/stylesheets/base.css')}" />
+    ${h.stylesheet_link_tag('base', 'fixed-pane')}
+    ${h.if_ie(h.stylesheet_link_tag('base_ie'))}
+    ${h.stylesheet_link_tag('print', media='print')}
+    ${self.stylesheet_links()}
+
+    <script type="text/javascript">
+      //<![CDATA[
+      // Global setup
+      var debug = ${'true' if bool(g.debug) else 'false'};
+      byCycle_prefix = '${h.url_for('/')}';
+      //]]>
+    </script>
+
+    ${h.javascript_include_tag('prototype')}
+    ${h.javascript_include_tag('bycycle', 'util')}
   </head>
 
-  <body class="yui-skin-sam">
-    ${self.loading_panel()}
 
-    <div id="top">
-      ${h.link_to('Home', h.url_for('/'), title='byCycle.org Home')} |
-      ${h.link_to('About', h.url_for('about'), title='About byCycle.org')} |
-      ${h.link_to('Help', h.url_for('help'), title='Help')}
+  <body>
+
+
+    <div id="wrapper">
+
+
+      <!-- Masthead -->
+      <div id="masthead" class="noprint">
+        <h1 id="logo">
+          <a href="http://bycycle.org/" title="byCycle.org Home Page">
+          ${h.image_tag('logo.png', title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
+          </a>
+        </h1>
+
+        <h2 id="app-name">
+          ${h.link_to('Bicycle Trip Planner', h.url_for('/'), title='byCycle.org Bicycle Trip Planner (this page)')}
+        </h2>
+
+        <h3 id="app-version">
+          <a href="http://en.wikipedia.org/wiki/Development_stage#Beta"
+             title="Beta? (opens in new window)"
+             target="_blank"
+             >beta</a>
+        </h3>
+      </div>
+      <!-- /Masthead -->
+
+
+      <%call expr="self.input_container()" />
+
+
+      <div class="clear"></div>
+
+
+      <!-- Bar -->
+      <div id="bar" class="noprint">
+        <div id="spinner" class="spinner noprint" style="display: none;">
+          ${h.image_tag('spinner.gif', width=16, height=16, alt='Click to hide')}
+        </div>
+
+        <div id="status">
+          % if c.status:
+            ${c.status}
+          % else:
+            Welcome to the byCycle.org bicycle trip planner.
+          % endif
+          <span id="loading-status">Loading...</span>
+        </div>
+
+        <!-- Links -->
+        <div id="links">
+          ${self.links()}
+        </div>
+        <!-- /Links -->
+
+
+        <div class="clear"></div>
+      </div>
+      <!-- /Bar -->
+
+
+      <!-- Content -->
+      <div id="content">
+
+
+        <!-- Column A -->
+        <div id="col-a">
+
+
+          <!-- Message Pane -->
+          <%
+            show_msg_pane = (not c.http_status or c.info or c.exception or
+                             (c.http_status and c.http_status > 299))
+            show_error_pane = (c.exception or
+                               (c.http_status and c.http_status > 299))
+            show_info_pane = not show_error_pane
+            msg_pane_style = {'display': ('block' if show_msg_pane else 'none')}
+          %>
+
+          <%call expr="fixed_pane(id='message_pane', classes=['display-pane'], style=msg_pane_style)">
+            <div id="info_pane" ${h.hide_element(not show_info_pane)}>
+              % if c.info:
+                ${c.info}
+              % else:
+                <%include file="/news.html" />
+
+                <hr />
+
+                <p class="noprint">
+                  Users should independently verify all information presented here. This
+                  service is provided <b>AS IS</b> with <b>NO WARRANTY</b> of any kind.
+                  <em>Please be careful out there.</em>
+                </p>
+
+                <p>
+                  <a href="http://info.bycycle.org/contact/">Contact us</a><br />
+                </p>
+
+                <p class="no-bottom-margin">
+                  &copy; 2004-2009 byCycle.org
+                </p>
+              % endif
+            </div>
+
+            <div id="error_pane" ${h.hide_element(not show_error_pane)}>
+              ${self.body()}
+            </div>
+          </%call>
+          <!-- /Message Pane -->
+
+
+          <%call expr="self.result_pane()" />
+
+
+        </div>
+        <!-- /Column A -->
+
+
+        <!-- Column B -->
+        <div id="col-b">
+
+
+          <%call expr="self.map_controls()" />
+
+
+          <!-- Map -->
+          <div id="map_pane">
+            <div id="map_message" style="display: none; padding: 5px;">
+              You will need to update to a recent version of Internet Explorer, Firefox, or Safari to view the map.
+            </div>
+          </div>
+          <!-- /Map -->
+
+
+        </div>
+        <!-- /Column B -->
+
+
+        <div class="clear"></div>
+      </div>
+      <!-- /Content -->
+
+
     </div>
+    <!-- /Wrapper -->
 
-    <div id="left">
-      <div id="controls">
-        ${self.controls()}
+
+    <div id="map-buttons" ${h.hide_element()}>
+      <div
+        id="legend-map-button"
+        class="map-button noprint"
+        title="Pop up bike map legend"
+        >
+          <div class="map-button-inner">
+            Bike map legend
+          </div>
       </div>
     </div>
 
-    <div id="center">
-      <div id="map_pane">
-        <!-- Map gets inserted here. -->
-      </div>
 
-      <div id="spinner" class="spinner noprint">
-        <img src="${h.url_for('/images/spinner.gif')}" width="32" height="32" alt="*" title="Activity Indicator - Click to hide" />
-      </div>
-    </div>
+    ${h.javascript_include_tag('map', 'gmap')}
+    ${h.javascript_include_tag('widgets/fixed_pane', 'ui', 'regions')}
+    ${self.javascript_includes()}
 
-    <div id="right">
-      <div id="ads">
-        ${self.ads()}
-      </div>
-    </div>
 
     <script type="text/javascript">
       //<![CDATA[
-      var debug = ${'true' if bool(g.debug) else 'false'};
+      // Set up for initialization
+      byCycle.UI.beforeLoad();
+      ${self.javascript()}
       //]]>
     </script>
 
-    <script type="text/javascript" src="${h.url_for('/javascripts/init.js')}" ></script>
 
-    <script type="text/javascript" src="${h.url_for('/ext/adapter/ext/ext-base.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/ext/ext-all-debug.js')}"></script>
+    <!-- TODO: Maybe we could get this dynamically the first time it's needed? -->
+    <%include file="/widgets/center_marker.html" />
 
-    <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
-
-    <script type="text/javascript" src="${h.url_for('/javascripts/util.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/bycycle.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/map.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/regions.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/ui.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/query.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/result.js')}"></script>
-    <script type="text/javascript" src="${h.url_for('/javascripts/openlayers.js')}"></script>
-
-    <script type="text/javascript">
-      //<![CDATA[
-      Ext.BLANK_IMAGE_URL = '${h.url_for("/ext/resources/images/default/s.gif")}';
-      Ext.onReady(function() {
-          // Only initialization that MUST be done here should. All other
-          // initialization should happen in or via `app.initialize`.
-          app.prefix = '${h.url_for("/")}';
-          app.region_id = '${c.region.slug if c.region else ""}';
-          app.ui.service = '${c.service}';
-          app.ui.member_name = '${c.member_name}';
-          app.ui.collection_name = '${c.collection_name}';
-          app.ui.http_status = ${c.http_status or 'null'};
-          app.ui.q = '${c.q}';
-          app.initialize();
-      });
-      //]]>
-    </script>
-
-    % if not g.debug:
-      <%include file="_google_analytics.html" />
-    % endif
+    <%include file="_google_analytics.html" />
   </body>
 </html>
 
-<%def name="loading_panel()">
-  <div id="loading_panel">
-    <table summary="Fullscreen, vertically and horizontally centered loading indicator.">
-      <tbody>
-        <tr>
-          <td>
-            <img src="${h.url_for('/images/spinner.gif')}" width="26" height="26" alt="Loading..." />
-            <h1>Loading...</h2>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</%def>
+
+<%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
 
 <%def name="region_title()">
   ${c.region.title if c.region else 'Select a region'}
 </%def>
 
-<%def name="menu()">
+<%def name="stylesheet_links()"></%def>
 
+<%def name="input_container(classes=[])">
+  <!-- Input Container -->
+  <div id="input_container" class="noprint ${' '.join(classes)}">
+    % if caller:
+      ${caller.body()}
+    % endif
+  </div>
+  <!-- /Input Container -->
 </%def>
 
-<%def name="make_panel(id, title=None, visible=True)">
-  <% visibility = 'visible' if visible else 'hidden' %>
+<%def name="links()"></%def>
 
-  <div id="${id}" style="visibility: ${visibility}">
-    <% title = caller.header() if hasattr(caller, 'header') else title %>
-
-    % if title is not None:
-      <div class="hd">${title}</div>
-    % endif
-
-    <div class="bd">
+<%def name="result_pane(classes=[])">
+  <!-- Result Pane -->
+  <div id="result_pane" class="display-pane ${' '.join(classes)}">
+    % if caller:
       ${caller.body()}
-    </div>
+    % endif
+  </div>
+  <!-- /Result Pane -->
+</%def>
 
-    % if hasattr(caller, 'footer'):
-     <div class="ft">${caller.footer()}</div>
+<%def name="map_controls()"></%def>
+<%def name="javascript_includes()"></%def>
+<%def name="javascript()"></%def>
+
+<%def name="errors()">
+  <div class="errors">
+    <h2>${getattr(c.exception, 'title', 'Error')}</h2>
+    % if hasattr(c.exception, 'errors'):
+      % for error in c.exception.errors:
+        <p class="error">
+          ${error}
+        </p>
+      % endfor
+    % else:
+      <p class="error">
+        ${c.exception.description.decode('utf-8')}
+      </p>
+    % endif
+    <% explanation = getattr(c.exception, 'explanation', None) %>
+    % if explanation is not None:
+      <div class="explanation">
+        <h3>What This Means</h3>
+        <p>${explanation.strip().replace('\n', '</p><p>')}</p>
+      </div>
     % endif
   </div>
 </%def>
 
-<%def name="controls()">
-  <%call expr="make_panel('about-bycycle', title='About', visible=False)">
-    <p>
-      This is an alternative transportation trip planner and data resource.
-      Currently, the focus is on trips made <i>by bike</i>, but we are also
-      starting to add some public transit info. To learn more about byCycle,
-      ${h.link_to(
-        'click here', 'http://info.bycycle.org/about',
-        title='About byCycle.org')}.
-    </p>
-
-    <p>
-      The
-      ${h.link_to(
-        'source code', h.url_for('code'),
-        title='byCycle source repository (Subversion)')}
-      for this application is licensed under the
-      ${h.link_to(
-        'GNU General Public License, v3', h.url_for('gpl'), title='License')}.
-    </p>
-
-    <p>
-      There is a
-      ${h.link_to(
-        'project Web site', h.url_for('project'),
-        title='byCycle project site (Trac)')}
-      for software developers.
-    </p>
-
-    <%def name="footer()">
-      &copy; 2004-2008 byCycle.org.
-    </%def>
-  </%call>
-
-  <%call expr="make_panel('support-bycycle', title='Support byCycle', visible=False)">
-    byCycle's only funding comes from users like you. We need your support to
-    keep the trip planner up and running. You can donate through PayPal by
-    clicking the button below, or you can visit our
-
-    ${h.link_to(
-      'support page', 'http://info.bycycle.org/support/',
-      title='Support byCycle')}
-
-    to find other ways of supporting byCycle.
-
-    <%include file="/widgets/paypal-button.html" />
-  </%call>
-
-  <%call expr="make_panel('contact-bycycle', title='Contact Us', visible=False)">
-    Feel free to get in touch. We're open to any sort of constructive
-    criticism. Please bear in mind, though, that this project has no funding
-    or employees. It is maintained by volunteers. Please send all feedback
-    to <a href="mailto:contact@bycycle.org">contact@bycycle.org</a>.
-  </%call>
-
-  <% visible = c.http_status and c.http_status != 200 %>
-  <%call expr="make_panel('oops', title='Oops!', visible=visible)">
-    % if c.http_status != 200:
-      ${next.body()}
-    % endif
-  </%call>
-</%def>
-
-<%def name="ads()">
-  Ads go here.
-</%def>
-
-<%def name="json()">
-  % if c.format != 'json':
-    ${h.hidden(None, value=c.json, class_='json')}
-  % endif
-</%def>
 
 % endif ## if not c.wrap

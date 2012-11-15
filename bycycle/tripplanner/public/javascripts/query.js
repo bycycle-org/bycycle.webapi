@@ -1,16 +1,19 @@
 /**
  * Query Base Class
  */
-Class(app.ui, 'Query', null, {
-  initialize: function(service, form, result_container,
-                       opts /* input: null */) {
+byCycle.UI.Query = Class.create()
+byCycle.UI.Query.prototype = {
+  initialize: function(service, form, result_list,
+                       opts /* processing_message='Processing...'
+                               input=undefined */) {
     if (arguments.length == 0) return;
-    this.ui = app.ui;
+    this.ui = byCycle.UI;
     this.service = service;
     this.form = form;
-    this.result_container = result_container;
+    this.result_list = result_list;
     if (opts) {
-      this.input = opts.input;
+      this.processing_message = opts.processing_message || 'Processing...';
+      this.input = opts.input;  // Hash or undefined
     }
   },
 
@@ -30,59 +33,80 @@ Class(app.ui, 'Query', null, {
   before: function() {
     // Always do this
     // Base version should not raise errors
-    this.ui.showSpinner();
+    this.start_ms = new Date().getTime();
+    Element.show(this.ui.spinner);
+    this.ui.status.innerHTML = this.processing_message;
+    Element.hide(this.ui.message_pane);
   },
 
   doQuery: function() {
     // Done only if no errors in before()
-    var path = [
-      'regions', app.region_id, this.service, 'find.json'].join('/');
-    var url = [app.prefix, path].join('');
-    if (this.input) {
-      url += util.objectToQueryString(this.input);
-    } else {
-      YAHOO.util.Connect.setForm(this.form.get('element'));
-    }
+    var path = ['regions', this.ui.region_id, this.service, 'find'].join('/')
+    var url = [byCycle.prefix, path].join('');
+    var params = this.input ? this.input : this.form.serialize(true);
 
-    // TODO: Make bookmark???
+    // Make bookmark
+    var bookmark_params = Object.extend({}, params);
+    delete bookmark_params.commit;
+    var q_str = Hash.toQueryString(bookmark_params);
+    this.ui.bookmark_link.href = [url, q_str].join('?');
 
-    var self = this;
-    var callback = {
-      start: function () { self.onLoading.apply(self, arguments); },
-      success: function () { self.on200.apply(self, arguments); },
-      failure: function () { self.onFailure.apply(self, arguments); }
+    params.format = 'json';
+    var args = {
+      method:'get',
+      onLoading: this.onLoading.bind(this),
+      on200: this.on200.bind(this),
+      on300: this.on300.bind(this),
+      onFailure: this.onFailure.bind(this),
+      onComplete: this.onComplete.bind(this),
+      parameters: params
     };
-    this.request = YAHOO.util.Connect.asyncRequest('GET', url, callback)
-    var id = 'query-' + this.request.tId;
-    this.ui.queries[id] = this;
-    this.ui.query = this;
+    this.request = new Ajax.Request(url, args);
   },
 
-  onLoading: function(response) {
-    this.ui.showSpinner();
+  onLoading: function(request) {
+    this.ui.status.update(this.processing_message);
+    this.ui.spinner.show();
   },
 
-  on200: function(response) {
+  on200: function(request) {
+    eval('var response = ' + request.responseText + ';');
+    this.response = response;
+    this.ui.showResultPane(this.result_list);
+    var results = this.makeResults(response);
+    // Show widget in result list for ``service``
+    var li;
+    var result_list = this.result_list;
+    results.each(function (r) {
+      li = $(document.createElement('li'));
+      li.appendChild(r.widget.dom_node);
+      result_list.appendChild(li);
+    });
     // Process the results for ``service``
     // I.e., recenter map, place markers, draw line, etc
-    this.ui.hideSpinner();
-    var result = YAHOO.lang.JSON.parse(response.responseText);
-    this.result = result;
-    var results = this.makeResults(result);
     this.processResults(response, results);
     this.ui.is_first_result = false;
   },
 
-  onFailure: function(response) {
-    this.ui.hideSpinner();
-    var failure_method = this['on' + response.status]
-    if (failure_method) {
-      failure_method.call(this, response);
-    } else {
-      var result = YAHOO.lang.JSON.parse(response.responseText);
-      this.result = result;
-      this.ui.selectErrorTab(result.result.fragment);
-    }
+  on300: function(request) {
+    this.onFailure(request);
+  },
+
+  onFailure: function(request) {
+    this.ui.spinner.hide();
+    eval('var response = ' + request.responseText + ';');
+    this.response = response;
+    this.ui.showMessagePane(this.ui.error_pane, response.fragment);
+  },
+
+  onComplete: function(request) {
+    this.ui.spinner.hide();
+    this.http_status = request.status;
+    this.ui.status.update(this.getElapsedTimeMessage());
+  },
+
+  onException: function(request) {
+    this.ui.spinner.hide();
   },
 
   /**
@@ -92,21 +116,24 @@ Class(app.ui, 'Query', null, {
    *
    * @param response The response object (responseText evaled)
    */
-  makeResults: function(response_obj) {
+  makeResults: function(response) {
+    var results = [];
+
     // Extract top level DOM nodes from response HTML fragment (skipping text
-    // nodes). These nodes will be inserted as the content of each result's
-    // widget.
+    // nodes).
+    // Note: The fragment should consist of a set of top level elements that
+    // can be transformed into widgets.
     var div = document.createElement('div');
-    div.innerHTML = response_obj.result.fragment;
-    var nodes = div.getElementsByClassName('query-result');
-    var dom_node, result, results = [];
-    var response_results = response_obj.result.results;
-    for (var i = 0, obj; i < response_results.length; ++i) {
-      obj = response_results[i];
+    div.innerHTML = response.fragment;
+    var nodes = $(div).getElementsByClassName('fixed-pane');
+
+    var result, dom_node;
+    response.results.each((function (r, i) {
       dom_node = nodes[i];
-      result = this.makeResult(obj, dom_node);
+      result = this.makeResult(r, dom_node);
       results.push(result);
-    }
+    }).bind(this));
+
     return results;
   },
 
@@ -117,87 +144,83 @@ Class(app.ui, 'Query', null, {
    *
    * @param result A simple object from the evaled JSON response
    * @param dom_node A DOM node that contains the necessary elements to create
-   *        a result widget.
+   *        a ``FixedPane`` widget.
    * @return ``Result``
    */
   makeResult: function (result, dom_node) {
-    var result_container = this.result_container;
-    var results = this.ui.results;
-    var service = this.service;
-
-    var id = [service, 'result', new Date().getTime()].join('_');
+    var id = [this.service, 'result', new Date().getTime()].join('_');
     dom_node.id = id;
-
-    var div = document.createElement('div');
-    div.appendChild(dom_node);
-    var num_tabs = result_container.get('tabs').length;
-    var widget = new YAHOO.widget.Tab({
-      label: '#' + num_tabs,
-      content: div.innerHTML,
-      active: true
-    });
-    result_container.addTab(widget);
-
-    new YAHOO.widget.Button({
-      id: id + '-close-button',
-      type: 'button',
-      label: 'X',
-      container: id,
-      onclick: {
-        fn: function () {
-          results[service][id].remove();
-        }
-      }
-    });
-
-    var result_obj = new this.ui.Result(id, result, service, widget, result_container);
-    results[service][id] = result_obj;
+    var widget = new byCycle.widget.FixedPane(dom_node, {destroy_on_close: true});
+    var result_obj = new this.ui.Result(id, result, this.service, widget);
+    widget.register_listeners('close', result_obj.remove.bind(result_obj));
+    this.ui.results[this.service][id] = result_obj;
     return result_obj;
   },
 
-  processResults: function(response, results) {}
-});
+  processResults: function(response, results) {},
+
+  getElapsedTimeMessage: function() {
+    var elapsed_time_msg = '';
+    if (this.http_status < 400 && this.start_ms) {
+      elapsed_time = (new Date().getTime() - this.start_ms) / 1000.0;
+      var s = '';
+      if (elapsed_time < 1) {
+        elapsed_time = ' less than 1 ';
+      } else if (elapsed_time > 1) {
+        s = 's';
+      }
+      elapsed_time_msg = ['in ', elapsed_time, ' second', s, '.'].join('');
+    }
+    var status_message = this.ui.status_messages[this.http_status || 200];
+    elapsed_time_msg = [status_message, elapsed_time_msg].join(' ');
+    return elapsed_time_msg;
+  }
+};
 
 
 /**
  * Geocode Query
  */
-Class(app.ui, 'GeocodeQuery', app.ui.Query, {
-  initialize: function(opts /* form=app.ui.query_form,
-                               result_container=app.ui.locations_container,
+byCycle.UI.GeocodeQuery = Class.create();
+byCycle.UI.GeocodeQuery.prototype = Object.extend(new byCycle.UI.Query(), {
+  // Kludge.
+  superclass: byCycle.UI.Query.prototype,
+
+  initialize: function(opts /* form=byCycle.UI.query_form,
+                               result_list=byCycle.UI.location_list,
+                               processing_message='Locating address...',
                                input=undefined */) {
     opts = opts || {};
-    var ui = app.ui;
+    var ui = byCycle.UI;
     var form = opts.form || ui.query_form;
-    var result_container = opts.result_container || ui.locations_container;
-    this.superclass.initialize.call(this, 'geocodes', form, result_container, opts);
+    var result_list = opts.result_list || ui.location_list;
+    opts.processing_message = opts.processing_message || 'Looking up address...';
+    this.superclass.initialize.call(this, 'geocodes', form, result_list, opts);
   },
 
   before: function() {
     this.superclass.before.apply(this, arguments);
-    if (typeof this.input == 'undefined') {
-      var q = this.ui.q_el.get('value');
+    var q;
+    if (typeof(this.input) == 'undefined') {
+      q = this.ui.q_el.value;
       if (!q) {
-        this.ui.q_el.get('element').focus();
+        this.ui.q_el.focus();
         throw new Error('Please enter an address!');
       }
     }
   },
 
   processResults: function(response, results) {
+    var zoom = this.ui.is_first_result ? this.ui.map.default_zoom : undefined;
     // For each result, place a marker on the map.
-    var zoom = this.ui.is_first_result ? this.ui.map.default_zoom : null;
-    var self = this;
-    var div, link, content_pane, marker;
-    for (var i = 0, r; i < results.length; ++i) {
-      r = results[i];
-      div = document.getElementById(r.id);
-      div = div.cloneNode(true);
-      link = div.getElementsByClassName('show-on-map-link')[0];
-      link.parentNode.removeChild(link);
-      marker = self.ui.map.placeGeocodeMarker(r.result.point, div, zoom);
-      r.addOverlay(marker, self.ui.map.locations_layer);
-    }
+    var div, content_pane;
+    var placeGeocodeMarker = this.ui.map.placeGeocodeMarker.bind(this.ui.map);
+    results.each(function (r) {
+      div = document.createElement('div');
+      content_pane = r.widget.content_pane.cloneNode(true);
+      div.appendChild(content_pane);
+      r.addOverlay(placeGeocodeMarker(r.result.point, div, zoom));
+    });
   }
 });
 
@@ -205,35 +228,41 @@ Class(app.ui, 'GeocodeQuery', app.ui.Query, {
 /**
  * Route Query
  */
-Class(app.ui, 'RouteQuery', app.ui.Query, {
-  initialize: function(opts /* form=app.ui.route_form,
-                               result_container=app.ui.routes_container,
+byCycle.UI.RouteQuery = Class.create();
+byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
+  // Kludge.
+  superclass: byCycle.UI.Query.prototype,
+
+  initialize: function(opts /* form=byCycle.UI.query_form,
+                               result_list=byCycle.UI.location_list,
+                               processing_message='Finding route...',
                                input=undefined */) {
     opts = opts || {};
-    var ui = app.ui;
+    var ui = byCycle.UI;
     var form = opts.form || ui.route_form;
-    var result_container = opts.result_container || ui.routes_container;
+    var result_list = opts.result_list || ui.route_list;
+    opts.processing_message = opts.processing_message || 'Finding route...';
     var service = 'routes';
-    this.superclass.initialize.call(this, service, form, result_container, opts);
-    this.ui.selectInputPane(service);
+    this.superclass.initialize.call(this, service, form, result_list, opts);
+    this.ui.selectInputTab(service);
   },
 
   before: function() {
-    this.superclass.before.apply(this, arguments);
+    this.superclass.before.call(this);
     var errors = [];
-    if (typeof this.input == 'undefined') {
+    if (typeof(this.input) == 'undefined') {
       // Use form fields for input
-      var s = this.ui.s_el.get('value');
-      var e = this.ui.e_el.get('value');
+      var s = this.ui.s_el.value;
+      var e = this.ui.e_el.value;
       if (!(s && e)) {
         if (!s) {
           errors.push('Please enter a start address');
-          this.ui.s_el.get('element').focus();
+          this.ui.s_el.focus();
         }
         if (!e) {
           errors.push('Please enter an end address');
           if (s) {
-            this.ui.e_el.get('element').focus();
+            this.ui.e_el.focus();
           }
         }
         throw new Error(errors.join('\n'));
@@ -241,22 +270,22 @@ Class(app.ui, 'RouteQuery', app.ui.Query, {
     }
   },
 
-  on300: function(response) {
-    var result = YAHOO.lang.JSON.parse(response.responseText);
-    this.result = result;
-    this.ui.selectErrorTab(result.result.fragment);
-    var addr;
+  on300: function(request) {
+    this.superclass.on300.call(this, request);
     var route_choices = [];
-    var choices = result.result.choices;
-    for (var i = 0, c; i < choices.length; ++i) {
-      c = choices[i];
-      if (c.number) {
-        addr = [c.number, c.network_id].join('-');
+    var addr;
+    this.response.choices.each(function (c, i) {
+      if (typeof c == 'Array') {
+        addr = null;
       } else {
-        addr = c.network_id
+        if (c.number) {
+          addr = [c.number, c.network_id].join('-');
+        } else {
+          addr = c.network_id
+        }
       }
-      route_choices.push(addr);
-    }
+      route_choices[i] = addr;
+    });
     this.route_choices = route_choices;
   },
 
@@ -264,53 +293,50 @@ Class(app.ui, 'RouteQuery', app.ui.Query, {
     var route, ls, s_e_markers, s_marker, e_marker, line;
     var ui = this.ui;
     var map = ui.map;
+    var getBoundsForPoints = map.getBoundsForPoints.bind(map);
+    var centerAndZoomToBounds = map.centerAndZoomToBounds.bind(map);
+    var placeMarkers = map.placeMarkers.bind(map);
+    var addListener = map.addListener.bind(map);
+    var showMapBlowup = map.showMapBlowup.bind(map);
     var drawPolyLine;
     if (map.drawPolyLineFromEncodedPoints) {
-      drawPolyLine = map.drawPolyLineFromEncodedPoints;
+      drawPolyLine = map.drawPolyLineFromEncodedPoints.bind(map);
     } else {
-      drawPolyLine = map.drawPolyLine;
+      drawPolyLine = map.drawPolyLine.bind(map);
     }
-    for (var i = 0, r; i < results.length; ++i) {
-      r = results[i];
+    results.each(function (r) {
       route = r.result;
       ls = route.linestring;
 
-      // Zoom to route extent
-      map.centerAndZoomToBounds(route.bounds, route.center);
+      // Zoom to linestring
+      // TODO: Compute this in back end
+      centerAndZoomToBounds(route.bounds, route.center);
 
-      // Place start and end markers
-      s_e_markers = map.placeMarkers(
-        [ls[0], ls[ls.length - 1]],
-        [map.get_start_icon(), map.get_end_icon()]);
+      // Place from and to markers
+      s_e_markers = placeMarkers([ls[0], ls[ls.length - 1]],
+                                 [map.start_icon, map.end_icon]);
+
+      // Add listeners to start and end markers
       s_marker = s_e_markers[0];
       e_marker = s_e_markers[1];
-
-      // TODO: Doesn't work in OpenLayers (no equivalent to ``showMapBlowup``??
-      map.addListener(s_marker, 'click', function() {
-        var point = ls[0];
-        map.setCenter(point, map.getZoom());
-        map.showMapBlowup(point);
+      addListener(s_marker, 'click', function() {
+        showMapBlowup(ls[0]);
       });
-      map.addListener(e_marker, 'click', function() {
-        var point = ls[ls.length - 1];
-        map.setCenter(point, map.getZoom());
-        map.showMapBlowup(point);
+      addListener(e_marker, 'click', function() {
+        showMapBlowup(ls[ls.length - 1]);
       });
 
       // Draw linestring
       var line;
       var color = ui.route_line_color;
       if (map.drawPolyLineFromEncodedPoints) {
-        line = drawPolyLine.call(
-        map, route.google_points, route.google_levels, color);
+        line = drawPolyLine(route.google_points, route.google_levels, color);
       } else {
-        line = drawPolyLine.call(map, ls, color);
+        line = drawPolyLine(ls, color);
       }
 
       // Add overlays to result object
-      r.addOverlay(s_marker);
-      r.addOverlay(e_marker);
-      r.addOverlay(line);
-    }
+      r.overlays.push(s_marker, e_marker, line);
+    });
   }
 });
