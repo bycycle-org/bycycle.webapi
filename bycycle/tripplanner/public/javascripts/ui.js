@@ -158,7 +158,7 @@ byCycle.UI = function () {
     setRegion: function(region_id) {
       self.region_id = region_id;
       var regions = byCycle.regions.regions;
-      var region = regions[region_id];
+      var region = regions.get(region_id);
       if (region) {
         // Zoom to a specific region
         self.map.centerAndZoomToBounds(region.bounds, region.center);

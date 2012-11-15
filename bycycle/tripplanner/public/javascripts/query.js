@@ -153,7 +153,7 @@ byCycle.UI.Query.prototype = {
     var widget = new byCycle.widget.FixedPane(dom_node, {destroy_on_close: true});
     var result_obj = new this.ui.Result(id, result, this.service, widget);
     widget.register_listeners('close', result_obj.remove.bind(result_obj));
-    this.ui.results[this.service][id] = result_obj;
+    this.ui.results.get(this.service)[id] = result_obj;
     return result_obj;
   },
 

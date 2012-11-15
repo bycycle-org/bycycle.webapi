@@ -352,7 +352,7 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
                "&HEIGHT=", tile_size].join('');
     var sw, ne;
 
-    var pdx_bounds = byCycle.regions.regions.portlandor.bounds;
+    var pdx_bounds = byCycle.regions.regions.get('portlandor').bounds;
     var pdx_sw = pdx_bounds.sw;
     var pdx_ne = pdx_bounds.ne;
     var bounds = new GLatLngBounds(new GLatLng(pdx_sw.lat, pdx_sw.lng),

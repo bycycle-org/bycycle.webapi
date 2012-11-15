@@ -75,7 +75,7 @@ byCycle.widget.TabControl.prototype = {
   select_by_id: function(tab_id) {
     // Select tab programatically by ID
     this.tabs.values().each(this.hide.bind(this));
-    this.show(this.tabs[tab_id]);
+    this.show(this.tabs.get(tab_id));
   },
 
   hide: function(tab) {
@@ -108,7 +108,7 @@ byCycle.widget.TabControl.prototype = {
     var initial_tab;
     var initial_tab_id = this.get_tab_id(window.location);
     if (initial_tab_id) {
-      initial_tab = this.tabs[initial_tab_id];
+      initial_tab = this.tabs.get(initial_tab_id);
     }
     return initial_tab || this.first_tab;
   }
