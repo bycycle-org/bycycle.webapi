@@ -24,7 +24,7 @@ byCycle.regions = (function() {
     }
   });
 
-  // Initialize other region attributes and calculate minimum bounds 
+  // Initialize other region attributes and calculate minimum bounds
   // containing all regions
   var bounds, nw, ne, se, sw;
   regions.values().each(function (r) {

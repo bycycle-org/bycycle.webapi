@@ -142,7 +142,7 @@ byCycle.Map.base.Map.prototype = {
       x: point.x,
       y: point.y,
       toString: function() {
-        return [this.type, ' at ', this.x, ', ', this.y, 
+        return [this.type, ' at ', this.x, ', ', this.y,
         ' [', node.innerHTML, ']'].join('');
       }
     };
