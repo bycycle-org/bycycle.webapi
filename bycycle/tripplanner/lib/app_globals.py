@@ -1,6 +1,4 @@
-from pylons import config
-
-
 class Globals(object):
-    def __init__(self):
+
+    def __init__(self, config):
         self.debug = config['debug']

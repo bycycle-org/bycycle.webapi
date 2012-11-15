@@ -1,4 +1,6 @@
-from bycycle.tripplanner.lib.base import *
+from pylons.controllers.util import abort
+
+from bycycle.tripplanner.lib.base import BaseController
 
 class TemplateController(BaseController):
     def view(self, url):

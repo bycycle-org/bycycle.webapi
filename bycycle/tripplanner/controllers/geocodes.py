@@ -1,6 +1,8 @@
+from pylons import request
+
 from bycycle.core.services.geocode import Service, MultipleMatchingAddressesError
 
-from bycycle.tripplanner.controllers.services import *
+from bycycle.tripplanner.controllers.services import ServicesController
 
 
 class GeocodesController(ServicesController):

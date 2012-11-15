@@ -23,22 +23,25 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     install_requires=(
-        'byCycleCore>=0.5.dev,==dev',
-        'simplejson>=2.0.9',
-        'Beaker>=1.3.1',
-        'Routes>=1.10.3',
-        'Mako>=0.2.4',
-        'Restler==dev,>=0.3dev-r89',
-        'WebHelpers>=0.6.4',
-        'Pylons>=0.9.7',
+        'bycycle.core>=0.5.dev0',
+        'simplejson>=2.6.2',
+        'Beaker>=1.6.4',
+        'Routes>=1.13',
+        'Mako>=0.7.3',
+        'Restler>=0.7.1',
+        'WebHelpers>=1.3',
+        'Pylons>=1.0.1',
     ),
     test_suite = 'nose.collector',
     package_data={'bycycle.tripplanner': ['i18n/*/LC_MESSAGES/*.mo']},
     entry_points="""
     [paste.app_factory]
-    main=bycycle.tripplanner:make_app
+    main = bycycle.tripplanner.config.middleware:make_app
 
     [paste.app_install]
-    main=paste.script.appinstall:Installer
+    main = pylons.util:PylonsInstaller
+
+    [nose.plugins]
+    pylons = pylons.test:PylonsPlugin
     """,
-    )
+)

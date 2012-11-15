@@ -1,7 +1,9 @@
+from pylons import request
+
 from bycycle.core.services.exceptions import InputError
 from bycycle.core.services.route import Service, MultipleMatchingAddressesError
 
-from bycycle.tripplanner.controllers.services import *
+from bycycle.tripplanner.controllers.services import ServicesController
 
 
 class RoutesController(ServicesController):

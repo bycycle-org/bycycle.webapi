@@ -5,10 +5,6 @@ from webhelpers.html.tags import (
     textarea, literal, hidden, checkbox,)
 from webhelpers.html.tools import button_to
 
-from routes import url_for
-
-from restler.helpers import *
-
 
 def if_ie(content, join_string=''):
     """Create and Internet Explorer conditional comment section."""
@@ -29,7 +25,7 @@ def make_inline_style(style_dict):
         styles = ['%s: %s' % (i[0], i[1]) for i in style_dict.items()]
     else:
         styles = ''
-    return 'style="%s"' % '; '.join(styles)
+    return literal('style="%s"' % '; '.join(styles))
 
 
 def make_tab_buttons(tab_ids, tag_name='li', selected=''):
@@ -60,4 +56,4 @@ def make_tab_buttons(tab_ids, tag_name='li', selected=''):
             css_class = ''
         link = link_to(link_text, '#%s' % tab_id, title=link_text)
         buttons.append(template % (css_class, link))
-    return ''.join(buttons)
+    return literal(''.join(buttons))
