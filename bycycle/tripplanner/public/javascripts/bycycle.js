@@ -12,10 +12,6 @@ var byCycle = (function() {
     }
   };
 
-  var console_debug = function() {
-   console.debug.apply(console, arguments);
-  }
-
   var hostname = location.hostname;
   var port = location.port;
 
@@ -53,8 +49,6 @@ var byCycle = (function() {
         v = func(v);
       }
       return v;
-    },
-
-    logDebug: (debug ? console_debug : function () {})
+    }
   };
 })();
