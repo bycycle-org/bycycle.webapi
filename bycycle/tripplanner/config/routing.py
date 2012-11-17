@@ -28,7 +28,6 @@ def make_map(config):
     mapper.resource('service', 'services', **options)
     mapper.resource('geocode', 'geocodes', **options)
     mapper.resource('route', 'routes', **options)
-    mapper.resource('ad', 'ads', **options)
 
     mapper.connect('info', 'http://info.bycycle.org/', _static=True)
     mapper.connect('about', 'http://info.bycycle.org/about/', _static=True)
