@@ -223,9 +223,7 @@ class ServicesController(RestController):
         try:
             route_list = eval(q)
         except:
-            sRe = '\s+to\s+'
-            oRe = re.compile(sRe, re.I)
-            route_list = re.split(oRe, q)
+            route_list = re.split('\s+to\s+', q)
         if not (isinstance(route_list, list) and len(route_list) > 1):
             raise ValueError(
                 '%s cannot be parsed as a list of two or more items.' % q
