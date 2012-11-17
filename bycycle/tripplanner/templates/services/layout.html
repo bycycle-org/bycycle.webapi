@@ -23,7 +23,7 @@
 
       <!-- Query Pane -->
       <div id="search-the-map" class="tab-content">
-        ${h.form(url('/regions/%s/services/find' % c.region.slug), method='get', id='query_form')}
+        ${h.form(url('/regions/{0.region}/services/find'.format(c)), method='get', id='query_form')}
           <div>
             ${h.text('q', id='q', value=c.q, title='Enter an address or route', tabindex='1')}
             ${h.submit('search', 'Search Map', title='Click to search the map', tabindex='2')}
@@ -37,7 +37,7 @@
 
       <!-- Route Pane -->
       <div id="find-a-route" class="tab-content">
-        ${h.form(url('/regions/%s/routes/find' % c.region.slug), method='get', id='route_form')}
+        ${h.form(url('/regions/{0.region}/routes/find'.format(c)), method='get', id='route_form')}
           <div>
             ${h.text('s', id='s', value=c.s, title='Enter start address', tabindex='3')}<a
               id="swap_s_and_e"
