@@ -49,7 +49,7 @@ class RoutesController(ServicesController):
             try:
                 raise exc
             except MultipleMatchingAddressesError, exc:
-                self._template = '300'
+                self.action = '300'
                 self.http_status = 300
                 self.title = 'Multiple Matches'
                 self.choices = exc.choices

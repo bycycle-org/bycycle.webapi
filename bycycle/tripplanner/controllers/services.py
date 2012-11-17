@@ -106,7 +106,7 @@ class ServicesController(RestController):
         except ByCycleError, self.exception:
             # Let subclass deal with any other `ByCycleError`. The ``block``
             # function MUST set ``self.http_status`` and MAY set
-            # ``self._template``.
+            # ``self.action``.
             if not block:
                 raise
             block(self.exception)
@@ -124,12 +124,12 @@ class ServicesController(RestController):
             except TypeError:
                 # No, it's a single object (AKA member)
                 self.member = result
-                template = 'show'
+                self.action = 'show'
                 log.debug('Found member')
             else:
                 # Yes
                 self.collection = result
-                template = 'index'
+                self.action = 'index'
                 log.debug('Found collection')
 
         try:
@@ -139,7 +139,7 @@ class ServicesController(RestController):
             pass
         else:
             self.exception = self.exception
-            template = getattr(self, '_template', 'errors')
+            self.action = getattr(self, 'action', 'errors')
             if self.http_status == 500:
                 if app_globals.debug:
                     raise self.exception
@@ -149,16 +149,16 @@ class ServicesController(RestController):
                     err_handler = app_globals.error_handler.exception_handler
                     err_handler(sys.exc_info(), request.environ)
 
-        return self._render(action=template, code=self.http_status)
+        return self._render(code=self.http_status)
 
     def _render_template(self, json=True, **kwargs):
         if json:
             # Inject JSON into template, so the UI can initialize from it
-            json_obj = self._get_json_object(action=kwargs['action'])
+            json_obj = self._get_json_object()
             self.json = simplejson.dumps(json_obj)
         return super(ServicesController, self)._render_template(**kwargs)
 
-    def _get_json_object(self, action=None, wrap=True, fragment=True, block=None):
+    def _get_json_object(self, wrap=True, block=None, fragment=True):
         def block(obj):
             result = {
                 'type': self.entity.__name__,
@@ -182,7 +182,7 @@ class ServicesController(RestController):
             if fragment:
                 wrap = self.wrap
                 self.wrap = False
-                args = dict(action=action, format='html')
+                args = dict(format='html')
                 f = super(ServicesController, self)._render_template(**args)
                 self.wrap = wrap
                 f = f.strip().replace('\n', ' ')
