@@ -160,18 +160,15 @@ class ServicesController(RestController):
 
     def _get_json_object(self, wrap=True, block=None, fragment=True):
         def block(obj):
-            result = {
-                'type': self.entity.__name__,
-                'results': (obj if isinstance(obj, list) else [obj]),
-            }
+            obj['type'] = self.entity.__name__
 
             msg = getattr(self, 'message', None)
             if msg is not None:
-                result['message'] = msg
+                obj['message'] = msg
 
             exc = getattr(self, 'exception', None)
             if exc is not None:
-                result['exception'] = {
+                obj['exception'] = {
                     'code': self.http_status,
                     'title': getattr(exc, 'title', None),
                     'description': getattr(exc, 'description', None),
@@ -184,11 +181,12 @@ class ServicesController(RestController):
                 self.wrap = False
                 args = dict(format='html')
                 f = super(ServicesController, self)._render_template(**args)
+                f = f.encode('utf-8')
                 self.wrap = wrap
                 f = f.strip().replace('\n', ' ')
                 for i in range(10, 0, -1):
                     f = f.replace(' ' * i, ' ')
-                result['fragment'] = f
+                obj['fragment'] = f
 
             # ``choices`` may be set when HTTP status is 300
             choices = []
@@ -198,10 +196,10 @@ class ServicesController(RestController):
                 else:
                     choices.append([m.to_simple_object() for m in choice])
             if choices:
-                result['choices'] = choices
+                obj['choices'] = choices
 
-            return result
-        return super(ServicesController, self)._get_json_object(block=block)
+            return obj
+        return super(ServicesController, self)._get_json_object(wrap=wrap, block=block)
 
     def _makeRouteList(self, q):
         """Try to parse a route list from the given query, ``q``.
