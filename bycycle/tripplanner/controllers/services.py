@@ -38,8 +38,11 @@ class ServicesController(RestController):
 
     entity = Service
 
-    def __before__(self, format='html'):
-        RestController.__before__(self, format=format)
+    def __before__(self, format=None):
+        kw = {}
+        if format is not None:
+            kw['format'] = format
+        super(ServicesController, self).__before__(**kw)
         self.service = self.collection_name
         self.region = Region.get_by_slug('portlandor')
 
