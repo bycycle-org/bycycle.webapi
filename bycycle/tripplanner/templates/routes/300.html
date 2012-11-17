@@ -16,7 +16,7 @@ ${self.json()}
 <h3>Select a location</h3>
 
 
-<% first_ul = True %>
+<% li_class = h.cycle('ab') %>
 % for i, geocodes in enumerate(c.choices):
   % if not isinstance(geocodes, Geocode):
     <%
@@ -34,7 +34,7 @@ ${self.json()}
             else:
                style = ''
           %>
-          <li class="${h.cycle('b', 'a')}" ${style}>
+          <li class="${li_class.next()}" ${style}>
             ${self.geocode(code, i, j)}
           </li>
         % endfor
@@ -62,7 +62,7 @@ ${self.json()}
          >Show on map</a>
       |
       <a class="select-geocode-link"
-         href="${h.url_for('find_geocodes', region_id=c.region.slug, q=field_addr)}#select-this-location"
+         href="${url('find_geocodes', region_id=c.region.slug, q=field_addr)}#select-this-location"
          title="Select this location"
          onclick="byCycle.UI.selectRouteGeocode(this, ${i}, ${j}); return false;"
          >Select</a>

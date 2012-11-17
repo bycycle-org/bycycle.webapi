@@ -26,6 +26,7 @@
     set_center_onclick = 'byCycle.UI.map.setCenter({x: %s, y: %s}); return false;'
     map_blowup_href = "#show-map-blowup"
     map_blowup_onclick = "byCycle.UI.map.showMapBlowup({x: %s, y: %s}); return false;"
+    row_class = h.cycle('ab')
 %>
 
 <%call expr="fixed_pane()">
@@ -62,7 +63,6 @@
     <div class="directions">
         % for i, d in enumerate(directions):
             <%
-                row_class = h.cycle('a', 'b')
                 turn = d['turn']
                 street = d['street']
                 point = linestring.pointN(d['linestring_index'])
@@ -90,7 +90,7 @@
                 #bms = d['bikemode']
                 #bms = ' [%s]' % ', '.join([b for b in bms]) if bms else ''
             %>
-                <div class="direction ${row_class}">
+                <div class="direction ${row_class.next()}">
                     <span class="count">
                         <a href="${map_blowup_href}"
                            onclick="${map_blowup_onclick % (point.x, point.y)}"
@@ -109,8 +109,7 @@
                     % endif
                 </div>
         % endfor
-        <% row_class = h.cycle('a', 'b') %>
-        <div class="direction ${row_class}">
+        <div class="direction ${row_class.next()}">
             <span class="count">
                 <a href="${map_blowup_href}"
                    onclick="${map_blowup_onclick % (end.xy_ll.x, end.xy_ll.y)}"

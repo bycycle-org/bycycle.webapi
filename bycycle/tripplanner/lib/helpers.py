@@ -1,3 +1,7 @@
+import itertools
+
+from pylons import url
+
 from webhelpers.html.tags import (
     link_to,
     stylesheet_link, javascript_link, image,
@@ -57,3 +61,24 @@ def make_tab_buttons(tab_ids, tag_name='li', selected=''):
         link = link_to(link_text, '#%s' % tab_id, title=link_text)
         buttons.append(template % (css_class, link))
     return literal(''.join(buttons))
+
+
+def javascript_include_tag(*names, **attrs):
+    """Create JS <script> tag for each name in ``names``.
+    
+    ``names`` are paths relative to /javascripts/ without the .js extension.
+
+    """
+    urls = [url('/javascripts/{name}.js'.format(n)) for n in names]
+    return javascript_link(*urls, **attrs)
+
+
+def stylesheet_link_tag(*names, **attrs):
+    """Create stylesheet <link> for each name in ``names``.
+    
+    ``names`` are paths relative to /stylesheets/ without the .css
+    extension.
+
+    """
+    urls = [url('/stylesheets/{name}.css'.format(n)) for n in names]
+    return stylesheet_link(*urls, **attrs)
