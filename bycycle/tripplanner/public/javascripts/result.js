@@ -2,7 +2,7 @@
  * Result Base Class
  *
  * ``id`` Unique ID for this result
- * ``result`` Object representing the result (Evaled JSON string)
+ * ``result`` Object representing the result
  * ``service`` Service type for the result (i.e., where the result came from)
  */
 byCycle.UI.Result = Class.create();

@@ -97,7 +97,6 @@
            class="${'selected-' if c.service == 'geocodes' else ''}tab-content">
         % if c.service == 'geocodes' and c.http_status == 200:
           <div class="fragment">
-            ${self.json()}
             ${self.body()}
           </div>
         % endif
@@ -108,7 +107,6 @@
            class="${'selected-' if c.service == 'routes' else ''}tab-content">
         % if c.service == 'routes' and c.http_status == 200:
           <div class="fragment">
-            ${self.json()}
             ${self.body()}
           </div>
         % endif
@@ -144,11 +142,5 @@
   byCycle.UI.region_id = '${c.region.slug if c.region else ""}';
   byCycle.UI.http_status = ${'%i' % c.http_status if c.http_status else 'undefined'};
   byCycle.UI.q = '${c.q}';
-</%def>
-
-
-<%def name="json()">
-  % if c.format != 'json':
-    ${h.hidden(None, value=c.json, class_='json')}
-  % endif
+  byCycle.jsonData = ${c.json or '{}' | n};
 </%def>

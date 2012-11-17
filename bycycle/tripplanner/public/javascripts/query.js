@@ -70,7 +70,7 @@ byCycle.UI.Query.prototype = {
   },
 
   on200: function(request) {
-    eval('var response = ' + request.responseText + ';');
+    var response = request.responseJSON;
     this.response = response;
     this.ui.showResultPane(this.result_list);
     var results = this.makeResults(response);
@@ -93,8 +93,8 @@ byCycle.UI.Query.prototype = {
   },
 
   onFailure: function(request) {
+    var response = request.responseJSON;
     this.ui.spinner.hide();
-    eval('var response = ' + request.responseText + ';');
     this.response = response;
     this.ui.showMessagePane(this.ui.error_pane, response.fragment);
   },
@@ -114,7 +114,7 @@ byCycle.UI.Query.prototype = {
    * contains an ID, result object, associated map overlays, widget reference,
    * etc.
    *
-   * @param response The response object (responseText evaled)
+   * @param response The response object
    */
   makeResults: function(response) {
     var results = [];
@@ -128,7 +128,7 @@ byCycle.UI.Query.prototype = {
     var nodes = $(div).getElementsByClassName('fixed-pane');
 
     var result, dom_node;
-    response.results.each((function (r, i) {
+    response.response.results.each((function (r, i) {
       dom_node = nodes[i];
       result = this.makeResult(r, dom_node);
       results.push(result);
@@ -142,7 +142,7 @@ byCycle.UI.Query.prototype = {
    * The ``Result`` will contain an ID, JSON result object, associated map
    * overlays, widget reference, etc.
    *
-   * @param result A simple object from the evaled JSON response
+   * @param result A simple object from the JSON response
    * @param dom_node A DOM node that contains the necessary elements to create
    *        a ``FixedPane`` widget.
    * @return ``Result``
