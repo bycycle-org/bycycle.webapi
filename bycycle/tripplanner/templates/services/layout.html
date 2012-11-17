@@ -78,6 +78,7 @@
 
 <!-- Bar links -->
 <%def name="links()">
+  <a id="clear-map-link" href="">Clear map</a>
   <a id="bookmark" href=""
      title="Link to the current result &amp; view"
      >Link to last result</a>
@@ -127,36 +128,6 @@
       </div>
     </div>
   </%call>
-</%def>
-
-
-<%def name="map_controls()">
-  <!-- Map Menu -->
-  <div id="map-controls" class="noprint">
-    <!--<select id="map_mode">-->
-      <!--<option value="">- Map Mode -</option>-->
-      <!--<option value="">Normal</option>-->
-      <!--<option value="identifyIntersection">Identify Intersection</option>-->
-      <!--<option value="identifyStreet">Identify Street</option>-->
-    <!--</select>-->
-    <input type="button"
-      id="find-at-center-link"
-      title="Find address nearest to center of map"
-      value="Find address at center"
-      />
-
-    <% region_ns = self.get_namespace('/regions/%s.html' % c.region.slug) %>
-    % if hasattr(region_ns, 'map_controls'):
-      ${region_ns.map_controls()}
-    % endif
-
-    <input type="button"
-      id="clear-map-link"
-      title="Clear all results and map"
-      value="Clear all"
-      />
-  </div>
-  <!-- /Map Menu -->
 </%def>
 
 

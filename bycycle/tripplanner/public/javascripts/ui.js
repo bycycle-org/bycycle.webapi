@@ -128,8 +128,6 @@ byCycle.UI = function () {
       self.map.onUnload();
     },
 
-    handleMapClick: function (event) {},
-
     /* Display Panes *********************************************************/
 
     showMessagePane: function(sub_pane, content /*=undefined*/) {
