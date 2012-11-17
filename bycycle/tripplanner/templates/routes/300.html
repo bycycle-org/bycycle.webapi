@@ -47,8 +47,7 @@ ${self.json()}
 <%def name="geocode(geocode, i, j)">
   <%
     str_addr = str(geocode.address)
-    xy_ll = geocode.xy_ll
-    x, y = xy_ll.x, xy_ll.y
+    x, y = geocode.lat_long.x, geocode.lat_long.y
     html_addr = str_addr.replace('\n', '<br />')
     field_addr = unquote_plus(geocode.urlStr())
   %>
