@@ -206,8 +206,8 @@ class ServicesController(RestController):
     def _makeRouteList(self, q):
         """Try to parse a route list from the given query, ``q``.
 
-        The query can be . A ValueError is raised if query
-        can't be parsed as a list of at least two strings.
+        A ValueError is raised if query can't be parsed as a list of at
+        least two strings.
 
         ``q``
             Either a string with waypoints separated by ' to ' or a string
