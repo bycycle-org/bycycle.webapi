@@ -19,7 +19,7 @@ class GeocodesController(ServicesController):
                 raise exc
             except MultipleMatchingAddressesError, self.exception:
                 self.http_status = 300
-                self._template = str(self.http_status)
+                self.action = str(self.http_status)
                 self.collection = self.exception.geocodes
         _find = super(GeocodesController, self)._find
         return _find(q, service_class=Service, block=block)
