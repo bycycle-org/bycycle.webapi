@@ -160,9 +160,6 @@
         <div id="col-b">
 
 
-          <%call expr="self.map_controls()" />
-
-
           <!-- Map -->
           <div id="map_pane">
             <div id="map_message" style="display: none; padding: 5px;">
@@ -183,19 +180,6 @@
 
     </div>
     <!-- /Wrapper -->
-
-
-    <div id="map-buttons" ${h.hide_element()}>
-      <div
-        id="legend-map-button"
-        class="map-button noprint"
-        title="Pop up bike map legend"
-        >
-          <div class="map-button-inner">
-            Bike map legend
-          </div>
-      </div>
-    </div>
 
 
     ${h.javascript_include_tag('map', 'gmap')}
@@ -247,7 +231,6 @@
   <!-- /Result Pane -->
 </%def>
 
-<%def name="map_controls()"></%def>
 <%def name="javascript_includes()"></%def>
 <%def name="javascript()"></%def>
 

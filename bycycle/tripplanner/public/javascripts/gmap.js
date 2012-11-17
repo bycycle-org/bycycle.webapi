@@ -77,9 +77,6 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
     var self = this;
     GEvent.addListener(self.map, 'click', function (overlay, point) {
       self.map.closeInfoWindow();
-      //if (point) {
-        //self.ui.handleMapClick({x: point.lng(), y: point.lat()});
-      //}
     });
   },
 

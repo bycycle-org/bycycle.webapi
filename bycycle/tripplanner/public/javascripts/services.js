@@ -15,8 +15,6 @@
     results: $H({'geocodes': $H({}), 'routes': $H({})}),
     http_status: null,
     response_text: null,
-    bike_overlay: null,
-    bike_overlay_state: false,
 
     status_messages: {
       200: 'One result was found',
@@ -41,11 +39,6 @@
                                       initial_tab_id);
       self.handleQuery();
       self.onResize();
-      if (byCycle.getParamVal('bike_map')) {
-        self.toggleBikeTileOverlay();
-      }
-      self.map_buttons = self.map_buttons.remove();
-      self.map_pane.appendChild(self.map_buttons);
     },
 
     _assignUIElements: function() {
@@ -61,9 +54,6 @@
       self.pref_el = $('pref');
       self.location_list = $('location_list');
       self.route_list = $('route_list');
-      self.bike_overlay_link = $('bike-overlay-link');
-      self.map_buttons = $('map-buttons');
-      self.legend_button = $('legend-map-button');
     },
 
     _createEventHandlers: function () {
@@ -72,16 +62,6 @@
       Event.observe(self.query_form, 'submit', self.runGenericQuery);
       Event.observe(self.route_form, 'submit', self.runRouteQuery);
       Event.observe($('clear-map-link'), 'click', self.clearResults);
-      Event.observe($('find-at-center-link'), 'click',
-                    self.identifyIntersectionAtCenter);
-      if (self.bike_overlay_link) {
-        Event.observe(self.bike_overlay_link, 'click',
-                      self.toggleBikeTileOverlay);
-      }
-      Event.observe(self.legend_button, 'click', function (event) {
-        var url = '/static/regions/' + self.region_id + '/map_legend_popup.html';
-        var w = window.open(url, 'bike_map_legend_window', 'status=0,toolbar=0,scrollbars=1,location=0,menubar=0,directories=0,width=755,height=490,left=0,top=0');
-      });
     },
 
     showResultPane: function(list_pane) {
@@ -287,49 +267,6 @@
       self.s_el.value = s;
       self.e_el.value = e;
       new self.RouteQuery(self.route_form).run();
-    },
-
-
-    /* Map *******************************************************************/
-
-    identifyIntersectionAtCenter: function(event) {
-      var center = self.map.getCenter();
-      self.q_el.value = self.map.getCenterString();
-      self.identifyIntersection(center, event);
-    },
-
-    handleMapClick: function(point, event) {
-      var handler = self[$('map_mode').value];
-      if (typeof(handler) != 'undefined') {
-        handler(point);
-      }
-    },
-
-    identifyIntersection: function(point, event) {
-      self.runGeocodeQuery(event, {q: [point.x, point.y].join()});
-    },
-
-    identifyStreet: function(point, event) {
-      self.status.innerHTML = '"Identify Street" feature not implemented yet.';
-    },
-
-    toggleBikeTileOverlay: function (event) {
-      event && Event.stop(event);
-      if (self.bike_overlay_state) {
-        // Bike layer was on; turn it off
-        self.map.removeOverlay(self.bike_overlay);
-        Element.hide('map-buttons');
-        self.bike_overlay_link.value = 'Show bike map';
-      } else {
-        // Bike layer was off; turn it on
-        self.bike_overlay = self.map.makeBikeTileOverlay(20);
-        self.map.addOverlay(self.bike_overlay);
-        Element.show('map-buttons');
-        self.bike_overlay_link.value = 'Hide bike map';
-        if (self.map.getZoom() < 9) { self.map.setZoom(9); }
-        self.bike_overlay.show();
-      }
-      self.bike_overlay_state = !self.bike_overlay_state;
     }
   });
 })();
