@@ -1,4 +1,4 @@
-import itertools
+from itertools import cycle
 
 from pylons import url
 
