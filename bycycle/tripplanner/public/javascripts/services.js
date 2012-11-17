@@ -118,15 +118,11 @@
       if (self.http_status == 200) {
         var pane = $(self.collection_name == 'routes' ? 'routes' : 'locations');
         var fragment = pane.getElementsByClassName('fragment')[0];
-        var json = fragment.getElementsByClassName('json')[0];
-        var request = {status: self.http_status, responseText: $F(json)};
+        var request = {status: self.http_status, responseJSON: byCycle.jsonData};
         Element.remove(fragment);
-        Element.remove(json);
         query_obj.on200(request);
       } else if (self.http_status == 300) {
-        var json = self.error_pane.getElementsByClassName('json')[0];
-        var request = {status: self.http_status, responseText: $F(json)};
-        Element.remove(json);
+        var request = {status: self.http_status, responseJSON: byCycle.jsonData};
         query_obj.on300(request);
       }
       self.query = query_obj;
@@ -191,7 +187,7 @@
      * Select from multiple matching geocodes
      */
     selectGeocode: function(select_link, i) {
-      var response = self.query.response;
+      var response = self.query.response.response;
       var dom_node = $(select_link).up('.fixed-pane');
       var result = self.query.makeResult(response.results[i], dom_node);
       self.query.processResults('', [result])
