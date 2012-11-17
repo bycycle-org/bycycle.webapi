@@ -33,8 +33,7 @@ def make_map(config):
     mapper.connect('about', 'http://info.bycycle.org/about/', _static=True)
     mapper.connect('help', 'http://info.bycycle.org/help/', _static=True)
     mapper.connect('gpl', 'http://info.bycycle.org/gplv3/', _static=True)
-    mapper.connect('code', 'http://guest:guest@code.bycycle.org/', _static=True)
-    mapper.connect('project', 'http://project.bycycle.org/', _static=True)
+    mapper.connect('project', 'http://bitbucket.org/wyatt/bycycle.tripplanner', _static=True)
 
     # This one can be used to display a template directly
     mapper.connect('*url', controller='template', action='view')
