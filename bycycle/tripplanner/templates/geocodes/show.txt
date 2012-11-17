@@ -1,2 +1,2 @@
 ${c.geocode.address}
-${c.geocode.xy_ll.y}, ${c.geocode.xy_ll.x}
+${c.geocode.lat_long.y}, ${c.geocode.lat_long.x}
