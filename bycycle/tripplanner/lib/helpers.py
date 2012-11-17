@@ -69,7 +69,7 @@ def javascript_include_tag(*names, **attrs):
     ``names`` are paths relative to /javascripts/ without the .js extension.
 
     """
-    urls = [url('/javascripts/{name}.js'.format(n)) for n in names]
+    urls = [url('/javascripts/{0}.js'.format(n)) for n in names]
     return javascript_link(*urls, **attrs)
 
 
@@ -80,5 +80,5 @@ def stylesheet_link_tag(*names, **attrs):
     extension.
 
     """
-    urls = [url('/stylesheets/{name}.css'.format(n)) for n in names]
+    urls = [url('/stylesheets/{0}.css'.format(n)) for n in names]
     return stylesheet_link(*urls, **attrs)
