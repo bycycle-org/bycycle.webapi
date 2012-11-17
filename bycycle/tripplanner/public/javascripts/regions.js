@@ -13,14 +13,6 @@ byCycle.regions = (function() {
         sw: {x: -123.485755, y: 44.885219},
         ne: {x: -121.649618, y: 45.814153}
       }
-    },
-
-    milwaukeewi: {
-      key: 'milwaukeewi',
-      bounds: {
-        sw: {x: -88.069888, y: 42.842059},
-        ne: {x: -87.828241, y: 43.192647}
-      }
     }
   });
 
