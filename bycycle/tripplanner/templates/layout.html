@@ -29,7 +29,7 @@
       //<![CDATA[
       // Global setup
       var debug = ${'true' if bool(g.debug) else 'false'};
-      byCycle_prefix = '${h.url_for('/')}';
+      byCycle_prefix = '${url('/')}';
       //]]>
     </script>
 
@@ -48,12 +48,12 @@
       <div id="masthead" class="noprint">
         <h1 id="logo">
           <a href="http://bycycle.org/" title="byCycle.org Home Page">
-          ${h.image_tag('logo.png', title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
+          ${h.image(url('/images/logo.png'), title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
           </a>
         </h1>
 
         <h2 id="app-name">
-          ${h.link_to('Bicycle Trip Planner', h.url_for('/'), title='byCycle.org Bicycle Trip Planner (this page)')}
+          ${h.link_to('Bicycle Trip Planner', url('/'), title='byCycle.org Bicycle Trip Planner (this page)')}
         </h2>
 
         <h3 id="app-version">
@@ -75,7 +75,7 @@
       <!-- Bar -->
       <div id="bar" class="noprint">
         <div id="spinner" class="spinner noprint" style="display: none;">
-          ${h.image_tag('spinner.gif', width=16, height=16, alt='Click to hide')}
+          ${h.image(url('/images/spinner.gif'), width=16, height=16, alt='Click to hide')}
         </div>
 
         <div id="status">
