@@ -1,8 +1,11 @@
+from pylons import request, session, url
+from pylons.controllers.util import redirect
+
 from bycycle.core.services.exceptions import InputError, NotFoundError
 from bycycle.core.model import regions
 from bycycle.core.model.entities.public import Region
 
-from bycycle.tripplanner.lib.base import *
+from bycycle.tripplanner.lib.base import RestController
 
 
 class RegionsController(RestController):
@@ -38,9 +41,9 @@ class RegionsController(RestController):
             if 'to' in params:
                 params['e'] = params.pop('to')
             if 'q' in params or 's' in params or 'e' in params:
-                redirect_to('find_services', region_id=id, **params)
+                redirect(url('find_services', region_id=id, **params))
             else:
-                redirect_to('region', id=id, **params)
+                redirect(url('region', id=id, **params))
         else:
             return super(RegionsController, self).index()
 
@@ -67,14 +70,14 @@ class RegionsController(RestController):
             if params.pop('q', None) is not None:
                 session['q'] = q
             session.save()
-            return redirect_to('regions', **params)
+            return redirect(url('regions', **params))
         elif q:
             # Go to and find something in region
-            redirect_to('find_services', region_id=region_id, **params)
+            redirect(url('find_services', region_id=region_id, **params))
         else:
             # Just go to region
             params.pop('q', None)
-            redirect_to('region', id=region_id, **params)
+            redirect(url('region', id=region_id, **params))
 
     @staticmethod
     def _get_region_id(region_id, params=None):
@@ -95,4 +98,4 @@ class RegionsController(RestController):
                 session.save()
                 params.pop('region', '')
                 params.pop('bycycle_region', '')
-                redirect_to('regions', **dict(params))
+                redirect(url('regions', **dict(params)))
