@@ -8,8 +8,7 @@
 <%
    code = c.geocode
    x, y = code.lat_long.x, code.lat_long.y
-   str_addr = str(code.address)
-   html_addr = str_addr.replace('\n', '<br />')
+   html_addr = h.literal(str(code.address).replace('\n', '<br />'))
    field_addr = unquote_plus(code.urlStr())
 %>
 

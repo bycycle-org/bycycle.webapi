@@ -17,12 +17,12 @@
     directions = route.directions
     linestring = route.linestring_ll
     centroid = linestring.centroid()
-    s_addr = str(s_addr).replace('\n', '<br/>')
-    e_addr = str(e_addr).replace('\n', '<br/>')
+    s_addr = h.literal(str(s_addr).replace('\n', '<br/>'))
+    e_addr = h.literal(str(e_addr).replace('\n', '<br/>'))
     last_street = e_addr.split('<br/>', 1)[0]
     s_url_str = start.urlStr()
     e_url_str = end.urlStr()
-    tab = '&nbsp;&nbsp;&nbsp;&nbsp;'
+    tab = h.literal('&nbsp;&nbsp;&nbsp;&nbsp;')
     set_center_onclick = 'byCycle.UI.map.setCenter({x: %s, y: %s}); return false;'
     map_blowup_href = "#show-map-blowup"
     map_blowup_onclick = "byCycle.UI.map.showMapBlowup({x: %s, y: %s}); return false;"

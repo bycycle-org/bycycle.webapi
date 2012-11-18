@@ -2,7 +2,7 @@
 <%def name="fixed_pane(id='', classes=None, style='', title_bar_style='', title_style='', content_pane_style='')">
    <%
       if id:
-         id = 'id="%s"' % id
+         id = h.literal('id="%s"') % id
       else:
          id = ''
       if classes is not None:

@@ -35,11 +35,10 @@
 
 <%def name="geocode(geocode, i)">
   <%
-    str_addr = str(geocode.address)
     ll = geocode.lat_long
     x, y = ll.x, ll.y
     link_addr = geocode.urlStr()
-    html_addr = str_addr.replace('\n', '<br />')
+    html_addr = h.literal(str(geocode.address).replace('\n', '<br />'))
     field_addr = unquote_plus(link_addr)
   %>
   <%call expr="fixed_pane(title_bar_style={'display': 'none'}, )">

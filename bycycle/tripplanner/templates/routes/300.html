@@ -47,7 +47,7 @@
   <%
     str_addr = str(geocode.address)
     x, y = geocode.lat_long.x, geocode.lat_long.y
-    html_addr = str_addr.replace('\n', '<br />')
+    html_addr = h.literal(str_addr.replace('\n', '<br />'))
     field_addr = unquote_plus(geocode.urlStr())
   %>
   <%call expr="fixed_pane(title_bar_style={'display': 'none'}, )">
