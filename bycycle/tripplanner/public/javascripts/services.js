@@ -105,27 +105,28 @@
 
     /* Query-related *********************************************************/
 
+    // This is run on page load only. The purpose is to simulate an AJAX
+    // query (i.e., the post-processing that happens).
     handleQuery: function() {
-      if (!self.http_status) { return; }
-      var res = self.member_name;
-
-      // E.g., query_class := GeocodeQuery
-      var query_class = [res.charAt(0).toUpperCase(), res.substr(1),
-                         'Query'].join('');
-      query_class = self[query_class];
-
-      var query_obj = new query_class();
-      if (self.http_status == 200) {
-        var pane = $(self.collection_name == 'routes' ? 'routes' : 'locations');
-        var fragment = pane.getElementsByClassName('fragment')[0];
-        var request = {status: self.http_status, responseJSON: byCycle.jsonData};
-        Element.remove(fragment);
-        query_obj.on200(request);
-      } else if (self.http_status == 300) {
-        var request = {status: self.http_status, responseJSON: byCycle.jsonData};
-        query_obj.on300(request);
+      var status = self.http_status;
+      if (!status) {
+        return;
       }
-      self.query = query_obj;
+      var queryClassName = [self.member_name.capitalize(), 'Query'].join(''),
+          queryClass = self[queryClassName],
+          queryObj = new queryClass();
+      if (status == 200) {
+        var pane = $(self.collection_name == 'routes' ? 'routes' : 'locations'),
+            fragment = pane.getElementsByClassName('fragment')[0];
+        Element.remove(fragment);
+      } else if (status != 300) {
+        throw new Error('Unexpected HTTP status: ' + status);
+      }
+      queryObj['on' + status]({
+        status: status,
+        responseJSON: byCycle.jsonData,
+      });
+      self.query = queryObj;
     },
 
     runGenericQuery: function(event, input /* =undefined */) {
@@ -187,21 +188,22 @@
      * Select from multiple matching geocodes
      */
     selectGeocode: function(select_link, i) {
-      var response = self.query.response.response;
-      var dom_node = $(select_link).up('.fixed-pane');
-      var result = self.query.makeResult(response.results[i], dom_node);
+      var response = self.query.response.response,
+          domNode = $(select_link).up('.fixed-pane'),
+          result = self.query.makeResult(response.results[i], domNode);
+
       self.query.processResults('', [result])
 
       // Remove the selected result's selection links ("show on map" & "select")
       Element.remove(select_link.parentNode);
 
       // Show the title bar and "set as start or end" links
-      dom_node.getElementsByClassName('title-bar')[0].show();
-      dom_node.getElementsByClassName('set_as_s_or_e')[0].show();
+      domNode.getElementsByClassName('title-bar')[0].show();
+      domNode.getElementsByClassName('set_as_s_or_e')[0].show();
 
       // Append the widget to the list of locations
       var li = document.createElement('li');
-      li.appendChild(dom_node);
+      li.appendChild(domNode);
       this.location_list.appendChild(li);
 
       self.showResultPane(self.location_list);
