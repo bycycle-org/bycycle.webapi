@@ -12,8 +12,8 @@ class RegionsController(RestController):
 
     entity = Region
 
-    def __before__(self):
-        RestController.__before__(self)
+    def __before__(self, format=None):
+        RestController.__before__(self, format=format)
         self.service = 'services'
 
     def index(self):
@@ -30,9 +30,8 @@ class RegionsController(RestController):
             self.http_status = session.pop('http_status')
             self.q = session.pop('q', None)
             session.save()
-            self.regions = self.Entity.select()
-            return self._render_response(template='errors',
-                                         code=self.http_status)
+            self.regions = self.entity.q().all()
+            return self._render(action='errors', code=self.http_status)
 
         id = self._get_region_id(params.pop('region', None), params)
         if id:
@@ -50,7 +49,9 @@ class RegionsController(RestController):
     def show(self, id):
         """Show the ``region`` with ID or name or key ``id``."""
         id = self._get_region_id(id)
-        self.set_member(id)
+        q = self.db_session.query(self.entity)
+        q = q.filter_by(slug=id)
+        self.member = q.one()
         return self._render(action=self.region.slug)
 
     def find(self):
