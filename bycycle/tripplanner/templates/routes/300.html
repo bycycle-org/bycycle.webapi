@@ -19,26 +19,17 @@
 % for i, geocodes in enumerate(c.choices):
   % if not isinstance(geocodes, Geocode):
     <%
-      if not first_ul:
-        ul_style = 'style="display: none;"'
-      else:
-        ul_style = ''
+      ul_style = '' if i == 0 else 'style="display: none;"'
+      last = len(geocodes) - 1
     %>
     <ul class="result_list multi-list" ${ul_style}>
-      <% last = len(geocodes) - 1 %>
-        % for j, code in enumerate(geocodes):
-          <%
-            if j == last:
-              style = 'style="margin-bottom: 0;"'
-            else:
-               style = ''
-          %>
-          <li class="${li_class.next()}" ${style}>
-            ${self.geocode(code, i, j)}
-          </li>
-        % endfor
+      % for j, code in enumerate(geocodes):
+        <% style = '' if i < last else 'style="margin-bottom: 0;"' %>
+        <li class="${li_class.next()}" ${style}>
+          ${self.geocode(code, i, j)}
+        </li>
+      % endfor
     </ul>
-    <% first_ul = False %>
   % endif
 % endfor
 
