@@ -59,9 +59,8 @@ def make_app(global_conf, full_stack=True, **app_conf):
 
     # Static files (If running in production, and Apache or another web
     # server is handling this static content, remove the following 3 lines)
-    if debug:
-        static_app = StaticURLParser(config['pylons.paths']['static_files'])
-        app = Cascade([static_app, app])
+    static_app = StaticURLParser(config['pylons.paths']['static_files'])
+    app = Cascade([static_app, app])
 
     app.config = config
     return app
