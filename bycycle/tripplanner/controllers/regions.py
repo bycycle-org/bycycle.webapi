@@ -52,7 +52,7 @@ class RegionsController(RestController):
         q = self.db_session.query(self.entity)
         q = q.filter_by(slug=id)
         self.member = q.one()
-        return self._render(action=self.region.slug)
+        return self._render()
 
     def find(self):
         params = dict(request.params)
