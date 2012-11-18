@@ -213,13 +213,15 @@ byCycle.UI.GeocodeQuery.prototype = Object.extend(new byCycle.UI.Query(), {
   processResults: function(response, results) {
     var zoom = this.ui.is_first_result ? this.ui.map.default_zoom : undefined;
     // For each result, place a marker on the map.
-    var div, content_pane;
+    var div, content_pane, point;
     var placeGeocodeMarker = this.ui.map.placeGeocodeMarker.bind(this.ui.map);
     results.each(function (r) {
       div = document.createElement('div');
       content_pane = r.widget.content_pane.cloneNode(true);
       div.appendChild(content_pane);
-      r.addOverlay(placeGeocodeMarker(r.result.point, div, zoom));
+      point = r.result.lat_long.coordinates;
+      point = {x: point[0], y: point[1]};
+      r.addOverlay(placeGeocodeMarker(point, div, zoom));
     });
   }
 });
@@ -290,7 +292,7 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
   },
 
   processResults: function(response, results) {
-    var route, ls, s_e_markers, s_marker, e_marker, line;
+    var route, ls, s_e_markers, startPoint, endPoint, s_marker, e_marker, line;
     var ui = this.ui;
     var map = ui.map;
     var getBoundsForPoints = map.getBoundsForPoints.bind(map);
@@ -312,18 +314,22 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
       // TODO: Compute this in back end
       centerAndZoomToBounds(route.bounds, route.center);
 
+      startPoint = ls.coordinates[0];
+      startPoint = {x: startPoint[0], y: startPoint[1]};
+      endPoint = ls.coordinates[ls.coordinates.length - 1];
+      endPoint = {x: endPoint[0], y: endPoint[1]};
+
       // Place from and to markers
-      s_e_markers = placeMarkers([ls[0], ls[ls.length - 1]],
-                                 [map.start_icon, map.end_icon]);
+      s_e_markers = placeMarkers([startPoint, endPoint], [map.start_icon, map.end_icon]);
 
       // Add listeners to start and end markers
       s_marker = s_e_markers[0];
       e_marker = s_e_markers[1];
       addListener(s_marker, 'click', function() {
-        showMapBlowup(ls[0]);
+        showMapBlowup(startPoint);
       });
       addListener(e_marker, 'click', function() {
-        showMapBlowup(ls[ls.length - 1]);
+        showMapBlowup(endPoint);
       });
 
       // Draw linestring
