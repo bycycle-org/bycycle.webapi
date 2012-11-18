@@ -10,13 +10,13 @@
     distance = route.distance
     total_mi = distance['miles']
     total_km = distance['kilometers']
-    start = route.start['geocode']
+    start = route.start
     s_addr = start.address
-    end = route.end['geocode']
+    end = route.end
     e_addr = end.address
     directions = route.directions
-    linestring = route.linestring_ll
-    centroid = linestring.centroid()
+    linestring = route.linestring
+    centroid = linestring.centroid
     s_addr = h.literal(str(s_addr).replace('\n', '<br/>'))
     e_addr = h.literal(str(e_addr).replace('\n', '<br/>'))
     last_street = e_addr.split('<br/>', 1)[0]
@@ -65,7 +65,7 @@
             <%
                 turn = d['turn']
                 street = d['street']
-                point = linestring.pointN(d['linestring_index'])
+                point = linestring.coords[d['linestring_index']]
                 if turn == 'straight':
                     turn = 'cont.'
                     street = street[1]
@@ -93,7 +93,7 @@
                 <div class="direction ${row_class.next()}">
                     <span class="count">
                         <a href="${map_blowup_href}"
-                           onclick="${map_blowup_onclick % (point.x, point.y)}"
+                           onclick="${map_blowup_onclick % point}"
                            >${i + 1}</a>
                     </span>
                     -
