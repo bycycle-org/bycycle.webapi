@@ -19,13 +19,12 @@
     centroid = linestring.centroid
     s_addr = h.literal(str(s_addr).replace('\n', '<br/>'))
     e_addr = h.literal(str(e_addr).replace('\n', '<br/>'))
-    last_street = e_addr.split('<br/>', 1)[0]
     s_url_str = start.urlStr()
     e_url_str = end.urlStr()
-    tab = h.literal('&nbsp;&nbsp;&nbsp;&nbsp;')
     set_center_onclick = 'byCycle.UI.map.setCenter({x: %s, y: %s}); return false;'
     map_blowup_href = "#show-map-blowup"
     map_blowup_onclick = "byCycle.UI.map.showMapBlowup({x: %s, y: %s}); return false;"
+    tab = h.literal('&nbsp;' * 4)
     row_class = h.cycle('ab')
 %>
 
@@ -74,40 +73,32 @@
                 street = ' - '.join([s.strip() for s in street.split('-') if s])
                 if i == 0:
                     street = street #'%s toward %s' % (street, d['toward'])
-                jogs = d['jogs']
-                if jogs:
-                    J = ['%sJogs...' % tab]
-                    for j in jogs:
-                        J.append('<br/>%s%s&middot; <i>%s</i> at %s' %
-                                 (tab, tab, j['turn'], j['street']))
-                    jogs = ''.join(J)
-                else:
-                    jogs = ''
                 ls_index = d['linestring_index']
                 distance = d['distance']
                 mi = '%.2f' % distance['miles']
                 km = '%.2f' % distance['kilometers']
-                #bms = d['bikemode']
-                #bms = ' [%s]' % ', '.join([b for b in bms]) if bms else ''
             %>
-                <div class="direction ${row_class.next()}">
-                    <span class="count">
-                        <a href="${map_blowup_href}"
-                           onclick="${map_blowup_onclick % point}"
-                           >${i + 1}</a>
-                    </span>
-                    -
-                    <span class="turn">${turn.title()}</span>
-                    -
-                    <span class="direction">${street}</span>
-                    -
-                    <span class="segment_distance">${mi} mi</span>
-                    % if jogs:
-                        <div class="jogs">
-                            ${jogs}
-                        </div>
-                    % endif
-                </div>
+            <div class="direction ${row_class.next()}">
+                <span class="count">
+                    <a href="${map_blowup_href}"
+                       onclick="${map_blowup_onclick % point}"
+                       >${i + 1}</a>
+                </span>
+                -
+                <span class="turn">${turn.title()}</span>
+                -
+                <span class="direction">${street}</span>
+                -
+                <span class="segment_distance">${mi} mi</span>
+                % if d['jogs']:
+                    <div class="jogs">
+                        ${tab} Jogs...
+                        % for j in d['jogs']:
+                            <br/>${tab}${tab}&middot; <i>${j['turn']}</i> at ${j['street']}
+                        % endfor
+                    </div>
+                % endif
+            </div>
         % endfor
         <div class="direction ${row_class.next()}">
             <span class="count">
@@ -118,7 +109,7 @@
             -
             <span class="turn">End</span>
             -
-            <span class="direction">${last_street}</span>
+            <span class="direction">${end.address.street_name}</span>
         </div>
     </div>
 </%call>
