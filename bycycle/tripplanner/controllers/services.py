@@ -39,10 +39,7 @@ class ServicesController(RestController):
     entity = Service
 
     def __before__(self, format=None):
-        kw = {}
-        if format is not None:
-            kw['format'] = format
-        super(ServicesController, self).__before__(**kw)
+        super(ServicesController, self).__before__(format=format)
         self.service = self.collection_name
         self.region = Region.get_by_slug('portlandor')
 
