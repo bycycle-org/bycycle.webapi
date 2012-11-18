@@ -24,10 +24,3 @@ class TestGeocodesController(TestController):
         assert hasattr(c, 'collection')
         assert hasattr(c, 'geocodes')
         assert c.collection is c.geocodes
-
-    def test_find_collection(self):
-        u = url('find_geocodes', region_id='portlandor',
-                q=str(['633 n alberta', '4807 se kelly']))
-        assert u == ('/regions/portlandor/geocodes/find?'
-                     'q=%5B%27633+n+alberta%27%2C+%274807+se+kelly%27%5D')
-        response = self.app.get(u, status=400)
