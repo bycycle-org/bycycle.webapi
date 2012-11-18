@@ -19,6 +19,7 @@ class RestController(restler.controller.Controller):
         self.exception = None
         self.http_status = None
         self.info = None
+        self.json = None
         self.q = None
         self.region = None
         self.s = None
