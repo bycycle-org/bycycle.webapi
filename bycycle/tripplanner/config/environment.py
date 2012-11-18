@@ -28,7 +28,6 @@ def load_environment(global_conf, app_conf):
     config['routes.map'] = make_map(config)
     config['pylons.app_globals'] = Globals(config)
     config['pylons.h'] = bycycle.tripplanner.lib.helpers
-    config['pylons.strict_tmpl_context'] = False
 
     # Create the Mako TemplateLookup, with the default auto-escaping
     config['pylons.app_globals'].mako_lookup = TemplateLookup(
