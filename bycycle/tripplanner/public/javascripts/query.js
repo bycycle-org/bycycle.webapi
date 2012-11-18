@@ -117,44 +117,39 @@ byCycle.UI.Query.prototype = {
    * @param response The response object
    */
   makeResults: function(response) {
-    var results = [];
-
-    // Extract top level DOM nodes from response HTML fragment (skipping text
-    // nodes).
-    // Note: The fragment should consist of a set of top level elements that
-    // can be transformed into widgets.
-    var div = document.createElement('div');
+    var results = [],
+        div = document.createElement('div'),
+        nodes,
+        result,
+        domNode;
     div.innerHTML = response.fragment;
-    var nodes = $(div).getElementsByClassName('fixed-pane');
-
-    var result, dom_node;
+    nodes = div.getElementsByClassName('fixed-pane');
     response.response.results.each((function (r, i) {
-      dom_node = nodes[i];
-      result = this.makeResult(r, dom_node);
+      domNode = nodes[i];
+      result = this.makeResult(r, domNode);
       results.push(result);
     }).bind(this));
-
     return results;
   },
 
   /**
-   * Make a ``Result`` for the given (JSON) ``result`` and ``dom_node``.
+   * Make a ``Result`` for the given (JSON) ``result`` and ``domNode``.
    * The ``Result`` will contain an ID, JSON result object, associated map
    * overlays, widget reference, etc.
    *
    * @param result A simple object from the JSON response
-   * @param dom_node A DOM node that contains the necessary elements to create
+   * @param domNode A DOM node that contains the necessary elements to create
    *        a ``FixedPane`` widget.
    * @return ``Result``
    */
-  makeResult: function (result, dom_node) {
+  makeResult: function (result, domNode) {
     var id = [this.service, 'result', new Date().getTime()].join('_');
-    dom_node.id = id;
-    var widget = new byCycle.widget.FixedPane(dom_node, {destroy_on_close: true});
-    var result_obj = new this.ui.Result(id, result, this.service, widget);
-    widget.register_listeners('close', result_obj.remove.bind(result_obj));
-    this.ui.results.get(this.service)[id] = result_obj;
-    return result_obj;
+    domNode.id = id;
+    var widget = new byCycle.widget.FixedPane(domNode, {destroy_on_close: true}),
+        resultObj = new this.ui.Result(id, result, this.service, widget);
+    widget.register_listeners('close', resultObj.remove.bind(resultObj));
+    this.ui.results.get(this.service)[id] = resultObj;
+    return resultObj;
   },
 
   processResults: function(response, results) {},
@@ -211,14 +206,15 @@ byCycle.UI.GeocodeQuery.prototype = Object.extend(new byCycle.UI.Query(), {
   },
 
   processResults: function(response, results) {
-    var zoom = this.ui.is_first_result ? this.ui.map.default_zoom : undefined;
-    // For each result, place a marker on the map.
-    var div, content_pane, point;
-    var placeGeocodeMarker = this.ui.map.placeGeocodeMarker.bind(this.ui.map);
+    var div,
+        contentPane,
+        point,
+        zoom = this.ui.is_first_result ? this.ui.map.default_zoom : undefined,
+        placeGeocodeMarker = this.ui.map.placeGeocodeMarker.bind(this.ui.map);
     results.each(function (r) {
       div = document.createElement('div');
-      content_pane = r.widget.content_pane.cloneNode(true);
-      div.appendChild(content_pane);
+      contentPane = r.widget.content_pane.cloneNode(true);
+      div.appendChild(contentPane);
       point = r.result.lat_long.coordinates;
       point = {x: point[0], y: point[1]};
       r.addOverlay(placeGeocodeMarker(point, div, zoom));
@@ -240,22 +236,22 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
                                processing_message='Finding route...',
                                input=undefined */) {
     opts = opts || {};
-    var ui = byCycle.UI;
-    var form = opts.form || ui.route_form;
-    var result_list = opts.result_list || ui.route_list;
     opts.processing_message = opts.processing_message || 'Finding route...';
-    var service = 'routes';
-    this.superclass.initialize.call(this, service, form, result_list, opts);
+    var ui = byCycle.UI,
+        form = opts.form || ui.route_form,
+        resultList = opts.result_list || ui.route_list,
+        service = 'routes';
+    this.superclass.initialize.call(this, service, form, resultList, opts);
     this.ui.selectInputTab(service);
   },
 
   before: function() {
     this.superclass.before.call(this);
-    var errors = [];
-    if (typeof(this.input) == 'undefined') {
+    if (typeof this.input === 'undefined') {
       // Use form fields for input
-      var s = this.ui.s_el.value;
-      var e = this.ui.e_el.value;
+      var errors = [],
+          s = this.ui.s_el.value,
+          e = this.ui.e_el.value;
       if (!(s && e)) {
         if (!s) {
           errors.push('Please enter a start address');
@@ -274,10 +270,10 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
 
   on300: function(request) {
     this.superclass.on300.call(this, request);
-    var route_choices = [];
-    var addr;
+    var route_choices = [],
+        addr;
     this.response.choices.each(function (c, i) {
-      if (typeof c == 'Array') {
+      if (typeof c === 'Array') {  // XXX: Huh?
         addr = null;
       } else {
         if (c.number) {
@@ -292,15 +288,21 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
   },
 
   processResults: function(response, results) {
-    var route, ls, s_e_markers, startPoint, endPoint, s_marker, e_marker, line;
-    var ui = this.ui;
-    var map = ui.map;
-    var getBoundsForPoints = map.getBoundsForPoints.bind(map);
-    var centerAndZoomToBounds = map.centerAndZoomToBounds.bind(map);
-    var placeMarkers = map.placeMarkers.bind(map);
-    var addListener = map.addListener.bind(map);
-    var showMapBlowup = map.showMapBlowup.bind(map);
-    var drawPolyLine;
+    var route,
+        ls,
+        markers,
+        startPoint, endPoint,
+        startMarker, endMarker,
+        line,
+        color,
+        ui = this.ui,
+        map = ui.map,
+        getBoundsForPoints = map.getBoundsForPoints.bind(map),
+        centerAndZoomToBounds = map.centerAndZoomToBounds.bind(map),
+        placeMarkers = map.placeMarkers.bind(map),
+        addListener = map.addListener.bind(map),
+        showMapBlowup = map.showMapBlowup.bind(map),
+        drawPolyLine;
     if (map.drawPolyLineFromEncodedPoints) {
       drawPolyLine = map.drawPolyLineFromEncodedPoints.bind(map);
     } else {
@@ -320,21 +322,20 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
       endPoint = {x: endPoint[0], y: endPoint[1]};
 
       // Place from and to markers
-      s_e_markers = placeMarkers([startPoint, endPoint], [map.start_icon, map.end_icon]);
+      markers = placeMarkers([startPoint, endPoint], [map.start_icon, map.end_icon]);
 
       // Add listeners to start and end markers
-      s_marker = s_e_markers[0];
-      e_marker = s_e_markers[1];
-      addListener(s_marker, 'click', function() {
+      startMarker = markers[0];
+      endMarker = markers[1];
+      addListener(startMarker, 'click', function() {
         showMapBlowup(startPoint);
       });
-      addListener(e_marker, 'click', function() {
+      addListener(endMarker, 'click', function() {
         showMapBlowup(endPoint);
       });
 
       // Draw linestring
-      var line;
-      var color = ui.route_line_color;
+      color = ui.route_line_color;
       if (map.drawPolyLineFromEncodedPoints) {
         line = drawPolyLine(route.google_points, route.google_levels, color);
       } else {
@@ -342,7 +343,7 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
       }
 
       // Add overlays to result object
-      r.overlays.push(s_marker, e_marker, line);
+      r.overlays.push(startMarker, endMarker, line);
     });
   }
 });
