@@ -167,7 +167,8 @@ class Deployer(Task):
         # TODO: Create sdists for develop eggs
 
         # Copy buildout.cfg
-        shutil.copy('buildout.cfg', self.build_dir)
+        dest = os.path.join(self.build_dir, 'buildout.cfg')
+        self._render_template('deploy.cfg', dest)
 
         # Copy Paste config file
         shutil.copy('production.ini', self.build_paths['config'])
@@ -220,7 +221,7 @@ class Deployer(Task):
         self.clean_buildout()
         with cd(self.env_dir):
             with path(env.get('PATH', ''), behavior='prepend'):
-                run('buildout buildout:develop= install prod')
+                run('buildout')
         with cd(self.env_base_dir):
             # Disallow other access to all.
             run('chmod -R o-rwx .')
@@ -237,6 +238,24 @@ class Deployer(Task):
     def restart(self):
         with cd(self.env_dir):
             run('uwsgi --reload ~/var/run/uwsgi/bycycle.pid')
+
+    def _render_template(self, source, destination):
+        """Copy ``source`` to ``destination``, applying **env.
+
+        ``source`` should be a file name. Its contents will be treated as
+        a string template to which `.format(**env)` will be applied. The
+        resulting string will be written to ``destination``.
+
+        ``destination`` can be a file path or a directory. If it's the
+        latter, ``source`` will be copied into the specified directory.
+
+        """
+        if os.path.isdir(destination):
+            destination = os.path.join(destination, os.path.basename(source))
+        with open(source) as source:
+            contents = source.read().format(**env)
+        with open(destination, 'w') as destination:
+            destination.write(contents)
 
 
 deploy = Deployer()
