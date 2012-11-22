@@ -232,6 +232,7 @@ class Deployer(Task):
             run('chmod -R u+rw,g+r .')
             run('find . -type d | xargs chmod ug+x')
             # Ensure other has access to static files.
+            run('chmod o+x .')
             run('chmod -R o+r static')
             run('find static -type d | xargs chmod o+x')
 
