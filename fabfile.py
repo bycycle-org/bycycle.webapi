@@ -36,7 +36,7 @@ env.static_dir = os.path.join(env.package_path, 'static')
 env.user = 'bycycle'
 env.HOME = '/home/bycycle'
 env.env_base_dir = '{0.HOME}/webapps/bycycle'.format(env)
-env.static_server_base_dir = '{0.env_base_dir}/static'.format(env)
+env.static_server_base_dir = '{0.HOME}/webapps/bycycle_static'.format(env)
 env.static_server_path = '{static_server_base_dir}/{version}'.format(**env)
 
 # Map of environment names to host lists
@@ -231,10 +231,10 @@ class Deployer(Task):
             # access to everything.
             run('chmod -R u+rw,g+r .')
             run('find . -type d | xargs chmod ug+x')
+        with cd(env.static_server_path):
             # Ensure other has access to static files.
-            run('chmod o+x .')
-            run('chmod -R o+r static')
-            run('find static -type d | xargs chmod o+x')
+            run('chmod -R o+r .')
+            run('find . -type d | xargs chmod o+x')
 
     def restart(self):
         with cd(self.env_dir):
