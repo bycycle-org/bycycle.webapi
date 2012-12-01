@@ -1,0 +1,4 @@
+include *.cfg
+include *.ini
+recursive-include bycycle/tripplanner/static *
+recursive-include bycycle/tripplanner/templates *
