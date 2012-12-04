@@ -171,6 +171,7 @@ class Deployer(Task):
         self._render_template('deploy.cfg', dest)
 
         # Copy Paste config file
+        shutil.copy('base.ini', self.build_paths['config'])
         self._render_template('production.ini', self.build_paths['config'])
 
         # Copy static files
