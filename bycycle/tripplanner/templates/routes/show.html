@@ -1,4 +1,3 @@
-## -*- coding: UTF-8 -*-
 <%inherit file="layout.html"/>
 
 <%! from urllib import unquote_plus %>
@@ -6,7 +5,7 @@
 <%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
 
 <%
-    route = c.route
+    route = result
     distance = route.distance
     total_mi = distance['miles']
     total_km = distance['kilometers']
@@ -15,7 +14,7 @@
     end = route.end
     e_addr = end.address
     directions = route.directions
-    linestring = route.linestring
+    linestring = route.linestring_lat_long
     centroid = linestring.centroid
     s_addr = h.literal(str(s_addr).replace('\n', '<br/>'))
     e_addr = h.literal(str(e_addr).replace('\n', '<br/>'))
@@ -25,7 +24,6 @@
     map_blowup_href = "#show-map-blowup"
     map_blowup_onclick = "byCycle.UI.map.showMapBlowup({x: %s, y: %s}); return false;"
     tab = h.literal('&nbsp;' * 4)
-    row_class = h.cycle('ab')
 %>
 
 <%call expr="fixed_pane()">
@@ -55,12 +53,12 @@
         ${'%.2f' % total_mi} miles / ${'%.2f' % total_km} km
     </div>
     <div class="noprint reverse-directions">
-        <a href="/regions/${c.region.slug}/routes/find?q=${e_url_str}+to+${s_url_str}"
+        <a href="/regions/${region.slug}/routes/find?q=${e_url_str}+to+${s_url_str}"
            onclick="byCycle.UI.reverseDirections('${unquote_plus(e_url_str)}', '${unquote_plus(s_url_str)}'); return false;"
            >Reverse Directions</a>
     </div>
     <div class="directions">
-        % for i, d in enumerate(directions):
+        % for d in directions:
             <%
                 turn = d['turn']
                 street = d['street']
@@ -71,18 +69,19 @@
                 if street == 'None':
                     street = '[No name]'
                 street = ' - '.join([s.strip() for s in street.split('-') if s])
-                if i == 0:
-                    street = street #'%s toward %s' % (street, d['toward'])
+                if loop.first:
+                    street = street  # XXX: '{0} toward {toward}'.format(street, **d)
                 ls_index = d['linestring_index']
                 distance = d['distance']
                 mi = '%.2f' % distance['miles']
                 km = '%.2f' % distance['kilometers']
+                row_class = loop.cycle('a', 'b')
             %>
-            <div class="direction ${row_class.next()}">
+            <div class="direction ${row_class}">
                 <span class="count">
                     <a href="${map_blowup_href}"
                        onclick="${map_blowup_onclick % point}"
-                       >${i + 1}</a>
+                       >${loop.index + 1}</a>
                 </span>
                 -
                 <span class="turn">${turn.title()}</span>
@@ -100,16 +99,16 @@
                 % endif
             </div>
         % endfor
-        <div class="direction ${row_class.next()}">
+        <div class="direction ${'a' if row_class == 'b' else 'b'}">
             <span class="count">
                 <a href="${map_blowup_href}"
                    onclick="${map_blowup_onclick % (end.lat_long.x, end.lat_long.y)}"
-                   >${i + 2}</a>
+                   >${len(directions) + 1}</a>
             </span>
             -
             <span class="turn">End</span>
             -
-            <span class="direction">${end.address.street_name}</span>
+            <span class="direction">${str(end.address).split('\n')[0]}</span>
         </div>
     </div>
 </%call>

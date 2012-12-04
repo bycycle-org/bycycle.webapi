@@ -1,5 +1,4 @@
-## -*- coding: UTF-8 -*-
-% if not c.wrap:
+% if not wrap:
   ${self.body()}
 % else:
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -18,23 +17,24 @@
 
     <meta name="description" content="byCycle.org Bicycle Trip Planner -- A web-based, interactive, bicycle trip planner (route finder) for the Portland, Oregon metro region." />
 
-    <title>byCycle.org - Bicycle Trip Planner - ${self.region_title()}</title>
+    <title>byCycle.org - Bicycle Trip Planner - ${self.title()}</title>
 
-    ${h.stylesheet_link_tag('base', 'fixed-pane')}
-    ${h.if_ie(h.stylesheet_link_tag('base_ie'))}
-    ${h.stylesheet_link_tag('print', media='print')}
+    ${request.stylesheet_link_tag('base', 'fixed-pane')}
+    ${h.if_ie(request.stylesheet_link_tag('base_ie'))}
+    ${request.stylesheet_link_tag('print', media='print')}
     ${self.stylesheet_links()}
 
     <script type="text/javascript">
       //<![CDATA[
       // Global setup
-      var debug = ${'true' if bool(app_globals.debug) else 'false'};
-      byCycle_prefix = '${url('/')}';
+      var debug = ${str(debug).lower()};
+      byCycle_prefix = '${request.script_name or "/"}';
+      byCycle_staticPrefix = '${request.static_path("bycycle.tripplanner:static/")}';
       //]]>
     </script>
 
-    ${h.javascript_include_tag('prototype')}
-    ${h.javascript_include_tag('bycycle', 'util')}
+    ${request.javascript_include_tag('prototype')}
+    ${request.javascript_include_tag('bycycle', 'util')}
   </head>
 
 
@@ -47,13 +47,13 @@
       <!-- Masthead -->
       <div id="masthead" class="noprint">
         <h1 id="logo">
-          <a href="${url('/')}" title="byCycle.org Home Page">
-          ${h.image(url('/images/logo.png'), title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
+          <a href="${request.application_url}" title="byCycle.org Home Page">
+            ${h.image(request.static_url('bycycle.tripplanner:static/images/logo.png'), title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
           </a>
         </h1>
 
         <h2 id="app-name">
-          ${h.link_to('Bicycle Trip Planner', url('/'), title='byCycle.org Bicycle Trip Planner (this page)')}
+          ${h.link_to('Bicycle Trip Planner', request.application_url, title='byCycle.org Bicycle Trip Planner (this page)')}
         </h2>
 
         <h3 id="app-version">
@@ -63,7 +63,7 @@
              >beta</a>
         </h3>
       </div>
-      <!-- /Masthead -->
+      <!--/Masthead -->
 
 
       <%call expr="self.input_container()" />
@@ -75,12 +75,12 @@
       <!-- Bar -->
       <div id="bar" class="noprint">
         <div id="spinner" class="spinner noprint" style="display: none;">
-          ${h.image(url('/images/spinner.gif'), width=16, height=16, alt='Click to hide')}
+          ${h.image(request.static_url('bycycle.tripplanner:static/images/spinner.gif'), width=16, height=16, alt='Click to hide')}
         </div>
 
         <div id="status">
-          % if c.status:
-            ${c.status}
+          % if status:
+            ${status}
           % else:
             Welcome to the byCycle.org bicycle trip planner.
           % endif
@@ -109,18 +109,20 @@
 
           <!-- Message Pane -->
           <%
-            show_msg_pane = (not c.http_status or c.info or c.exception or
-                             (c.http_status and c.http_status > 299))
-            show_error_pane = (c.exception or
-                               (c.http_status and c.http_status > 299))
-            show_info_pane = not show_error_pane
+            http_status = request.response.status_int
+            ## Show the message pane if there's info OR no result OR an error
+            show_msg_pane = info or not result or exception or http_status > 299
             msg_pane_style = {'display': ('block' if show_msg_pane else 'none')}
+            ## Show the info pane (inside the message pane) when there is NOT an error
+            show_info_pane = not exception and http_status < 300
+            ## Show the error pane (inside the message pane) when there IS an error
+            show_error_pane = exception or http_status > 299
           %>
 
           <%call expr="fixed_pane(id='message_pane', classes=['display-pane'], style=msg_pane_style)">
             <div id="info_pane" ${h.hide_element(not show_info_pane)}>
-              % if c.info:
-                ${c.info}
+              % if info:
+                ${info}
               % else:
                 <%include file="/news.html" />
 
@@ -133,11 +135,11 @@
                 </p>
 
                 <p>
-                  <a href="http://info.bycycle.org/contact/">Contact us</a><br />
+                  <a href="${req.registry.settings['contact_url']}"">Contact us</a><br />
                 </p>
 
                 <p class="no-bottom-margin">
-                  &copy; 2004-2009 byCycle.org
+                  &copy; 2012 byCycle.org
                 </p>
               % endif
             </div>
@@ -182,8 +184,8 @@
     <!-- /Wrapper -->
 
 
-    ${h.javascript_include_tag('map', 'gmap')}
-    ${h.javascript_include_tag('widgets/fixed_pane', 'ui', 'regions')}
+    ${request.javascript_include_tag('map', 'gmap')}
+    ${request.javascript_include_tag('widgets/fixed_pane', 'ui', 'regions')}
     ${self.javascript_includes()}
 
 
@@ -203,9 +205,7 @@
 
 <%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
 
-<%def name="region_title()">
-  ${c.region.title if c.region else 'Select a region'}
-</%def>
+<%def name="title()">Select a region</%def>
 
 <%def name="stylesheet_links()"></%def>
 
@@ -236,27 +236,27 @@
 
 <%def name="errors()">
   <div class="errors">
-    <h2>${getattr(c.exception, 'title', 'Error')}</h2>
-    % if hasattr(c.exception, 'errors'):
-      % for error in c.exception.errors:
+    <h2>${error.get('title', 'Error')}</h2>
+    % if hasattr(error, 'errors'):
+      % for err in error['errors']:
         <p class="error">
-          ${error}
+          ${err}
         </p>
       % endfor
     % else:
       <p class="error">
-        ${c.exception.description.decode('utf-8')}
+        ${error['description']}
       </p>
     % endif
-    <% explanation = getattr(c.exception, 'explanation', None) %>
-    % if explanation is not None:
+    <% explanation = error.get('explanation') %>
+    % if explanation:
       <div class="explanation">
         <h3>What This Means</h3>
-        <p>${explanation.strip().replace('\n', '</p><p>')}</p>
+        <p>${h.literal(explanation.strip().replace('\n', '</p><p>'))}</p>
       </div>
     % endif
   </div>
 </%def>
 
 
-% endif ## if not c.wrap
+% endif ## if not wrap

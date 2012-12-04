@@ -1,4 +1,3 @@
-## -*- coding: UTF-8 -*-
 <%inherit file="layout.html"/>
 
 <%! from urllib import unquote_plus %>
@@ -6,10 +5,9 @@
 <%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
 
 <%
-   code = c.geocode
-   x, y = code.lat_long.x, code.lat_long.y
-   html_addr = h.literal(str(code.address).replace('\n', '<br />'))
-   field_addr = unquote_plus(code.urlStr())
+  x, y = result.lat_long.x, result.lat_long.y
+  html_addr = h.literal(str(result.address).replace('\n', '<br />'))
+  field_addr = unquote_plus(result.urlStr())
 %>
 
 <%call expr="fixed_pane()">

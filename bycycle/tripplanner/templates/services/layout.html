@@ -1,9 +1,8 @@
-## -*- coding: UTF-8 -*-
 <%inherit file="/layout.html" />
 
 
 <%def name="stylesheet_links()">
-  ${h.stylesheet_link_tag('tab-control', 'fixed-pane')}
+  ${request.stylesheet_link_tag('tab-control', 'fixed-pane')}
 </%def>
 
 
@@ -22,9 +21,9 @@
 
       <!-- Query Pane -->
       <div id="search-the-map" class="tab-content">
-        ${h.form(url('/regions/{0.region}/services/find'.format(c)), method='get', id='query_form')}
+        ${h.form(request.route_url('region', id=region.slug), method='get', id='query_form')}
           <div>
-            ${h.text('q', id='q', value=c.q, title='Enter an address or route', tabindex='1')}
+            ${h.text('q', id='q', value=q, title='Enter an address or route', tabindex='1')}
             ${h.submit('search', 'Search Map', title='Click to search the map', tabindex='2')}
           </div>
           <div class="input_label">
@@ -36,16 +35,16 @@
 
       <!-- Route Pane -->
       <div id="find-a-route" class="tab-content">
-        ${h.form(url('/regions/{0.region}/routes/find'.format(c)), method='get', id='route_form')}
+        ${h.form(request.route_url('find_route', id=region.slug, renderer=req.matchdict.get('renderer', '')), method='get', id='route_form')}
           <div>
-            ${h.text('s', id='s', value=c.s, title='Enter start address', tabindex='3')}<a
+            ${h.text('s', id='s', value=s, title='Enter start address', tabindex='3')}<a
               id="swap_s_and_e"
               href="#swap-start-and-end"
               onclick="return false;"
               title="Swap start and end addresses"
               tabindex="4"
               style="text-decoration: none;"
-            > &laquo;-&raquo; </a>${h.text('e', id='e', value=c.e, title='Enter end address', tabindex='5')}
+            > &laquo;-&raquo; </a>${h.text('e', id='e', value=e, title='Enter end address', tabindex='5')}
             ${self.route_pref()}
             ${h.submit('find', 'Find Route', title='Click to find a route', tabindex='9')}
           </div>
@@ -66,7 +65,7 @@
 
 <!-- Route preference form control -->
 <%def name='route_pref()'>
-  % if c.region.slug == 'portlandor':
+  % if region.slug == 'portlandor':
     <select id="pref" name="pref" tabindex="8">
       <option value="default">- Route Type -</option>
       <option value="default">Normal</option>
@@ -88,14 +87,14 @@
 <%def name="result_pane()">
   <%call expr="parent.result_pane(classes=['tab-control'])">
     <ul id="result_tab_buttons" class="tab-buttons">
-      <% selected = 'routes' if c.service == 'routes' else 'locations' %>
+      <% selected = 'routes' if service == 'route' else 'locations' %>
       ${h.make_tab_buttons(('locations', 'routes'), selected=selected)}
     </ul>
 
     <div class="tab-contents">
       <div id="locations"
-           class="${'selected-' if c.service == 'geocodes' else ''}tab-content">
-        % if c.service == 'geocodes' and c.http_status == 200:
+           class="${'selected-' if service == 'geocode' else ''}tab-content">
+        % if service == 'geocode' and request.response.status_int == 200:
           <div class="fragment">
             ${self.body()}
           </div>
@@ -104,8 +103,8 @@
       </div>
 
       <div id="routes"
-           class="${'selected-' if c.service == 'routes' else ''}tab-content">
-        % if c.service == 'routes' and c.http_status == 200:
+           class="${'selected-' if service == 'route' else ''}tab-content">
+        % if service == 'route' and request.response.status_int == 200:
           <div class="fragment">
             ${self.body()}
           </div>
@@ -131,16 +130,14 @@
 
 <%def name="javascript_includes()">
   <% js = ('services', 'query', 'result', 'widgets/tab_control', 'widgets/fixed_pane') %>
-  ${h.javascript_include_tag(*js)}
+  ${request.javascript_include_tag(*js)}
 </%def>
 
 
 <%def name="javascript()">
-  byCycle.UI.service = '${c.service}';
-  byCycle.UI.member_name = '${c.member_name}';
-  byCycle.UI.collection_name = '${c.collection_name}';
-  byCycle.UI.region_id = '${c.region.slug if c.region else ""}';
-  byCycle.UI.http_status = ${'%i' % c.http_status if c.http_status else 'undefined'};
-  byCycle.UI.q = '${c.q}';
-  byCycle.jsonData = ${c.json or '{}' | n};
+  byCycle.UI.service = '${service}';
+  byCycle.UI.region_id = '${region.slug}';
+  byCycle.UI.http_status = ${request.response.status_int};
+  byCycle.UI.q = '${q}';
+  byCycle.jsonData = ${json or 'null' | n};
 </%def>

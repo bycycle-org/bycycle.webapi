@@ -1,4 +1,3 @@
-## -*- coding: UTF-8 -*-
 <%inherit file="layout.html"/>
 
 
@@ -10,24 +9,14 @@
 <%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
 
 
-<h2>${c.exception.title}</h2>
+<h2>${error['title']}</h2>
 <h3>Select a location</h3>
 
 
 <ul class="result_list multi-list">
-  <%
-    last = len(c.geocodes) - 1
-    li_class = h.cycle('ab')
-  %>
-  % for i, code in enumerate(c.geocodes):
-    <%
-      if i == last:
-        style = ' style="margin-bottom: 0;"'
-      else:
-        style = ''
-    %>
-    <li class="${li_class.next()}"${style}>
-      ${self.geocode(code, i)}
+  % for code in result:
+    <li class="${loop.cycle('a', 'b')}${' no-bottom-margin' if loop.last else ''}">
+      ${self.geocode(code, loop.index)}
     </li>
   % endfor
 </ul>
@@ -61,7 +50,7 @@
          >Show on map</a>
       |
       <a class="select-geocode-link"
-         href="${url('find_geocodes', region_id=c.region.slug, q=field_addr)}#select-this-location"
+         href="${request.route_url('find_geocode', id=region.slug, renderer=req.matchdict.get('renderer', ''), q=field_addr)}#select-this-location"
          title="Select this location"
          onclick="byCycle.UI.selectGeocode(this, ${i}); return false;"
          >Select</a>

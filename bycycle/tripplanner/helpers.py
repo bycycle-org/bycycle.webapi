@@ -1,7 +1,3 @@
-from itertools import cycle
-
-from pylons import url
-
 from webhelpers.html.tags import (
     link_to,
     stylesheet_link, javascript_link, image,
@@ -18,9 +14,8 @@ def if_ie(content, join_string=''):
 def hide_element(cond=True, as_attr=True):
     rule = 'display: %s' % ('none' if cond else 'block')
     if as_attr:
-        return 'style="%s"' % rule
-    else:
-        return rule
+        rule = 'style="%s"' % rule
+    return literal(rule)
 
 
 def make_inline_style(style_dict):
@@ -63,22 +58,24 @@ def make_tab_buttons(tab_ids, tag_name='li', selected=''):
     return literal(''.join(buttons))
 
 
-def javascript_include_tag(*names, **attrs):
+def javascript_include_tag(request, *names, **attrs):
     """Create JS <script> tag for each name in ``names``.
-    
+
     ``names`` are paths relative to /javascripts/ without the .js extension.
 
     """
-    urls = [url('/javascripts/{0}.js'.format(n)) for n in names]
+    temp = 'bycycle.tripplanner:static/javascripts/{0}.js'
+    urls = [request.static_url(temp.format(n)) for n in names]
     return javascript_link(*urls, **attrs)
 
 
-def stylesheet_link_tag(*names, **attrs):
+def stylesheet_link_tag(request, *names, **attrs):
     """Create stylesheet <link> for each name in ``names``.
-    
+
     ``names`` are paths relative to /stylesheets/ without the .css
     extension.
 
     """
-    urls = [url('/stylesheets/{0}.css'.format(n)) for n in names]
+    temp = 'bycycle.tripplanner:static/stylesheets/{0}.css'
+    urls = [request.static_url(temp.format(n)) for n in names]
     return stylesheet_link(*urls, **attrs)

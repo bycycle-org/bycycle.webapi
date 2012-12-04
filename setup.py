@@ -25,24 +25,36 @@ setup(
     zip_safe=False,
     install_requires=(
         'bycycle.core>=0.5.dev0',
-        'simplejson>=2.6.2',
         'Beaker>=1.6.4',
-        'Routes>=1.13',
+        'Pyramid>=1.4b1',
+        'pyramid_exclog>=0.6',
+        'pyramid_tm>=0.5',
         'Mako>=0.7.3',
-        'Restler>=0.7.1',
         'WebHelpers>=1.3',
-        'Pylons>=1.0.1',
+        'zope.sqlalchemy>=0.7.1',
     ),
-    test_suite = 'nose.collector',
-    package_data={'bycycle.tripplanner': ['i18n/*/LC_MESSAGES/*.mo']},
+    extras_require=dict(
+        dev=(
+            'pyramid_debugtoolbar>=1.0.3',
+            'waitress>=0.8.2',
+            'zest.releaser>=3.34',
+        ),
+        test=(
+            'coverage>=3.5.3',
+            'WebTest>=1.3.4',
+        ),
+        deploy=(
+            'Fabric>=1.5.1',
+        ),
+    ),
+    test_suite='bycycle.tripplanner',
     entry_points="""
     [paste.app_factory]
-    main = bycycle.tripplanner.config.middleware:make_app
+    main = bycycle.tripplanner.app:main
 
-    [paste.app_install]
-    main = pylons.util:PylonsInstaller
-
-    [nose.plugins]
-    pylons = pylons.test:PylonsPlugin
+    [console_scripts]
+    serve = bycycle.tripplanner.scripts.development:serve
+    shell = bycycle.tripplanner.scripts.development:shell
+    test = bycycle.tripplanner.scripts.development:test
     """,
 )
