@@ -8,11 +8,11 @@
   var _createEventHandlers = self._createEventHandlers;
 
   Object.extend(self, {
-    service: 'services',
+    service: null,
     query: null,  // query.Query object (not query string)
     is_first_result: true,
     result: null,
-    results: $H({'geocodes': $H({}), 'routes': $H({})}),
+    results: $H({'geocode': $H({}), 'route': $H({})}),
     http_status: null,
     response_text: null,
 
@@ -31,10 +31,10 @@
     onLoad: function () {
       onLoad();
       var w = byCycle.widget.TabControl;
-      var initial_tab_id = (self.service == 'routes' ? 'find-a-route' :
+      var initial_tab_id = (self.service == 'route' ? 'find-a-route' :
                             'search-the-map');
       self.input_tab_control = new w(self.input_container, initial_tab_id);
-      initial_tab_id = (self.service == 'routes' ? 'routes' : 'locations');
+      initial_tab_id = (self.service == 'route' ? 'routes' : 'locations');
       self.result_tab_control = new w(self.result_pane, initial_tab_id,
                                       initial_tab_id);
       self.handleQuery();
@@ -81,7 +81,7 @@
     },
 
     selectInputTab: function(service) {
-      self.input_tab_control.select(service == 'routes' ? 1 : 0);
+      self.input_tab_control.select(service == 'route' ? 1 : 0);
     },
 
     swapStartAndEnd: function(event) {
@@ -93,13 +93,13 @@
 
     setAsStart: function(addr) {
       self.s_el.value = addr;
-      self.selectInputTab('routes');
+      self.selectInputTab('route');
       self.s_el.focus();
     },
 
     setAsEnd: function(addr) {
       self.e_el.value = addr;
-      self.selectInputTab('routes');
+      self.selectInputTab('route');
       self.e_el.focus();
     },
 
@@ -108,15 +108,15 @@
     // This is run on page load only. The purpose is to simulate an AJAX
     // query (i.e., the post-processing that happens).
     handleQuery: function() {
-      var status = self.http_status;
-      if (!status) {
+      if (!byCycle.jsonData) {
         return;
       }
-      var queryClassName = [self.member_name.capitalize(), 'Query'].join(''),
+      var status = self.http_status,
+          queryClassName = [self.service.capitalize(), 'Query'].join(''),
           queryClass = self[queryClassName],
           queryObj = new queryClass();
       if (status == 200) {
-        var pane = $(self.collection_name == 'routes' ? 'routes' : 'locations'),
+        var pane = $(self.service == 'route' ? 'routes' : 'locations'),
             fragment = pane.getElementsByClassName('fragment')[0];
         Element.remove(fragment);
       } else if (status != 300) {
@@ -188,7 +188,7 @@
      * Select from multiple matching geocodes
      */
     selectGeocode: function(select_link, i) {
-      var response = self.query.response.response,
+      var response = self.query.response,
           domNode = $(select_link).up('.fixed-pane'),
           result = self.query.makeResult(response.results[i], domNode);
 
@@ -222,7 +222,7 @@
     selectRouteGeocode: function(select_link, i, j) {
       var dom_node = $(select_link).up('ul');
       var next = dom_node.next();
-      var choice = self.query.response.choices[i][j];
+      var choice = self.query.response.results[i][j];
       var addr;
       if (choice.number) {
         addr = [choice.number, choice.network_id].join('-');

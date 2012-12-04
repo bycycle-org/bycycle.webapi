@@ -1,4 +1,3 @@
-## -*- coding: UTF-8 -*-
 <%inherit file="layout.html"/>
 
 
@@ -11,22 +10,27 @@
 <%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
 
 
-<h2>${c.exception.title}</h2>
+<h2>${error['title']}</h2>
 <h3>Select a location</h3>
 
 
-<% li_class = h.cycle('ab') %>
-% for i, geocodes in enumerate(c.choices):
+## A query to the route service may find multiple matching matches for
+## any or all of the addresses it was passed as input. In this case, the
+## `result` list will contain a single `Geocode` for each input address
+## that did *not* have multiple matches and a list of `Geocode`s for
+## each input address that *did*. The following makes a "fixed pane" for
+## the addresses that had multiple matches. The first fixed pane is
+## visible while the others are initially hidden.
+<% first_ul = True %>
+% for geocodes in result:
   % if not isinstance(geocodes, Geocode):
-    <%
-      ul_style = '' if i == 0 else 'style="display: none;"'
-      last = len(geocodes) - 1
-    %>
-    <ul class="result_list multi-list" ${ul_style}>
-      % for j, code in enumerate(geocodes):
-        <% style = '' if i < last else 'style="margin-bottom: 0;"' %>
-        <li class="${li_class.next()}" ${style}>
-          ${self.geocode(code, i, j)}
+    <% style = '' if first_ul else 'display:none;' %>
+    <% first_ul = False %>
+    <ul class="result_list multi-list" style="${style}">
+      % for geocode in geocodes:
+        <% class_ = ' no-bottom-margin' if loop.last else '' %>
+        <li class="${loop.cycle('a', 'b')}${class_}">
+          ${self.geocode(geocode, loop.parent.index, loop.index)}
         </li>
       % endfor
     </ul>
@@ -50,8 +54,15 @@
          onclick="byCycle.UI.map.setCenter({x: ${x}, y: ${y}}); return false;"
          >Show on map</a>
       |
+      <% 
+        href = req.route_url(
+          'find_geocode',
+          id=region.slug,
+          renderer=req.matchdict.get('renderer', ''), 
+          q=field_addr)
+      %>
       <a class="select-geocode-link"
-         href="${url('find_geocodes', region_id=c.region.slug, q=field_addr)}#select-this-location"
+         href="${href}#select-this-location"
          title="Select this location"
          onclick="byCycle.UI.selectRouteGeocode(this, ${i}, ${j}); return false;"
          >Select</a>

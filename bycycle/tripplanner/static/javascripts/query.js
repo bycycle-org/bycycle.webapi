@@ -41,7 +41,7 @@ byCycle.UI.Query.prototype = {
 
   doQuery: function() {
     // Done only if no errors in before()
-    var path = ['regions', this.ui.region_id, this.service, 'find'].join('/')
+    var path = ['regions', this.ui.region_id, this.service + 's', 'find'].join('/')
     var url = [byCycle.prefix, path].join('');
     var params = this.input ? this.input : this.form.serialize(true);
 
@@ -51,9 +51,11 @@ byCycle.UI.Query.prototype = {
     var q_str = Hash.toQueryString(bookmark_params);
     this.ui.bookmark_link.href = [url, q_str].join('?');
 
-    params.format = 'json';
     var args = {
       method:'get',
+      requestHeaders: {
+        Accept: 'application/json'
+      },
       onLoading: this.onLoading.bind(this),
       on200: this.on200.bind(this),
       on300: this.on300.bind(this),
@@ -124,7 +126,7 @@ byCycle.UI.Query.prototype = {
         domNode;
     div.innerHTML = response.fragment;
     nodes = div.getElementsByClassName('fixed-pane');
-    response.response.results.each((function (r, i) {
+    response.results.each((function (r, i) {
       domNode = nodes[i];
       result = this.makeResult(r, domNode);
       results.push(result);
@@ -190,7 +192,7 @@ byCycle.UI.GeocodeQuery.prototype = Object.extend(new byCycle.UI.Query(), {
     var form = opts.form || ui.query_form;
     var result_list = opts.result_list || ui.location_list;
     opts.processing_message = opts.processing_message || 'Looking up address...';
-    this.superclass.initialize.call(this, 'geocodes', form, result_list, opts);
+    this.superclass.initialize.call(this, 'geocode', form, result_list, opts);
   },
 
   before: function() {
@@ -240,7 +242,7 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
     var ui = byCycle.UI,
         form = opts.form || ui.route_form,
         resultList = opts.result_list || ui.route_list,
-        service = 'routes';
+        service = 'route';
     this.superclass.initialize.call(this, service, form, resultList, opts);
     this.ui.selectInputTab(service);
   },
@@ -272,7 +274,7 @@ byCycle.UI.RouteQuery.prototype = Object.extend(new byCycle.UI.Query(), {
     this.superclass.on300.call(this, request);
     var route_choices = [],
         addr;
-    this.response.choices.each(function (c, i) {
+    this.response.results.each(function (c, i) {
       if (typeof c === 'Array') {  // XXX: Huh?
         addr = null;
       } else {

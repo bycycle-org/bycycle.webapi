@@ -1,26 +1,41 @@
-from bycycle.tripplanner.tests import TestController, url
+from bycycle.tripplanner.tests.functional import BaseTestCase
 
 
-class TestGeocodesController(TestController):
+class TestGeocodes(BaseTestCase):
 
-    def test_find_member(self):
-        u = url('find_geocodes', region_id='portlandor', q='633 n alberta')
-        assert u == '/regions/portlandor/geocodes/find?q=633+n+alberta'
-        response = self.app.get(u)
-        c = response.tmpl_context
-        assert response.status_int == c.http_status == 200
-        assert c.q == '633 n alberta'
-        assert hasattr(c, 'member')
-        assert hasattr(c, 'geocode')
-        assert c.member is c.geocode
+    def test_get(self):
+        self.app.get('/regions/portlandor/geocodes')
 
-    def test_find_member_300(self):
-        u = url('find_geocodes', region_id='portlandor', q='633 alberta')
-        assert u == '/regions/portlandor/geocodes/find?q=633+alberta'
-        response = self.app.get(u)
-        c = response.tmpl_context
-        assert response.status_int == c.http_status == 300
-        assert c.q == '633 alberta'
-        assert hasattr(c, 'collection')
-        assert hasattr(c, 'geocodes')
-        assert c.collection is c.geocodes
+    def test_query(self):
+        self.app.get(
+            '/regions/portlandor/geocodes/find',
+            params={'q': '633 n alberta'},
+            status=200)
+
+    def test_query_json(self):
+        self.app.get(
+            '/regions/portlandor/geocodes/find',
+            headers={'accept': 'application/json'},
+            params={'q': '633 n alberta'},
+            status=200)
+
+    def test_query_json_ext(self):
+        self.app.get(
+            '/regions/portlandor/geocodes/find.json',
+            params={'q': '633 n alberta'},
+            status=200)
+
+    def test_query_300(self):
+        self.app.get(
+            '/regions/portlandor/geocodes/find',
+            params={'q': '633 alberta'},
+            status=300)
+
+    def test_query_404(self):
+        self.app.get(
+            '/regions/portlandor/geocodes/find',
+            params={'q': '100 N Fake St'},
+            status=404)
+
+    def test_query_missing_q(self):
+        self.app.get('/regions/portlandor/geocodes/find', status=400)

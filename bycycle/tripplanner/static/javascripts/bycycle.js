@@ -15,8 +15,9 @@ var byCycle = (function () {
     // from Pylons as an attribute of `app_globals`
     config: debug ? config.dev : config.prod,
 
-    // Prefix for when app is mounted somewhere other than root (/)
+    // Prefixes for when app is mounted somewhere other than root (/)
     prefix: byCycle_prefix,
+    staticPrefix: byCycle_staticPrefix,
 
     // URL query parameters as a Hash
     request_params: $H(location.search.toQueryParams()),

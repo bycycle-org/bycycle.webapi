@@ -56,7 +56,7 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
   createIcons: function() {
     // Base icon for start and end of route icons
     var base_icon = new GIcon();
-    base_icon.shadow = byCycle.prefix + 'images/shadow50.png';
+    base_icon.shadow = byCycle.staticPrefix + 'images/shadow50.png';
     base_icon.iconSize = new GSize(20, 34);
     base_icon.shadowSize = new GSize(37, 34);
     base_icon.iconAnchor = new GPoint(9, 34);
@@ -64,10 +64,10 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
     base_icon.infoShadowAnchor = new GPoint(18, 25);
     // Start icon
     var start_icon = new GIcon(base_icon);
-    start_icon.image = byCycle.prefix + 'images/dd-start.png';
+    start_icon.image = byCycle.staticPrefix + 'images/dd-start.png';
     // End icon
     var end_icon = new GIcon(base_icon);
-    end_icon.image = byCycle.prefix + 'images/dd-end.png';
+    end_icon.image = byCycle.staticPrefix + 'images/dd-end.png';
     // Assign icons to self
     this.start_icon = start_icon;
     this.end_icon = end_icon;
@@ -205,7 +205,7 @@ byCycle.Map.google.Map.prototype = Object.extend(new byCycle.Map.base.Map(), {
 
   makeRegionMarker: function(region) {
     var icon = new GIcon();
-    icon.image = byCycle.prefix + 'images/x.png';
+    icon.image = byCycle.staticPrefix + 'images/x.png';
     icon.iconSize = new GSize(17, 19);
     icon.iconAnchor = new GPoint(9, 10);
     icon.infoWindowAnchor = new GPoint(9, 10);
