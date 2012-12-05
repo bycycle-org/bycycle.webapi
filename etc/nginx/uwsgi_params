@@ -1,0 +1,4 @@
+# Rename the uwsgi_params file installed by yum to uwsgi_params.orig
+include /usr/local/nginx/conf/uwsgi_params;
+uwsgi_param  UWSGI_SCHEME $http_x_forwarded_proto;
+uwsgi_modifier1 30;
