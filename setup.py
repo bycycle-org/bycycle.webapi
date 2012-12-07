@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bycycle.tripplanner',
-    version='0.5a2',
+    version='0.5.dev0',
     description='byCycle Trip Planner',
     long_description='byCycle Bicycle Trip Planner Web Application',
     license='GPLv3',
