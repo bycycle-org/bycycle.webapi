@@ -1,9 +1,57 @@
 0.5.0 (unreleased)
 ------------------
 
-This will be a somewhat cleaned up version of 0.4. The intent is to do only
-the minimum necessary to get the site back online. After that, other
-improvements may or may not be forthcoming.
+This is a cleaned up version of 0.4. The goal was to do only the minimum
+necessary to get the site back online (although I did just a tad more than
+minimum, but not much more). Other improvements may or may not be forthcoming.
+
+The major changes:
+
+- Things were a mess due to some aborted starts on upgrades, modernization,
+  feature additions, and so forth. The first step was to clean that up.
+
+  - Fixed distribution name: byCycleTripPlanner => bycycle.tripplanner.
+
+  - Removed .egg-info directory from repo (it's a generated directory).
+
+  - Copied templates and static files from the rb-0.4 release branch, since
+    those were the last known good, working versions.
+
+  - Removed TriMet stuff--at one point I had the idea that I'd try to add
+    a TriMet base layer to the map.
+
+- Removed everything related to the Milwaukee, Wisconsin, region. I'd love to
+  support more than just Portland, but that's just not feasible at this time.
+
+- Removed the silly red dot from the center of the map. The "find at center"
+  stuff should be replaced with a map context menu that has items like
+  "What's here", "Zoom in/out", "Directions from/to here", etc.
+
+- Ported from Pylons to Pyramid. This was a pretty straightforward port,
+  although I did clean up a few things along the way. See 85a42710f2df.
+
+- Upgraded all Python dependencies to latest versions.
+
+- Upgraded prototype.js from 1.5 to 1.7.1. (Should probably switch to jQuery or
+  something.)
+
+- Simplified GMaps API key setup. Possible now that GMaps allows using the same
+  key for multiple subdomains (IIRC, this wasn't possible way back in the day).
+
+- Changed production deployment environment to Nginx/uWSGI instead of Apache
+  proxying to Paste server. Also, it's now Buildout based instead of...
+  whatever it was before (virtualenv?).
+
+- Added "one-touch" deployment capability via Fabric script.
+
+- Simplified static file serving in production by using a seperate subdomain.
+
+- Cleaned up tests. Added more tests.
+
+- General package cleanup: removed crufty, unused packages, modules, files, and
+  so forth.
+
+- Added this change log.
 
 
 Ancient History (<= 0.4)
