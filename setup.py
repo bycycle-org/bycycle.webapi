@@ -24,7 +24,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=(
-        'bycycle.core>=0.5.dev0',
+        'bycycle.core>=0.5a2',
         'Beaker>=1.6.4',
         'Pyramid>=1.4b1',
         'pyramid_exclog>=0.6',
