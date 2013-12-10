@@ -90,11 +90,13 @@ def add_subscribers(config):
         'debug': settings['debug'],
         'h': helpers,
     }
+
     def factory(data):
         request = data['request']
         data.update(renderer_globals)
         data['wrap'] = asbool(request.params.get('wrap', True))
         return data
+
     config.add_subscriber(factory, BeforeRender)
 
 
