@@ -93,7 +93,9 @@ def test():
         suite = loader.loadTestsFromNames(args.tests)
     else:
         suite = loader.discover('.')
-    unittest.TextTestRunner(buffer=args.buffer, failfast=args.failfast).run(suite)
+    runner = unittest.TextTestRunner(
+        buffer=args.buffer, failfast=args.failfast)
+    runner.run(suite)
     if args.with_coverage:
         cov.stop()
         cov.report(include=['bycycle/*'])

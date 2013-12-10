@@ -46,7 +46,8 @@ def make_tab_buttons(tab_ids, tag_name='li', selected=''):
 
     """
     buttons = []
-    template = '<%s class="noprint tab-button %%s">%%s</%s>' % (tag_name, tag_name)
+    template = (
+        '<%s class="noprint tab-button %%s">%%s</%s>' % (tag_name, tag_name))
     for tab_id in tab_ids:
         link_text = tab_id.replace('-', ' ').capitalize()
         if tab_id == selected:
