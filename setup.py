@@ -25,7 +25,6 @@ setup(
     zip_safe=False,
     install_requires=(
         'bycycle.core>=0.5a2',
-        'Beaker>=1.6.4',
         'Mako>=0.9.0',
         'Pyramid>=1.4.5',
         'pyramid_exclog>=0.7',
