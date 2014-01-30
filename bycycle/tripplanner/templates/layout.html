@@ -19,9 +19,9 @@
 
     <title>byCycle.org - Bicycle Trip Planner - ${self.title()}</title>
 
-    ${request.stylesheet_link_tag('base', 'fixed-pane')}
-    ${h.if_ie(request.stylesheet_link_tag('base_ie'))}
-    ${request.stylesheet_link_tag('print', media='print')}
+    ${h.stylesheet_link_tag('base', 'fixed-pane')}
+    ${h.if_ie(h.stylesheet_link_tag('base_ie'))}
+    ${h.stylesheet_link_tag('print', media='print')}
     ${self.stylesheet_links()}
 
     <script type="text/javascript">
@@ -29,12 +29,12 @@
       // Global setup
       var debug = ${str(debug).lower()};
       byCycle_prefix = '${request.script_name or "/"}';
-      byCycle_staticPrefix = '${request.static_path("bycycle.tripplanner:static/")}';
+      byCycle_staticPrefix = '${request.static_path("/static/")}';
       //]]>
     </script>
 
-    ${request.javascript_include_tag('prototype')}
-    ${request.javascript_include_tag('bycycle', 'util')}
+    ${h.javascript_include_tag('prototype')}
+    ${h.javascript_include_tag('bycycle', 'util')}
   </head>
 
 
@@ -48,12 +48,14 @@
       <div id="masthead" class="noprint">
         <h1 id="logo">
           <a href="${request.application_url}" title="byCycle.org Home Page">
-            ${h.image(request.static_url('bycycle.tripplanner:static/images/logo.png'), title='byCycle.org Home Page', width=141, height=23, alt='byCycle.org')}
+            <img src="${request.static_url('/static/images/logo.png')}" width="141" height="23" alt="byCycle.org">
           </a>
         </h1>
 
         <h2 id="app-name">
-          ${h.link_to('Bicycle Trip Planner', request.application_url, title='byCycle.org Bicycle Trip Planner (this page)')}
+          <a href="${request.application_url}"
+             title="byCycle.org Bicycle Trip Planner (this page)"
+             >Bicycle Trip Planner</a>
         </h2>
 
         <h3 id="app-version">
@@ -75,7 +77,7 @@
       <!-- Bar -->
       <div id="bar" class="noprint">
         <div id="spinner" class="spinner noprint" style="display: none;">
-          ${h.image(request.static_url('bycycle.tripplanner:static/images/spinner.gif'), width=16, height=16, alt='Click to hide')}
+          <img src="${request.static_url('/static/images/spinner.gif')}" width="16" height="16" alt="Click to hide">
         </div>
 
         <div id="status">
@@ -135,7 +137,7 @@
                 </p>
 
                 <p>
-                  <a href="${req.registry.settings['contact_url']}"">Contact us</a><br />
+                  <a href="${settings['contact_url']}"">Contact us</a><br />
                 </p>
 
                 <p class="no-bottom-margin">
@@ -184,8 +186,8 @@
     <!-- /Wrapper -->
 
 
-    ${request.javascript_include_tag('map', 'gmap')}
-    ${request.javascript_include_tag('widgets/fixed_pane', 'ui', 'regions')}
+    ${h.javascript_include_tag('map', 'gmap')}
+    ${h.javascript_include_tag('widgets/fixed_pane', 'ui', 'regions')}
     ${self.javascript_includes()}
 
 

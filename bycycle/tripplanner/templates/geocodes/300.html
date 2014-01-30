@@ -2,7 +2,7 @@
 
 
 <%!
-  from urllib import unquote_plus
+  from urllib.parse import unquote_plus
 %>
 
 
@@ -50,7 +50,7 @@
          >Show on map</a>
       |
       <a class="select-geocode-link"
-         href="${request.route_url('find_geocode', id=region.slug, renderer=req.matchdict.get('renderer', ''), q=field_addr)}#select-this-location"
+         href="${request.route_url('find_geocode', id=region.slug, renderer=self.urlvars.get('renderer', ''), q=field_addr)}#select-this-location"
          title="Select this location"
          onclick="byCycle.UI.selectGeocode(this, ${i}); return false;"
          >Select</a>

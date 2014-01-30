@@ -1,10 +1,10 @@
 from bycycle.core.services.geocode import Service
 from bycycle.core.services.geocode import MultipleMatchingAddressesError
 
-from bycycle.tripplanner.views.service import ServiceView
+from .service import ServiceResource
 
 
-class GeocodeView(ServiceView):
+class Geocode(ServiceResource):
     """View for interfacing with byCycle Geocode service."""
 
     service_class = Service

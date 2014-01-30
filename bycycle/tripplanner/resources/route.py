@@ -3,16 +3,16 @@ import re
 from bycycle.core.services.exceptions import InputError
 from bycycle.core.services.route import Service, MultipleMatchingAddressesError
 
-from bycycle.tripplanner.views.service import ServiceView
+from .service import ServiceResource
 
 
-class RouteView(ServiceView):
+class Route(ServiceResource):
     """View for interfacing with byCycle Route service."""
 
     service_class = Service
 
     def _find(self):
-        data = super(RouteView, self)._find()
+        data = super()._find()
         try:
             route_list = self._get_query()
         except InputError:
