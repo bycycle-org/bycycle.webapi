@@ -1,25 +1,20 @@
 import re
 
-from pyramid.decorator import reify
-from pyramid.httpexceptions import HTTPSeeOther
-from pyramid.renderers import render_to_response
+from tangled.decorators import reify
+from tangled.web import Resource, config
 
-from bycycle.core.model.entities.public import Region
+from bycycle.core.model.entities import public
 
 from bycycle.core.model.regions import getRegionKey
 
 
-class RegionsView(object):
+class Regions(Resource):
 
-    entity = Region
-
-    def __init__(self, request):
-        self.request = request
+    entity = public.Region
 
     @reify
     def region(self):
-        request = self.request
-        slug = request.matchdict['id']
+        slug = self.urlvars['id']
         try:
             slug = getRegionKey(slug)
         except ValueError:
@@ -28,31 +23,50 @@ class RegionsView(object):
         q = q.filter_by(slug=slug)
         return q.first()
 
-    def index(self):
-        request = self.request
+    @config('text/html', template='/regions/index.html')
+    def GET(self):
+        req = self.request
 
         # If there's a region ID query param, redirect to the canonical
-        # URL for the region: /regions/{id}
-        params = dict(request.params)
+        # URL for the region: /regions/<id>
+        params = dict(req.params)
         slug = params.pop('region', None)
         if slug:
-            location = request.route_url('region', id=slug, _query=params)
-            return HTTPSeeOther(location=location)
+            location = req.resource_url('region', {'id': slug}, query=params)
+            req.abort(303, location=location)
 
-        regions = request.db_session.query(self.entity).all()
-        q = request.params.get('q', '')
+        regions = req.db_session.query(self.entity).all()
+        q = req.params.get('q', '')
         return {
             'regions': regions,
             'q': q,
         }
 
-    def show(self):
-        if self.region is None:
-            return self.render_404()
 
-        request = self.request
-        slug = request.matchdict['id']
-        params = dict(request.params)
+class Region(Resource):
+
+    entity = public.Region
+
+    @reify
+    def region(self):
+        slug = self.urlvars['id']
+        try:
+            slug = getRegionKey(slug)
+        except ValueError:
+            return None
+        q = self.request.db_session.query(self.entity)
+        q = q.filter_by(slug=slug)
+        return q.first()
+
+    @config('text/html', template='/regions/show.html')
+    def GET(self):
+        req = self.request
+
+        if self.region is None:
+            self.abort(307, location=req.resource_url('regions'))
+
+        slug = self.urlvars['id']
+        params = dict(req.params)
 
         # If there are service-related query params, redirect to the
         # appropriate service.
@@ -73,10 +87,10 @@ class RegionsView(object):
                     params['s'] = s
                 if e:
                     params['e'] = e
-            renderer = request.matchdict.get('renderer', '')
-            location = request.route_url(
+            renderer = self.urlvars.get('renderer', '')
+            location = req.route_url(
                 route_name, id=slug, renderer=renderer, _query=params)
-            return HTTPSeeOther(location=location)
+            return req.abort(307, location=location)
 
         return {
             'region': self.region,
@@ -85,10 +99,3 @@ class RegionsView(object):
             's': s,
             'e': e,
         }
-
-    def render_404(self):
-        req = self.request
-        req.response.status_int = 404
-        data = self.index()
-        data['info'] = 'Unknown region: "{id}"'.format(**req.matchdict)
-        return render_to_response('/regions/index.html', data, req)

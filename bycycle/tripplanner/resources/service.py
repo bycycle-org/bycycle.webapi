@@ -2,28 +2,37 @@ from collections import Iterable
 import logging
 import re
 
-from pyramid.renderers import render, render_to_response
+from tangled.decorators import reify
+from tangled.web import Resource, config
 
 from bycycle.core.model.entities.base import Entity
 from bycycle.core.services.exceptions import ByCycleError
 from bycycle.core.services.exceptions import InputError, NotFoundError
 
-from bycycle.tripplanner.views.regions import RegionsView
+from .regions import Regions
 
 
 log = logging.getLogger(__name__)
 
 
-class ServiceView(object):
+class ServiceResource(Resource):
 
-    def __init__(self, request):
-        self.request = request
-        self.parent_view = RegionsView(request)
-        self.region = self.parent_view.region
+    @reify
+    def parent_view(self):
+        return Regions(self.app, self.request, urlvars=self.urlvars)
 
-    def show(self):
-        data = self.parent_view.show()
+    @reify
+    def region(self):
+        return self.parent_view.region
+
+    @config('text/html', template='/regions/show.html')
+    def GET(self):
+        data = self.parent_view.GET()
+        data['region'] = self.region
         data['service'] = self.service_class.name
+        data['q'] = ''
+        data['s'] = ''
+        data['e'] = ''
         return data
 
     def find(self):
@@ -89,7 +98,7 @@ class ServiceView(object):
 
     def _render(self, data):
         req = self.request
-        renderer = req.matchdict.get('renderer')
+        renderer = self.urlvars.get('renderer')
         best = req.accept.best_match(('text/html', 'application/json'))
         if renderer == '.json' or best == 'application/json':
             return self._render_json(data)

@@ -58,7 +58,7 @@
         href = req.route_url(
           'find_geocode',
           id=region.slug,
-          renderer=req.matchdict.get('renderer', ''), 
+          renderer=self.urlvars.get('renderer', ''),
           q=field_addr)
       %>
       <a class="select-geocode-link"

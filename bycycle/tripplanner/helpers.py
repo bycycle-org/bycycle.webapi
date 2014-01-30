@@ -1,9 +1,14 @@
-from webhelpers.html.tags import (
-    link_to,
-    stylesheet_link, javascript_link, image,
-    form, end_form, submit, select, radio, text, password,
-    textarea, literal, hidden, checkbox,)
-from webhelpers.html.tools import button_to
+from markupsafe import Markup as literal
+
+
+def include(app):
+    app.add_helper(literal, name='literal', static=True)
+    app.add_helper(if_ie, static=True)
+    app.add_helper(hide_element, static=True)
+    app.add_helper(make_inline_style, static=True)
+    app.add_helper(make_tab_buttons, static=True)
+    app.add_helper(javascript_include_tag)
+    app.add_helper(stylesheet_link_tag)
 
 
 def if_ie(content, join_string=''):
@@ -46,37 +51,49 @@ def make_tab_buttons(tab_ids, tag_name='li', selected=''):
 
     """
     buttons = []
-    template = (
-        '<%s class="noprint tab-button %%s">%%s</%s>' % (tag_name, tag_name))
+    template = '<{tag} class="noprint tab-button {css_class}">{link}</{tag}>'
+    link_template = '<a href={href} title="{text}">{text}</a>'
     for tab_id in tab_ids:
         link_text = tab_id.replace('-', ' ').capitalize()
         if tab_id == selected:
             css_class = 'selected-tab-button'
         else:
             css_class = ''
-        link = link_to(link_text, '#%s' % tab_id, title=link_text)
-        buttons.append(template % (css_class, link))
+        href = '#{}'.format(tab_id)
+        link = link_template.format(href=href, text=link_text)
+        buttons.append(
+            template.format(tag=tag_name, css_class=css_class, link=link))
     return literal(''.join(buttons))
 
 
-def javascript_include_tag(request, *names, **attrs):
+def javascript_include_tag(helpers, *names, **attrs):
     """Create JS <script> tag for each name in ``names``.
 
     ``names`` are paths relative to /javascripts/ without the .js extension.
 
     """
-    temp = 'bycycle.tripplanner:static/javascripts/{0}.js'
-    urls = [request.static_url(temp.format(n)) for n in names]
-    return javascript_link(*urls, **attrs)
+    request = helpers.request
+    url_template = '/static/javascripts/{0}.js'
+    link_template = '<script src="{src}"></script>'
+    urls = [request.static_path(url_template.format(n)) for n in names]
+    links = []
+    for url in urls:
+        links.append(link_template.format(src=url))
+    return literal('\n'.join(links))
 
 
-def stylesheet_link_tag(request, *names, **attrs):
+def stylesheet_link_tag(helpers, *names, **attrs):
     """Create stylesheet <link> for each name in ``names``.
 
     ``names`` are paths relative to /stylesheets/ without the .css
     extension.
 
     """
-    temp = 'bycycle.tripplanner:static/stylesheets/{0}.css'
-    urls = [request.static_url(temp.format(n)) for n in names]
-    return stylesheet_link(*urls, **attrs)
+    request = helpers.request
+    url_template = '/static/stylesheets/{0}.css'
+    link_template = '<link rel="stylesheet" type="text/css" href="{href}">'
+    urls = [request.static_path(url_template.format(n)) for n in names]
+    links = []
+    for url in urls:
+        links.append(link_template.format(href=url))
+    return literal('\n'.join(links))
