@@ -1,28 +1,24 @@
 % if not wrap:
   ${self.body()}
 % else:
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 
 <html xmlns="http://www.w3.org/1999/xhtml">
-  ${h.if_ie('<xml:namespace ns="urn:schemas-microsoft-com:vml" prefix="v"/>')}
-
+  <!--[if IE]><xml:namespace ns="urn:schemas-microsoft-com:vml" prefix="v"><![endif]-->
 
   <head>
-    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Wyatt Baldwin, wyatt@byCycle.org">
+    <meta name="description" content="byCycle.org Bicycle Trip Planner -- A web-based, interactive, bicycle trip planner (route finder) for the Portland, Oregon metro region.">
 
-    <meta name="author" content="Wyatt Baldwin, wyatt@byCycle.org" />
+    <title>byCycle.org - Bicycle Trip Planner</title>
 
-    <meta name="keywords" content="bicycle, bike, bicycle trip planner, bicycle route finder, bike trip planner, bike route finder, bicycle route, bicycle trip, bike route, bike trip, bicycle routing, bike routing, maps, bicycle maps, bike maps, bicycle advocacy, community, sustainability, portland, oregon" />
+    <link rel="shortcut icon" href="${request.static_path('/static/favicon.ico')}">
 
-    <meta name="description" content="byCycle.org Bicycle Trip Planner -- A web-based, interactive, bicycle trip planner (route finder) for the Portland, Oregon metro region." />
-
-    <title>byCycle.org - Bicycle Trip Planner - ${self.title()}</title>
-
-    ${h.stylesheet_link_tag('base', 'fixed-pane')}
-    ${h.if_ie(h.stylesheet_link_tag('base_ie'))}
-    ${h.stylesheet_link_tag('print', media='print')}
-    ${self.stylesheet_links()}
+    <link rel="stylesheet" type="text/css" href="${request.static_path('/static/bootstrap/css/bootstrap.min.css')}">
+    <link rel="stylesheet" type="text/css" href="${request.static_path('/static/stylesheets/base.css')}">
 
     <script type="text/javascript">
       //<![CDATA[
@@ -33,228 +29,211 @@
       //]]>
     </script>
 
-    ${h.javascript_include_tag('prototype')}
-    ${h.javascript_include_tag('bycycle', 'util')}
+    <script src="${request.static_path('/static/javascripts/jquery.js')}"></script>
+    <script src="${request.static_path('/static/bootstrap/js/bootstrap.min.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/bycycle.js')}"></script>
   </head>
 
 
   <body>
-
-
-    <div id="wrapper">
-
-
-      <!-- Masthead -->
-      <div id="masthead" class="noprint">
-        <h1 id="logo">
+    <div id="container">
+      <div id="top-row" class="row">
+        <div id="logo" class="col-xs-4">
           <a href="${request.application_url}" title="byCycle.org Home Page">
-            <img src="${request.static_url('/static/images/logo.png')}" width="141" height="23" alt="byCycle.org">
+            <div>
+              <img src="${request.static_url('/static/images/logo.png')}" width="141" height="23" alt="byCycle.org">
+            </div>
+            <div>
+              Bicycle Trip Planner
+            </div>
           </a>
-        </h1>
-
-        <h2 id="app-name">
-          <a href="${request.application_url}"
-             title="byCycle.org Bicycle Trip Planner (this page)"
-             >Bicycle Trip Planner</a>
-        </h2>
-
-        <h3 id="app-version">
-          <a href="http://en.wikipedia.org/wiki/Development_stage#Beta"
-             title="Beta? (opens in new window)"
-             target="_blank"
-             >beta</a>
-        </h3>
-      </div>
-      <!--/Masthead -->
-
-
-      <%call expr="self.input_container()" />
-
-
-      <div class="clear"></div>
-
-
-      <!-- Bar -->
-      <div id="bar" class="noprint">
-        <div id="spinner" class="spinner noprint" style="display: none;">
-          <img src="${request.static_url('/static/images/spinner.gif')}" width="16" height="16" alt="Click to hide">
         </div>
 
-        <div id="status">
+        <!-- Input Forms -->
+        <div class="col-xs-8">
+          <ul class="nav nav-tabs">
+            <li id="search-map-tab" class="active"><a href="#search-map" data-toggle="tab">Search Map</a></li>
+            <li id="find-route-tab"><a href="#find-route" data-toggle="tab">Find Route</a></li>
+          </ul>
+
+          <div class="tab-content">
+            <div id="search-map" class="tab-pane active">
+              <form id="query_form" method="get" action="${request.resource_url('find')}"
+                    class="form-inline">
+                <input type="hidden" name="region" value="portlandor">
+
+                <div class="form-group">
+                  <input id="q" name="q" value="${q}" class="form-control"
+                         placeholder="Address or route">
+                </div>
+
+                <div class="form-group">
+                  <input type="submit" value="Search"
+                         class="form-control btn-primary"
+                         title="Click to search the map">
+                </div>
+
+                <span class="help-block">
+                  Enter an address or intersection -OR- pick a location from the map.
+                </span>
+              </form>
+            </div>
+
+            <div id="find-route" class="tab-pane">
+              <form id="route_form" method="get" action="${request.resource_url('find_route')}"
+                    class="form-inline">
+                <input type="hidden" name="region" value="portlandor">
+                <input type="hidden" id="s_id" name="s_id" value="">
+                <input type="hidden" id="e_id" name="e_id" value="">
+
+                <div class="form-group">
+                  <input id="s" name="s" value="${s}" class="form-control"
+                         placeholder="Start address">
+                  <a id="swap-s-and-e"
+                     href="#swap-start-and-end"
+                     title="Swap start and end addresses"
+                     onclick="return false;"
+                      ><span class="glyphicon glyphicon-resize-horizontal"></span></a>
+                </div>
+
+                <div class="form-group">
+                  <input id="e" name="e" value="${e}" class="form-control"
+                         placeholder="End address">
+                </div>
+
+                <div class="form-group">
+                  <select id="pref" name="pref" class="form-control">
+                    <option value="default">Route Type</option>
+                    <option value="default">Normal</option>
+                    <option value="safer">Safer</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <input type="submit" value="Find Route"
+                         class="form-control btn-primary"
+                         title="Click to find a route">
+                </div>
+
+                <span class="help-block">
+                  Enter your start and end addresses and, optionally, select a route type
+                </span>
+              </form>
+            </div>
+
+          </div>
+        </div>
+        <!-- /Input Forms -->
+      </div>
+
+      <div id="bar" class="row">
+        <div id="status" class="col-xs-8">
           % if status:
             ${status}
           % else:
-            Welcome to the byCycle.org bicycle trip planner.
+            Welcome to the byCycle.org bicycle trip planner
           % endif
           <span id="loading-status">Loading...</span>
         </div>
 
-        <!-- Links -->
-        <div id="links">
-          ${self.links()}
+        <div class="col-xs-4">
+          <span class="pull-right">
+            <a id="clear-map-link" href="" title="Clear map and results">Clear Map</a>
+            <a id="bookmark" href="" title="Link to last result"
+               class="glyphicon glyphicon-link"></a>
+          </span>
         </div>
-        <!-- /Links -->
-
-
-        <div class="clear"></div>
       </div>
-      <!-- /Bar -->
 
+      <div id="main-row" class="row">
+        <div id="col-a" class="col-xs-4">
+          <img id="spinner" src="${request.static_path('/static/images/spinner.gif')}" width="16" height="16">
 
-      <!-- Content -->
-      <div id="content">
-
-
-        <!-- Column A -->
-        <div id="col-a">
-
-
-          <!-- Message Pane -->
-          <%
-            http_status = request.response.status_int
-            ## Show the message pane if there's info OR no result OR an error
-            show_msg_pane = info or not result or exception or http_status > 299
-            msg_pane_style = {'display': ('block' if show_msg_pane else 'none')}
-            ## Show the info pane (inside the message pane) when there is NOT an error
-            show_info_pane = not exception and http_status < 300
-            ## Show the error pane (inside the message pane) when there IS an error
-            show_error_pane = exception or http_status > 299
-          %>
-
-          <%call expr="fixed_pane(id='message_pane', classes=['display-pane'], style=msg_pane_style)">
-            <div id="info_pane" ${h.hide_element(not show_info_pane)}>
-              % if info:
-                ${info}
-              % else:
-                <%include file="/news.html" />
-
-                <hr />
-
-                <p class="noprint">
-                  Users should independently verify all information presented here. This
-                  service is provided <b>AS IS</b> with <b>NO WARRANTY</b> of any kind.
-                  <em>Please be careful out there.</em>
-                </p>
-
-                <p>
-                  <a href="${settings['contact_url']}"">Contact us</a><br />
-                </p>
-
-                <p class="no-bottom-margin">
-                  &copy; 2012 byCycle.org
-                </p>
-              % endif
-            </div>
-
-            <div id="error_pane" ${h.hide_element(not show_error_pane)}>
-              ${self.body()}
-            </div>
-          </%call>
-          <!-- /Message Pane -->
-
-
-          <%call expr="self.result_pane()" />
-
-
-        </div>
-        <!-- /Column A -->
-
-
-        <!-- Column B -->
-        <div id="col-b">
-
-
-          <!-- Map -->
-          <div id="map_pane">
-            <div id="map_message" style="display: none; padding: 5px;">
-              You will need to update to a recent version of Internet Explorer, Firefox, or Safari to view the map.
-            </div>
+          <div id="results">
+            % if info:
+              ${info}
+            % else:
+              <%include file="/news.html"/>
+            % endif
           </div>
-          <!-- /Map -->
 
+          <div class="disclaimer">
+            <p>
+              <b>Disclaimer</b>: As you are riding, please keep in mind that you
+              don't <i>have</i> to follow the suggested route. <i>It may not be
+              safe at any given point.</i> If you see what looks like an unsafe or
+              undesirable stretch in the suggested route, you can decide to walk,
+              ride on the sidewalk, or go a different way.
+            </p>
 
+            <p>
+              Users should independently verify all information presented here.
+              This service is provided <b>AS IS</b> with <b>NO WARRANTY</b> of any
+              kind. <em>Please be careful out there.</em>
+            </p>
+
+            <p>
+              © 2004-2007,2012,2014 byCycle.org
+            </p>
+          </div>
         </div>
-        <!-- /Column B -->
 
-
-        <div class="clear"></div>
+        <div id="col-b" class="col-xs-8">
+          <div id="map-pane"></div>
+        </div>
       </div>
-      <!-- /Content -->
-
-
     </div>
-    <!-- /Wrapper -->
 
-
-    ${h.javascript_include_tag('map', 'gmap')}
-    ${h.javascript_include_tag('widgets/fixed_pane', 'ui', 'regions')}
-    ${self.javascript_includes()}
-
+    <script src="${request.static_path('/static/javascripts/map.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/gmap.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/ui.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/result.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/regions.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/query.js')}"></script>
 
     <script type="text/javascript">
       //<![CDATA[
-      // Set up for initialization
-      byCycle.UI.beforeLoad();
-      ${self.javascript()}
+      <%block name="javascript">
+        byCycle.UI.beforeLoad({
+          region_id: 'portlandor',
+          service: '${service}',
+          q: '${q}',
+          http_status: ${request.response.status_int},
+          jsonData: ${json or 'null' | n}
+        });
+      </%block>
       //]]>
     </script>
 
-
-    <%include file="_google_analytics.html" />
+    % if not app.debug:
+      <%include file="_google_analytics.html"/>
+    % endif
   </body>
 </html>
 
 
-<%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
-
-<%def name="title()">Select a region</%def>
-
-<%def name="stylesheet_links()"></%def>
-
-<%def name="input_container(classes=[])">
-  <!-- Input Container -->
-  <div id="input_container" class="noprint ${' '.join(classes)}">
-    % if caller:
-      ${caller.body()}
-    % endif
-  </div>
-  <!-- /Input Container -->
-</%def>
-
-<%def name="links()"></%def>
-
-<%def name="result_pane(classes=[])">
-  <!-- Result Pane -->
-  <div id="result_pane" class="display-pane ${' '.join(classes)}">
-    % if caller:
-      ${caller.body()}
-    % endif
-  </div>
-  <!-- /Result Pane -->
-</%def>
-
-<%def name="javascript_includes()"></%def>
-<%def name="javascript()"></%def>
-
 <%def name="errors()">
   <div class="errors">
-    <h2>${error.get('title', 'Error')}</h2>
     % if hasattr(error, 'errors'):
       % for err in error['errors']:
-        <p class="error">
+        <div class="alert alert-danger">
           ${err}
-        </p>
+        </div>
       % endfor
     % else:
-      <p class="error">
+      <div class="alert alert-danger">
         ${error['description']}
-      </p>
+      </div>
     % endif
     <% explanation = error.get('explanation') %>
     % if explanation:
-      <div class="explanation">
-        <h3>What This Means</h3>
-        <p>${h.literal(explanation.strip().replace('\n', '</p><p>'))}</p>
+      <div class="panel">
+        <div class="panel-heading">
+          <div class="panel-title">What This Means</div>
+        </div>
+        <div class="panel-body">
+          <p>${h.literal(explanation.strip().replace('\n', '</p><p>'))}</p>
+        </div>
       </div>
     % endif
   </div>

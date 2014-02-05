@@ -1,34 +1,30 @@
 /**
  * Result Base Class
  *
- * ``id`` Unique ID for this result
- * ``result`` Object representing the result
- * ``service`` Service type for the result (i.e., where the result came from)
+ * @param id Unique ID for this result
+ * @param result Object representing the result
+ * @param service Service type for the result (i.e., where the result came from)
  */
-byCycle.UI.Result = Class.create();
-byCycle.UI.Result.prototype = {
-  initialize: function(id, result, service, widget) {
-    this.id = id;
-    this.result = result;
-    this.service = service;
-    this.map = byCycle.UI.map;
-    this.overlays = [];
-    this.widget = widget;
-  },
+byCycle.UI.Result = function (ui, id, result, service) {
+  this.ui = ui;
+  this.id = id;
+  this.result = result;
+  this.service = service;
+  this.overlays = [];
+};
 
-  addOverlay: function(overlay) {
-    this.overlays.push(overlay);
+byCycle.UI.Result.prototype = {
+  addOverlay: function() {
+    var overlays = $.makeArray(arguments);
+    for (var i = 0, len = overlays.length; i < len; ++i) {
+      this.overlays.push(overlays[i]);
+    }
   },
 
   remove: function() {
-    // Remove LI container
-    Element.remove($(this.id).parentNode);
-    // Remove map overlays
-    var removeOverlay = this.map.removeOverlay.bind(this.map);
-    for (var i = 0; i < this.overlays.length; ++i) {
-       removeOverlay(this.overlays[i]);
+    for (var i = 0, overlay, len = this.overlays.length; i < len; ++i) {
+      overlay = this.overlays[i];
+      this.ui.map.removeOverlay(overlay);
     };
-    // Remove this from results list
-    delete byCycle.UI.results.get(this.service)[this.id];
   }
 }

@@ -1,18 +1,13 @@
-<%inherit file="layout.html"/>
+<%inherit file="/layout.html"/>
 
+<%namespace file="/geocodes/geocode.html" import="show_geocode" />
 
 <%!
-  from urllib import unquote_plus
+  from urllib.parse import unquote_plus
   from bycycle.core.model.geocode import Geocode
 %>
 
-
-<%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
-
-
-<h2>${error['title']}</h2>
 <h3>Select a location</h3>
-
 
 ## A query to the route service may find multiple matching matches for
 ## any or all of the addresses it was passed as input. In this case, the
@@ -21,51 +16,15 @@
 ## each input address that *did*. The following makes a "fixed pane" for
 ## the addresses that had multiple matches. The first fixed pane is
 ## visible while the others are initially hidden.
-<% first_ul = True %>
-% for geocodes in result:
-  % if not isinstance(geocodes, Geocode):
-    <% style = '' if first_ul else 'display:none;' %>
-    <% first_ul = False %>
-    <ul class="result_list multi-list" style="${style}">
-      % for geocode in geocodes:
-        <% class_ = ' no-bottom-margin' if loop.last else '' %>
-        <li class="${loop.cycle('a', 'b')}${class_}">
-          ${self.geocode(geocode, loop.parent.index, loop.index)}
-        </li>
+
+<% first = True %>
+% for r in result:
+  % if not isinstance(r, Geocode):
+    <div class="route-choice" ${h.hide_element_if(not first)}>
+      % for g in r:
+        ${show_geocode(g, hide_links=True)}
       % endfor
-    </ul>
+    </div>
+    <% first = False %>
   % endif
 % endfor
-
-
-<%def name="geocode(geocode, i, j)">
-  <%
-    str_addr = str(geocode.address)
-    x, y = geocode.lat_long.x, geocode.lat_long.y
-    html_addr = h.literal(str_addr.replace('\n', '<br />'))
-    field_addr = unquote_plus(geocode.urlStr())
-  %>
-  <%call expr="fixed_pane(title_bar_style={'display': 'none'}, )">
-    <div class="address">${html_addr}</div>
-    <div class="multi-select-links">
-      <a class="show-on-map-link"
-         href="#show-location-on-map"
-         title="Show this location on the map"
-         onclick="byCycle.UI.map.setCenter({x: ${x}, y: ${y}}); return false;"
-         >Show on map</a>
-      |
-      <% 
-        href = req.route_url(
-          'find_geocode',
-          id=region.slug,
-          renderer=self.urlvars.get('renderer', ''),
-          q=field_addr)
-      %>
-      <a class="select-geocode-link"
-         href="${href}#select-this-location"
-         title="Select this location"
-         onclick="byCycle.UI.selectRouteGeocode(this, ${i}, ${j}); return false;"
-         >Select</a>
-    </div>
-  </%call>
-</%def>
