@@ -1,0 +1,47 @@
+<%! from urllib.parse import unquote_plus %>
+
+<%def name="show_geocode(geocode, hide_links=False)">
+  <%
+    x, y = geocode.lat_long.x, geocode.lat_long.y
+    href = request.resource_url('find_geocode', query={'q': q})
+    onclick = (
+      'byCycle.UI.map.setCenter({{x: {x}, y: {y}}}); '
+      'return false;'.format(x=x, y=y))
+    html_addr = str(geocode.address).replace('\n', '<br />')
+    field_addr = unquote_plus(geocode.urlStr())
+  %>
+
+  <div class="panel">
+    <div class="panel-body">
+      <div>
+        <a class="show-location-on-map select-location"
+           href="${href}"
+           title="Select this location"
+           onclick="${onclick}"
+           >${html_addr | n}
+
+        <a class="pull-right glyphicon glyphicon-map-marker"
+           href="${href}"
+           title="Show this location on the map"
+           onclick="${onclick}"
+           ></a>
+      </div>
+
+      <div class="set-as-s-or-e" ${h.hide_element_if(hide_links)}>
+        Set as
+        <a class="set-as-start"
+           href="#set-as-start"
+           title="Use this address as the starting point of a route"
+           onclick="byCycle.UI.setAsStart('${field_addr}'); return false;"
+           ><i>start</i></a>
+        or
+        <a class="set-as-end"
+           href="#set-as-end"
+           title="Use this address as the end point of a route"
+           onclick="byCycle.UI.setAsEnd('${field_addr}'); return false;"
+           ><i>end</i></a>
+        of route
+      </div>
+    </div>
+  </div>
+</%def>

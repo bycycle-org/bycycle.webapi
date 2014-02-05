@@ -10,6 +10,12 @@ var byCycle = (function () {
     }
   };
 
+  var search = window.location.search.substring(1),
+      params = {};
+  search.replace(/([^=&]+)=([^&]*)/g, function(m, name, value) {
+    params[decodeURIComponent(name)] = decodeURIComponent(value);
+  });
+
   return {
     // `debug` is a global set in the template; it's value is passed
     // from Pylons as an attribute of `app_globals`
@@ -20,28 +26,51 @@ var byCycle = (function () {
     staticPrefix: byCycle_staticPrefix,
 
     // URL query parameters as a Hash
-    request_params: $H(location.search.toQueryParams()),
+    request_params: params,
 
     default_map_type: 'base',
 
     // Namespace for byCycle widgets
     widget: {},
 
+    writeScript: function(src, type) {
+      type = type || 'text/javascript';
+      document.write('<script src="' + src + '" type="' + type + '"></script>');
+    },
+
     /**
-     * Get value for variable from query string if possible;
-     * otherwise use the global config value
+     * Get value query string parameter. If the parameter isn't present,
+     * use the default value if supplied, or try to get the value from
+     * config.
+     *
+     * @param name
+     * @param processor Iff the query parameter is present, process it
+     *        with this function.
+     * @param defaultValue
      */
-    getParamVal: function(var_name, func) {
+    getParamVal: function (name, processor, defaultValue) {
       // Override config setting with query string setting
-      var v = byCycle.request_params.get(var_name);
+      var v = byCycle.request_params[name];
       if (typeof v === 'undefined') {
-        // Query string override not given; use config
-        v = byCycle.config[var_name];
-      } else if (typeof func === 'function') {
-        // Process query string value with func, iff given
-        v = func(v);
+        if (typeof defaultValue !== 'undefined') {
+          v = defaultValue;
+        } else {
+          v = byCycle.config[name];
+        }
+      } else if (typeof processor === 'function') {
+        v = processor(v);
       }
       return v;
+    },
+
+    inheritFrom: function (superType, properties) {
+      var intermediateType = function () {},
+          constructor = properties.constructor;
+      intermediateType.prototype = superType.prototype;
+      constructor.prototype = new intermediateType;
+      $.extend(constructor.prototype, properties);
+      constructor.prototype.superType = superType;
+      return constructor;
     }
   };
 }());

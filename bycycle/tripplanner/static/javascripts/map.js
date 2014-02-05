@@ -1,43 +1,39 @@
 /**
  * byCycle Map namespace
  */
-byCycle.Map = {
-  // Mapping of map type to map object
-  base: {
-    description: 'Default byCycle map type',
-    beforeLoad: function() {},
-    isLoadable: function() {
-      return true;
-    }
-  }
-  // Other map types will be registered on load
-};
+byCycle.map = {};
+
+
+byCycle.map.base = {};
 
 
 /**
  * Base byCycle Map
+ *
+ * @param parent UI object
+ * @param container Widget that contains this map
  */
-byCycle.Map.base.Map = Class.create();
-byCycle.Map.base.Map.prototype = {
+byCycle.map.base.Map = function(ui, container, options) {
+  this.ui = ui;
+  this.container = container;
+  this.options = options;
+  this.createMap(container, options);
+};
+
+byCycle.map.base.Map.prototype = {
+  description: 'Default byCycle map type',
+
   /**
-   * Map Constructor
-   *
-   * @param parent UI object
-   * @param container Widget that contains this map
+   * Do map initialization that needs to happen before page is done loading.
+   * For example, for Google Maps, the API init script needs to be loaded
+   * inline because it does a document.write to load the actual API.
    */
-  initialize: function(ui, container) {
-    if (arguments.length == 0) return;
-    this.ui = ui;
-    this.container = container;
-    this.createMap(container);
+  beforeLoad: function() {
+    this.zoom = 0;
   },
 
-  createMap: function(container) {
-    var map = document.createElement('div');
-    map.style.height = '100%';
-    map.style.overflow = 'auto';
-    container.appendChild(map);
-    this.map = map;
+  createMap: function(container, options) {
+    this.map = container;
     this.put('Default byCycle Map Interface');
   },
 
@@ -46,20 +42,20 @@ byCycle.Map.base.Map.prototype = {
     div.innerHTML = '#' + (this.put_count = (this.put_count || 1)) + ' ' +
                     content;
     this.put_count += 1;
-    this.map.appendChild(div);
+    this.map.append(div);
     return div;
   },
 
   clear: function() {
-    this.map.innerHTML = '';
+    this.map.html('');
   },
 
   setSize: function(dims) {
     if (typeof(dims.w) != 'undefined') {
-      this.container.style.width = dims.w + 'px';
+      this.container.width(dims.w);
     }
     if (typeof(dims.h) != 'undefined') {
-      this.container.style.height = dims.h + 'px';
+      this.container.height(dims.h);
     }
   },
 
@@ -68,11 +64,7 @@ byCycle.Map.base.Map.prototype = {
   },
 
   setHeight: function(height) {
-    this.container.style.height = height + 'px';
-  },
-
-  onUnload: function() {
-    document.body.innerHTML = 'Bye.';
+    this.container.height(height);
   },
 
   getCenter: function() {
@@ -91,18 +83,18 @@ byCycle.Map.base.Map.prototype = {
               (zoom ? '; Zoom: ' + zoom : '')].join(''));
   },
 
+  getZoom: function () {
+    return this.zoom;
+  },
+
   setZoom: function(zoom) {
-    this.map.innerHTML += ('<br/>New zoom level: ' + zoom);
+    this.zoom = zoom;
+    this.map.html(this.map.html() + '<br/>New zoom level: ' + zoom);
   },
 
   openInfoWindowHtml: function(point, html) {},
 
   closeInfoWindow: function() {},
-
-  showMapBlowup: function(point) {
-    var content = 'Map blowup: ' + point.x + ', ' + point.y;
-    this.put(content);
-  },
 
   addOverlay: function(overlay) {
     var content = 'Added Overlay: ' + overlay.toString();
@@ -204,7 +196,8 @@ byCycle.Map.base.Map.prototype = {
   centerAndZoomToBounds: function(bounds, center) {},
 
   showGeocode: function(geocode) {
-    this.map.innerHTML += ('<br/>x: ' + geocode.x + ', y: ' + geocode.y);
+    this.map.html(
+      this.map.html() + ('<br/>x: ' + geocode.x + ', y: ' + geocode.y));
   },
 
   makeBounds: function(bounds) {},
@@ -214,6 +207,6 @@ byCycle.Map.base.Map.prototype = {
   },
 
   addListener: function(obj, signal, func) {
-    Event.observe(obj, signal, func);
+    $(obj).on(signal, func)
   }
 };

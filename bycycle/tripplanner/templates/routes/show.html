@@ -1,8 +1,6 @@
-<%inherit file="layout.html"/>
+<%inherit file="/layout.html"/>
 
-<%! from urllib import unquote_plus %>
-
-<%namespace file="/widgets/fixed-pane.html" import="fixed_pane" />
+<%! from urllib.parse import unquote_plus %>
 
 <%
     route = result
@@ -21,12 +19,10 @@
     s_url_str = start.urlStr()
     e_url_str = end.urlStr()
     set_center_onclick = 'byCycle.UI.map.setCenter({x: %s, y: %s}); return false;'
-    map_blowup_href = "#show-map-blowup"
-    map_blowup_onclick = "byCycle.UI.map.showMapBlowup({x: %s, y: %s}); return false;"
     tab = h.literal('&nbsp;' * 4)
 %>
 
-<%call expr="fixed_pane()">
+<div>
     <%def name="title()">
         Route
         <span class="small">
@@ -37,26 +33,31 @@
              >show on map</a>
         </span>
     </%def>
+
     <div class="start">
-        <a href="${map_blowup_href}"
+        <a href="#"
            title="Start of route"
-           onclick="${map_blowup_onclick % (start.lat_long.x, start.lat_long.y)}"
+           onclick="${set_center_onclick % (start.lat_long.x, start.lat_long.y)}"
            >${s_addr}</a>
     </div>
+
     <div class="end">
-        <a href="${map_blowup_href}"
+        <a href="#"
            title="End of route"
-           onclick="${map_blowup_onclick % (end.lat_long.x, end.lat_long.y)};"
+           onclick="${set_center_onclick % (end.lat_long.x, end.lat_long.y)};"
            >${e_addr}</a>
     </div>
+
     <div class="total-distance">
         ${'%.2f' % total_mi} miles / ${'%.2f' % total_km} km
     </div>
+
     <div class="noprint reverse-directions">
-        <a href="/regions/${region.slug}/routes/find?q=${e_url_str}+to+${s_url_str}"
+        <a href="/route/find?s=${e_url_str}&e=${s_url_str}"
            onclick="byCycle.UI.reverseDirections('${unquote_plus(e_url_str)}', '${unquote_plus(s_url_str)}'); return false;"
            >Reverse Directions</a>
     </div>
+
     <div class="directions">
         % for d in directions:
             <%
@@ -79,8 +80,8 @@
             %>
             <div class="direction ${row_class}">
                 <span class="count">
-                    <a href="${map_blowup_href}"
-                       onclick="${map_blowup_onclick % point}"
+                    <a href="#"
+                       onclick="${set_center_onclick % point}"
                        >${loop.index + 1}</a>
                 </span>
                 -
@@ -99,10 +100,11 @@
                 % endif
             </div>
         % endfor
+
         <div class="direction ${'a' if row_class == 'b' else 'b'}">
             <span class="count">
-                <a href="${map_blowup_href}"
-                   onclick="${map_blowup_onclick % (end.lat_long.x, end.lat_long.y)}"
+                <a href="#"
+                   onclick="${set_center_onclick % (end.lat_long.x, end.lat_long.y)}"
                    >${len(directions) + 1}</a>
             </span>
             -
@@ -111,4 +113,4 @@
             <span class="direction">${str(end.address).split('\n')[0]}</span>
         </div>
     </div>
-</%call>
+</div>

@@ -1,207 +1,89 @@
-html, body, table, td, tr, form {
-  padding: 0;
-  margin: 0;
-}
 html, body {
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   height: 100%;
 }
-body { font-size: 80%; }
-body, td {
-  font-family: Verdana, Helvetica, Arial, sans-serif;
-  background-color: white;
+
+a {
+  color: #3987c9;
+}
+a:hover {
+  color: orange;
+}
+
+#container {
+  padding: 0 15px;
+}
+
+#top-row {
+  padding: 15px 0;
+  padding-bottom: 0;
+}
+
+#logo a {
+  display: block;
   color: black;
-}
-
-td { vertical-align: top; }
-
-img { border: 0; }
-
-a { color: #46d; }
-a:hover { color: orange; }
-
-
-.clear { clear: both; }
-.no-top-margin { margin-top: 0; }
-.no-bottom-margin { margin-bottom: 0; }
-.small { font-size: 75%; }
-.attention, .attention a {
-  color: red;
-  font-weight: bold;
-}
-.attention a:hover {
-  color: orange;
-}
-
-
-/* Top level */
-#meta, #footer {
-  padding: 2px;
-  font-size: 11px;
-  background: #ddd;
-}
-#meta-left {
-  float: left;
-}
-#meta-right {
-  float: right;
-}
-#wrapper {
-  position: relative;
-  min-width: 600px;
-}
-#masthead, #input_container, #bar {
-  padding: 5px;
-}
-#footer {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  z-index: 1000;
-}
-
-
-/* Masthead */
-#masthead {
-  float: left;
-  width: 141px;
-  text-align: right;
-}
-#masthead h1, #masthead h2, #masthead h3, #masthead h4 {
-  margin: 0;
-  margin-bottom: 2px;
-  padding: 0;
-  font-weight: normal;
-}
-#masthead h1 { font-size: 128%; }
-#masthead h2 { font-size: 96%; }
-#masthead h3 { font-size: 80%; }
-#masthead h4 { font-size: 72%; }
-#masthead a {
   text-decoration: none;
-  color: #000;
-}
-#masthead a:hover {
-  color: orange;
-}
-
-
-/* Content Column Layout */
-#col-a {
-  float: left;
-  width: 30%;
-}
-#col-b {
-  float: right;
-  width: 69%;
-  border-left: 1px solid #99b3cc;
 }
 
 
 /* Input */
-#input_container {
-  margin-left: 146px;
+.nav-tabs {
+  margin-bottom: 10px;
 }
-#region-search {
-  border: 1px solid #99b3cc;
-  padding: 5px;
-}
-
-/* Input Controls */
 #q {
-  width: 368px;
+  width: 450px;
 }
 #s, #e {
-  width: 170px;
+  width: 201px;
 }
-#swap_s_and_e a {
+#swap-s-and-e a {
   text-decoration: none;
 }
-/* Input Labels */
-.input_label {
-  margin-top: 5px;
-  font-size: 85%;
-  color: #333;
+#pref {
+  width: 125px;
 }
 
 
 /* Status & Links */
+
 #bar {
-  position: relative;
+  padding: 5px 0;
   color: #eee;
   background: #444;
-  border: solid #99b3cc;
-  border-width: 1px 0;
   font-weight: bold;
 }
 #bar a {
   color: #eef;
-  text-decoration: underline;
-}
-#bar a:visited {
-  color: #aab;
+  text-decoration: none;
 }
 #bar a:hover {
-  color: #ff8800;
+  color: orange;
 }
-#status {
-  float: left;
-}
+
+
 /* Loading */
+
+#spinner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  margin: 4px;
+}
+
 #loading-status {
   color: red;
 }
-#links {
-  float: right;
-  text-align: right;
-}
 
-
-/* Content Column A -- Results and Messages */
-#spinner {
-  position: absolute;
-  left: -1px;
-  bottom: -22px;
-}
-.spinner {
-  float: left;
-  width: 16px;
-  height: 16px;
-  background: white;
-  margin-right: 2px;
-  padding: 2px;
-  border: 1px solid #a7cc95;
-}
 
 /* Results */
-.display-pane h2 {
-  margin-top: 0;
-}
-#message_pane, #result_pane {
-  padding: 5px;
-  overflow: auto;
-}
-#result_pane .tab-contents {
-  padding-bottom: 0;
-}
-.result_list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.result_list li, .fragment div.fixed-pane {
-  margin-bottom: 5px;
-}
-.multi-list {
 
-}
-.multi-list li {
-  border-top: 1px solid #99b3cc;
-}
-#route_list .fixed-pane .content-pane {
-  padding: 0;
-  border-bottom: none;
+#col-a {
+  background-color: #f8f8f8;
+  overflow: auto;
 }
 .disclaimer {
   font-size: 85%;
@@ -209,20 +91,15 @@ a:hover { color: orange; }
   color: #666;
 }
 
-/* Errors */
-.errors .title_bar, .errors .title_bar td {
-  background: #fd766a;
-}
-.errors p.error {
-  padding: 5px;
-  border: 1px solid #fd766a;
-}
 
+/* Map */
 
-/* Column B -- Map and any other map-related stuff */
-/* The map object is inserted here */
-#map_pane {
-  background: #d0d7de;
+#col-b {
+  padding: 0;
+}
+#map-pane {
+  background-color: #3987c9;
+  height: 100%;
 }
 .info_win {
   width: 250px;
@@ -252,4 +129,3 @@ div.b { background: #fff; }
 span.count { text-align: right; }
 span.turn { font-weight: bold; }
 span.segment_distance { font-style: italic; }
-

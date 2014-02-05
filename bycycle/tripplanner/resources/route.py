@@ -29,7 +29,7 @@ class Route(ServiceResource):
         params = self.request.params
         q = params.get('q', '')
         if q:
-            route_list = re.split('\s+to\s+', q)
+            route_list = re.split('\s+to\s+', q, re.I)
             if len(route_list) < 2:
                 raise InputError("That doesn't look like a route.")
         else:

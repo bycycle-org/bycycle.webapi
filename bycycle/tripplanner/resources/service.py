@@ -1,57 +1,85 @@
 from collections import Iterable
 import logging
+import json
 import re
 
 from tangled.decorators import reify
+from tangled.util import load_object
 from tangled.web import Resource, config
+from tangled.web.representations import Representation
 
 from bycycle.core.model.entities.base import Entity
+from bycycle.core.model.regions import getRegionKey, Region
 from bycycle.core.services.exceptions import ByCycleError
 from bycycle.core.services.exceptions import InputError, NotFoundError
-
-from .regions import Regions
 
 
 log = logging.getLogger(__name__)
 
 
+route_re = re.compile(r'.+\s+to\s+.+')
+
+
 class ServiceResource(Resource):
 
     @reify
-    def parent_view(self):
-        return Regions(self.app, self.request, urlvars=self.urlvars)
+    def region(self):
+        req = self.request
+        if 'region' in req.params:
+            try:
+                slug = getRegionKey(req.params['region'])
+            except ValueError:
+                return None
+            q = req.db_session.query(Region)
+            q = q.filter_by(slug=slug)
+            return q.first()
 
     @reify
-    def region(self):
-        return self.parent_view.region
+    def service_class(self):
+        params = self.request.params
 
-    @config('text/html', template='/regions/show.html')
-    def GET(self):
-        data = self.parent_view.GET()
-        data['region'] = self.region
-        data['service'] = self.service_class.name
-        data['q'] = ''
-        data['s'] = ''
-        data['e'] = ''
+        q = params.get('q', '').strip()
+        s = params.get('s', '').strip()
+        e = params.get('e', '').strip()
+
+        if q:
+            if route_re.match(q):
+                service_class = 'bycycle.core.services.route:Service'
+            else:
+                service_class = 'bycycle.core.services.geocode:Service'
+        elif s or e:
+            service_class = 'bycycle.core.services.route:Service'
+        else:
+            self.request.abort(400)
+
+        return load_object(service_class)
+
+    @property
+    def data(self):
+        params = self.request.params
+        data = {
+            'region': self.region,
+            'service': '',
+            'q': params.get('q', '').strip(),
+            's': params.get('s', '').strip(),
+            'e': params.get('e', '').strip(),
+            'result': None,
+            'json': None,
+        }
         return data
+
+    @config('text/html', template='/layout.html')
+    def GET(self):
+        return self.data
 
     def find(self):
         return self._render(self._find())
 
     def _find(self):
         """Query service and return data for renderer."""
-        if self.region is None:
-            return self.parent_view.render_404()
-        data = {
-            'service': self.service_class.name,
-            'region': self.region,
-            'q': '',
-            's': '',
-            'e': '',
-            'result': None,
-            'json': None,
-        }
-        service = self.service_class(region=self.region.slug)
+        data = self.data
+        data['service'] = self.service_class.name
+        service = self.service_class(region=self.region)
         try:
             query = self._get_query()
             options = self._get_options()
@@ -82,7 +110,7 @@ class ServiceResource(Resource):
         The `q` query param is used as-is by default.
 
         """
-        return self.request.params.get('q', '')
+        return self.request.params.get('q', '').strip()
 
     def _get_options(self):
         """Return keyword args for service.
@@ -99,13 +127,16 @@ class ServiceResource(Resource):
     def _render(self, data):
         req = self.request
         renderer = self.urlvars.get('renderer')
-        best = req.accept.best_match(('text/html', 'application/json'))
-        if renderer == '.json' or best == 'application/json':
+        render_json = (
+            renderer == '.json' or
+            req.response_content_type == 'application/json')
+        if render_json:
             return self._render_json(data)
         else:
             return self._render_template(data)
 
-    def _render_template(self, data, as_response=True, include_json=True):
+    def _render_template(self, data, for_json=False, include_json=True):
+        req = self.request
         status = self.request.response.status_int
         if status == 200:
             result = data['result']
@@ -121,18 +152,19 @@ class ServiceResource(Resource):
         else:
             template = 'errors'
         directory = self.service_class.name
-        path = '/{0}s/{1}.html'.format(directory, template)
+        template_name = '/{0}s/{1}.html'.format(directory, template)
+        if for_json:
+            self.__template_name = template_name
+        else:
+            req.resource_config.template = template_name
         if include_json:
-            # Save content type and restore it below. This hackery is
-            # necessary because the JSON renderer automatically sets the
-            # content type to application/json.
-            content_type = self.request.response.content_type
-            data['json'] = self._render_json(data.copy(), as_response=False)
-            self.request.response.content_type = content_type
-        render_func = render_to_response if as_response else render
-        return render_func(path, data, request=self.request)
+            json_data = self._render_json(data.copy())
+            json_repr_type = self.app.get(Representation, 'application/json')
+            json_repr = json_repr_type(self.app, req, json_data)
+            data['json'] = json_repr.content
+        return data
 
-    def _render_json(self, data, as_response=True, include_fragment=True):
+    def _render_json(self, data, include_fragment=True):
         """Render a JSON representation of the result.
 
         This is the structure of the object::
@@ -161,16 +193,17 @@ class ServiceResource(Resource):
             'error': data.get('error'),
         }
         if include_fragment:
-            data = data.copy()
-            data['wrap'] = False
-            f = self._render_template(
-                data, as_response=False, include_json=False)
-            f = f.strip()
-            f = f.encode('utf-8')
-            f = re.sub('\s+', ' ', f)
-            obj['fragment'] = f
-        render_func = render_to_response if as_response else render
-        return render_func('json', obj, request=self.request)
+            html_data = data.copy()
+            html_data['wrap'] = False
+            html_data = self._render_template(html_data, True, False)
+            html_repr_type = self.app.get(Representation, 'text/html')
+            html_repr = html_repr_type(
+                self.app, self.request, html_data,
+                template=self.__template_name)
+            html = html_repr.content
+            html = re.sub('\s+', ' ', html.strip())
+            obj['fragment'] = html
+        return obj
 
     def _exc_as_dict(self, exc):
         """Given the `ByCycleError` ``exc``, return a dict w/ its attrs.
