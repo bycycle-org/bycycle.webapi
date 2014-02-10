@@ -33,7 +33,7 @@ setup(
             'tangled.web[dev]>=0.1a5',
         ],
         'test': [
-            'coverage>=3.7',
+            'coverage>=3.7.1',
             'WebTest>=2.0.14',
         ],
     },
