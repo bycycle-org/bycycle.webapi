@@ -34,7 +34,7 @@ setup(
         ],
         'test': [
             'coverage>=3.7',
-            'WebTest>=2.0.10',
+            'WebTest>=2.0.14',
         ],
     },
     test_suite='bycycle.tripplanner',
