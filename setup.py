@@ -30,10 +30,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'tangled.web[dev]>=0.1a5',
-        ],
-        'test': [
-            'coverage>=3.7.1',
+            'bycycle.core[dev]>=0.5a2',
             'WebTest>=2.0.14',
         ],
     },
