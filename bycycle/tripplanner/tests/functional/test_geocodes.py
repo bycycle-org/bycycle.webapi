@@ -3,39 +3,44 @@ from bycycle.tripplanner.tests.functional import BaseTestCase
 
 class TestGeocodes(BaseTestCase):
 
-    def test_get(self):
-        self.app.get('/regions/portlandor/geocodes')
-
     def test_query(self):
         self.app.get(
-            '/regions/portlandor/geocodes/find',
-            params={'q': '633 n alberta'},
-            status=200)
+            '/geocode/find',
+            params={
+                'q': '633 n alberta',
+                'region': 'portlandor',
+            }
+        )
 
     def test_query_json(self):
         self.app.get(
-            '/regions/portlandor/geocodes/find',
-            headers={'accept': 'application/json'},
-            params={'q': '633 n alberta'},
-            status=200)
-
-    def test_query_json_ext(self):
-        self.app.get(
-            '/regions/portlandor/geocodes/find.json',
-            params={'q': '633 n alberta'},
-            status=200)
+            '/geocode/find',
+            headers={
+                'accept': 'application/json',
+            },
+            params={
+                'q': '633 n alberta',
+                'region': 'portlandor',
+            }
+        )
 
     def test_query_300(self):
         self.app.get(
-            '/regions/portlandor/geocodes/find',
-            params={'q': '633 alberta'},
-            status=300)
+            '/geocode/find',
+            params={
+                'q': '633 alberta',
+                'region': 'portlandor',
+            }
+        )
 
     def test_query_404(self):
         self.app.get(
-            '/regions/portlandor/geocodes/find',
-            params={'q': '100 N Fake St'},
+            '/geocodes/find',
+            params={
+                'q': '100 N Fake St',
+                'region': 'portlandor',
+            },
             status=404)
 
     def test_query_missing_q(self):
-        self.app.get('/regions/portlandor/geocodes/find', status=400)
+        self.app.get('/geocode/find', status=400)
