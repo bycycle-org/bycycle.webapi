@@ -8,8 +8,9 @@ from tangled.util import load_object
 from tangled.web import Resource, config
 from tangled.web.representations import Representation
 
+from bycycle.core.model import Region
 from bycycle.core.model.entities.base import Entity
-from bycycle.core.model.regions import getRegionKey, Region
+from bycycle.core.model.regions import getRegionKey
 from bycycle.core.services.exceptions import ByCycleError
 from bycycle.core.services.exceptions import InputError, NotFoundError
 
@@ -79,7 +80,8 @@ class ServiceResource(Resource):
         """Query service and return data for renderer."""
         data = self.data
         data['service'] = self.service_class.name
-        service = self.service_class(region=self.region)
+        service = self.service_class(
+            self.request.db_session, region=self.region)
         try:
             query = self._get_query()
             options = self._get_options()
