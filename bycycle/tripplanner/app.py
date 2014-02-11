@@ -2,8 +2,8 @@ from tangled.converters import as_bool
 from tangled.web.app import Application
 
 
-def make_app(settings):
-    app = Application(settings)
+def make_app(settings, parse_settings=False, **extra_settings):
+    app = Application(settings, parse_settings, **extra_settings)
     app.include(mount_resources)
     app.include(mount_static_directories)
     app.include(add_subscribers)
