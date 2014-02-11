@@ -26,7 +26,7 @@ setup(
         'bycycle.core>=0.5a2',
         'tangled.mako>=0.1a2',
         'tangled.sqlalchemy>=0.1a2',
-        'tangled.web>=0.1a5',
+        'tangled.web>=0.1a6',
     ],
     extras_require={
         'dev': [
