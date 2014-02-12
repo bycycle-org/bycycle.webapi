@@ -64,6 +64,11 @@ var byCycle = (function () {
     },
 
     inheritFrom: function (superType, properties) {
+      if (!properties.hasOwnProperty('constructor')) {
+        properties.constructor = function () {
+          superType.apply(this, arguments);
+        }
+      }
       var intermediateType = function () {},
           constructor = properties.constructor;
       intermediateType.prototype = superType.prototype;
