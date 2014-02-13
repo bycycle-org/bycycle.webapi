@@ -17,6 +17,12 @@ var byCycle = (function (globalConfig) {
     params[decodeURIComponent(name)] = decodeURIComponent(value);
   });
 
+  $(document).ready(function () {
+    $('#old-news-link').on('click', function () {
+      $('#old-news').toggle();
+    });
+  });
+
   return {
     debug: config.debug,
     config: config.debug ? config.dev : config.prod,

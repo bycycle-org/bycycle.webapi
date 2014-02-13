@@ -85,6 +85,9 @@ a:hover {
   background-color: #f8f8f8;
   overflow: auto;
 }
+#old-news {
+  display: none;
+}
 .disclaimer {
   font-size: 85%;
   font-style: italic;
