@@ -18,11 +18,6 @@ byCycle.map.google.Map = byCycle.inheritFrom(byCycle.map.base.Map, {
     byCycle.writeScript(url);
   },
 
-  constructor: function(ui, container, options) {
-    this.superType.call(this, ui, container, options);
-//    this.createIcons();
-  },
-
   createMap: function(container, options) {
     options = options || {};
     options = $.extend({
@@ -34,28 +29,7 @@ byCycle.map.google.Map = byCycle.inheritFrom(byCycle.map.base.Map, {
         opened: true
       }
     }, options);
-    var map = new google.maps.Map(container.get(0), options);
-    this.map = map;
-  },
-
-  createIcons: function() {
-    // Base icon for start and end of route icons
-    var base_icon = new google.maps.Icon();
-    base_icon.shadow = byCycle.staticPrefix + 'images/shadow50.png';
-    base_icon.iconSize = new GSize(20, 34);
-    base_icon.shadowSize = new GSize(37, 34);
-    base_icon.iconAnchor = new GPoint(9, 34);
-    base_icon.infoWindowAnchor = new GPoint(9, 2);
-    base_icon.infoShadowAnchor = new GPoint(18, 25);
-    // Start icon
-    var start_icon = new google.maps.Icon(base_icon);
-    start_icon.image = byCycle.staticPrefix + 'images/dd-start.png';
-    // End icon
-    var end_icon = new google.maps.Icon(base_icon);
-    end_icon.image = byCycle.staticPrefix + 'images/dd-end.png';
-    // Assign icons to self
-    this.start_icon = start_icon;
-    this.end_icon = end_icon;
+    return new google.maps.Map(container.get(0), options);
   },
 
   /* Events */
@@ -178,38 +152,14 @@ byCycle.map.google.Map = byCycle.inheritFrom(byCycle.map.base.Map, {
     return markers;
   },
 
-  makeRegionMarker: function(region) {
-    var icon = new google.maps.Icon();
-    icon.image = byCycle.staticPrefix + 'images/x.png';
-    icon.iconSize = new GSize(17, 19);
-    icon.iconAnchor = new GPoint(9, 10);
-    icon.infoWindowAnchor = new GPoint(9, 10);
-    icon.infoShadowAnchor = new GPoint(9, 10);
-    var marker = this.placeMarker(region.center, icon);
-    var self = this;
-    self.addListener(marker, 'click', function() {
-      var params = byCycle.request_params.toQueryString();
-      var location = [byCycle.prefix, 'regions/', region.key];
-      if (params) { location.push('?', params); }
-      window.location = location.join('');
-    });
-    return marker;
-  },
-
-  clear: function() {
-//    this.map.clearOverlays();
-  },
+  clear: function () {},
 
   /* Bounds */
 
-  centerAndZoomToBounds: function(bounds, center) {
-    center = center || this.getCenterOfBounds(bounds);
-    var sw = bounds.sw,
-        ne = bounds.ne,
-        bounds = new google.maps.LatLngBounds(
-          new google.maps.LatLng(sw.y, sw.x),
-          new google.maps.LatLng(ne.y, ne.x));
-    this.setCenter(center);
+  zoomToExtent: function(bounds) {
+    var bounds = new google.maps.LatLngBounds(
+          new google.maps.LatLng(bounds[1], bounds[0]),
+          new google.maps.LatLng(bounds[3], bounds[2]));
     this.map.fitBounds(bounds)
   }
 });
