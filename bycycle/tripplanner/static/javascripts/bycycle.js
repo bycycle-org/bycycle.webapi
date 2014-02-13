@@ -25,8 +25,6 @@ var byCycle = (function (globalConfig) {
     prefix: config.prefix,
     staticPrefix: config.staticPrefix,
 
-    default_map_type: 'base',
-
     writeScript: function(src, type) {
       type = type || 'text/javascript';
       document.write('<script src="' + src + '" type="' + type + '"></script>');
