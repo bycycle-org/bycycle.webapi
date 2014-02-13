@@ -25,9 +25,6 @@ var byCycle = (function (globalConfig) {
     prefix: config.prefix,
     staticPrefix: config.staticPrefix,
 
-    // URL query parameters as a Hash
-    request_params: params,
-
     default_map_type: 'base',
 
     writeScript: function(src, type) {
@@ -47,7 +44,7 @@ var byCycle = (function (globalConfig) {
      */
     getParamVal: function (name, processor, defaultValue) {
       // Override config setting with query string setting
-      var v = byCycle.request_params[name];
+      var v = params[name];
       if (typeof v === 'undefined') {
         if (typeof defaultValue !== 'undefined') {
           v = defaultValue;
