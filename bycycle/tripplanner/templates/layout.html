@@ -19,19 +19,6 @@
 
     <link rel="stylesheet" type="text/css" href="${request.static_path('/static/bootstrap/css/bootstrap.min.css')}">
     <link rel="stylesheet" type="text/css" href="${request.static_path('/static/stylesheets/base.css')}">
-
-    <script type="text/javascript">
-      //<![CDATA[
-      // Global setup
-      var debug = ${str(debug).lower()};
-      byCycle_prefix = '${request.script_name or "/"}';
-      byCycle_staticPrefix = '${request.static_path("/static/")}';
-      //]]>
-    </script>
-
-    <script src="${request.static_path('/static/javascripts/jquery.js')}"></script>
-    <script src="${request.static_path('/static/bootstrap/js/bootstrap.min.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/bycycle.js')}"></script>
   </head>
 
 
@@ -184,27 +171,33 @@
       </div>
     </div>
 
+    <script type="text/javascript">
+      //<![CDATA[
+      var byCycle = {
+        debug: ${str(debug).lower()},
+        prefix: '${request.script_name or "/"}',
+        staticPrefix: '${request.static_path("/static/")}',
+        UI: {
+          region_id: 'portlandor',
+          service: '${service}',
+          q: '${q}',
+          http_status: ${request.response.status_int},
+          jsonData: ${json or 'null' | n}
+        }
+      };
+      //]]>
+    </script>
+
+    <script src="${request.static_path('/static/jquery.js')}"></script>
+    <script src="${request.static_path('/static/bootstrap/js/bootstrap.min.js')}"></script>
     <script src="${request.static_path('/static/OpenLayers/OpenLayers.debug.js')}"></script>
+    <script src="${request.static_path('/static/javascripts/bycycle.js')}"></script>
     <script src="${request.static_path('/static/javascripts/map.js')}"></script>
     <script src="${request.static_path('/static/javascripts/openlayers.js')}"></script>
     <script src="${request.static_path('/static/javascripts/ui.js')}"></script>
     <script src="${request.static_path('/static/javascripts/result.js')}"></script>
     <script src="${request.static_path('/static/javascripts/regions.js')}"></script>
     <script src="${request.static_path('/static/javascripts/query.js')}"></script>
-
-    <script type="text/javascript">
-      //<![CDATA[
-      <%block name="javascript">
-        byCycle.UI.beforeLoad({
-          region_id: 'portlandor',
-          service: '${service}',
-          q: '${q}',
-          http_status: ${request.response.status_int},
-          jsonData: ${json or 'null' | n}
-        });
-      </%block>
-      //]]>
-    </script>
 
     % if not app.debug:
       <%include file="_google_analytics.html"/>

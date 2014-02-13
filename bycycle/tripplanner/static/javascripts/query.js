@@ -81,7 +81,7 @@ byCycle.UI.Query.prototype = {
       this.processResults(results);
     } catch (e) {
       console && console.log(e.toString());
-      if (debug) {
+      if (byCycle.debug) {
         throw e;
       }
     }
