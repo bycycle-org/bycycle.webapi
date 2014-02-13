@@ -1,4 +1,4 @@
-var byCycle = (function () {
+var byCycle = (function (globalConfig) {
   var config = {
     prod: {
       map_type: 'openlayers',
@@ -9,6 +9,7 @@ var byCycle = (function () {
       map_state: 1
     }
   };
+  $.extend(config, globalConfig);
 
   var search = window.location.search.substring(1),
       params = {};
@@ -17,21 +18,17 @@ var byCycle = (function () {
   });
 
   return {
-    // `debug` is a global set in the template; it's value is passed
-    // from Pylons as an attribute of `app_globals`
-    config: debug ? config.dev : config.prod,
+    debug: config.debug,
+    config: config.debug ? config.dev : config.prod,
 
     // Prefixes for when app is mounted somewhere other than root (/)
-    prefix: byCycle_prefix,
-    staticPrefix: byCycle_staticPrefix,
+    prefix: config.prefix,
+    staticPrefix: config.staticPrefix,
 
     // URL query parameters as a Hash
     request_params: params,
 
     default_map_type: 'base',
-
-    // Namespace for byCycle widgets
-    widget: {},
 
     writeScript: function(src, type) {
       type = type || 'text/javascript';
@@ -55,7 +52,7 @@ var byCycle = (function () {
         if (typeof defaultValue !== 'undefined') {
           v = defaultValue;
         } else {
-          v = byCycle.config[name];
+          v = config[name];
         }
       } else if (typeof processor === 'function') {
         v = processor(v);
@@ -78,4 +75,4 @@ var byCycle = (function () {
       return constructor;
     }
   };
-}());
+}(byCycle));

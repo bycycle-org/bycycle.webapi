@@ -302,3 +302,6 @@ byCycle.UI = {
     new byCycle.UI.RouteQuery(this.route_form).run();
   }
 };
+
+
+byCycle.UI.beforeLoad(byCycle.config.UI);

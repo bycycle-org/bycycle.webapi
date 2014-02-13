@@ -12,7 +12,7 @@ byCycle.map.google.Map = byCycle.inheritFrom(byCycle.map.base.Map, {
   beforeLoad: function () {
     var url = 'http://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false',
         apiKey = 'AIzaSyD0zDsPxMHaxNgZVNnWmxxDomPT039GJoM';
-    if (!debug) {
+    if (!byCycle.debug) {
       url += '&key=' + apiKey;
     }
     byCycle.writeScript(url);
