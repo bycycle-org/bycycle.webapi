@@ -7,7 +7,7 @@ byCycle.UI = {
     return $.inArray(mapState, ['0', 'off', '']) === -1;
   }),
   map_type: (
-    byCycle.map[byCycle.getParamVal('map_type').toLowerCase()] ||
+    byCycle.map[byCycle.getParamVal('map_type')] ||
     byCycle.map[byCycle.config.map_type] ||
     byCycle.map.base).Map,
 
