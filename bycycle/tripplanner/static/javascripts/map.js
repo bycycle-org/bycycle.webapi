@@ -17,24 +17,14 @@ byCycle.map.base.Map = function(ui, container, options) {
   this.ui = ui;
   this.container = container;
   this.options = options;
-  this.createMap(container, options);
+  this.map = this.createMap(container, options);
 };
 
 byCycle.map.base.Map.prototype = {
   description: 'Default byCycle map type',
 
-  /**
-   * Do map initialization that needs to happen before page is done loading.
-   * For example, for Google Maps, the API init script needs to be loaded
-   * inline because it does a document.write to load the actual API.
-   */
-  beforeLoad: function() {
-    this.zoom = 0;
-  },
-
   createMap: function(container, options) {
-    this.map = container;
-    this.put('Default byCycle Map Interface');
+    return container;
   },
 
   put: function(content) {
@@ -159,10 +149,6 @@ byCycle.map.base.Map.prototype = {
     return markers;
   },
 
-  makeRegionMarker: function() {
-  },
-
-
   /* Bounds */
 
   getBoundsForPoints: function(points) {
@@ -188,12 +174,14 @@ byCycle.map.base.Map.prototype = {
    * @return Center of bounding box {x: x, y: y}
    */
   getCenterOfBounds: function(bounds) {
-    var sw = bounds.sw;
-    var ne = bounds.ne;
-    return {x: (sw.x + ne.x) / 2.0, y: (sw.y + ne.y) / 2.0};
+    var left = bounds[0],
+        bottom = bounds[1],
+        right = bounds[2],
+        top = bounds[3];
+    return {x: (left + right) / 2.0, y: (top + bottom) / 2.0};
   },
 
-  centerAndZoomToBounds: function(bounds, center) {},
+  zoomToExtent: function (bounds) {},
 
   showGeocode: function(geocode) {
     this.map.html(

@@ -1,7 +1,7 @@
 var byCycle = (function () {
   var config = {
     prod: {
-      map_type: 'google',
+      map_type: 'openlayers',
       map_state: 1
     },
     dev: {

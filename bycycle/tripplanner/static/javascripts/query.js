@@ -254,6 +254,7 @@ byCycle.UI.RouteQuery = byCycle.inheritFrom(byCycle.UI.Query, {
   processResults: function (results) {
     var route,
         linestring,
+        bounds,
         line,
         markers,
         startPoint, endPoint,
@@ -261,7 +262,7 @@ byCycle.UI.RouteQuery = byCycle.inheritFrom(byCycle.UI.Query, {
         color = this.ui.route_line_color,
         ui = this.ui,
         map = ui.map,
-        centerAndZoomToBounds = map.centerAndZoomToBounds.bind(map),
+        zoomToExtent = map.zoomToExtent.bind(map),
         placeMarkers = map.placeMarkers.bind(map),
         addListener = map.addListener.bind(map),
         drawPolyLine;
@@ -278,7 +279,9 @@ byCycle.UI.RouteQuery = byCycle.inheritFrom(byCycle.UI.Query, {
 
       // Zoom to linestring
       // TODO: Compute this in back end
-      centerAndZoomToBounds(route.bounds, route.center);
+      bounds = route.bounds;
+      bounds = [bounds.sw.x, bounds.sw.y, bounds.ne.x, bounds.ne.y];
+      zoomToExtent(bounds);
 
       startPoint = linestring.coordinates[0];
       startPoint = {x: startPoint[0], y: startPoint[1]};

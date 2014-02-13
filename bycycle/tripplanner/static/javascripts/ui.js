@@ -41,13 +41,10 @@ byCycle.UI = {
   beforeLoad: function(props) {
     $('#spinner').show();
     this.setLoadingStatus('Loading...');
-
     $.extend(this, props);
-
-    if (this.map_state) {
+    if (this.map_state && this.map_type.prototype.beforeLoad) {
       this.map_type.prototype.beforeLoad();
     }
-
     $(document).ready(this.onLoad.bind(this));
   },
 
@@ -57,10 +54,10 @@ byCycle.UI = {
   onLoad: function() {
     this._assignUIElements();
     this._createEventHandlers();
+    this.onResize();
     this.map = new this.map_type(this, this.map_pane);
     this.setRegion(this.region_id);
     this.handleQuery();
-    this.onResize();
     $('#loading-status').remove();
     this.spinner.hide();
   },
@@ -98,7 +95,7 @@ byCycle.UI = {
         offset = this.main_row.offset().top,
         height = bodyHeight - offset;
     $('#col-a').height(height);
-    this.map.setHeight(height);
+    $('#col-b').height(height);
   },
 
   /* Display Panes *********************************************************/
@@ -119,30 +116,11 @@ byCycle.UI = {
     var region = regions[region_id];
     if (region) {
       // Zoom to a specific region
-      this.map.centerAndZoomToBounds(region.bounds, region.center);
-      this._showRegionOverlays(region);
+      this.map.zoomToExtent(region.bounds);
     } else {
       // Show all regions
       var all_regions = byCycle.regions;
-      this.map.centerAndZoomToBounds(all_regions.bounds, all_regions.center);
-      regions.values().each(function (r) {
-        this._showRegionOverlays(r);
-      });
-    }
-  },
-
-  // Show map overlays for a region, creating and caching them first if
-  // necessary
-  _showRegionOverlays: function(region, use_cached) {
-    if (!this.region_id && !region.marker) {
-      region.marker = this.map.makeRegionMarker(region);
-    } else if (use_cached) {
-      this.map.addOverlay(region.marker);
-    }
-    if (!region.line) {
-      region.line = this.map.drawPolyLine(region.linestring);
-    } else if (use_cached) {
-      this.map.addOverlay(region.line);
+      this.map.zoomToExtent(all_regions.bounds);
     }
   },
 
@@ -307,6 +285,7 @@ byCycle.UI = {
       event.preventDefault();
     }
     if (confirm('Remove all of your results and clear the map?')) {
+      this.map.clear();
       $.each(this.results, function (service, results) {
         $.each(results, function (id, result) {
           result.remove();
