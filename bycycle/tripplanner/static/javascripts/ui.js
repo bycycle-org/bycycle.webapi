@@ -171,8 +171,10 @@ byCycle.UI = {
         queryClass = byCycle.UI[queryClassName],
         queryObj = new queryClass();
     this.request = {responseJSON: this.jsonData};
-    if (status === 200 || status === 300) {
-      queryObj['on' + status](this.request);
+    if (status === 200) {
+      queryObj['on' + status](this.jsonData);
+    } else if (status === 300) {
+      queryObj.on300(this.request);
     } else {
       queryObj.onFailure(this.request);
     }
