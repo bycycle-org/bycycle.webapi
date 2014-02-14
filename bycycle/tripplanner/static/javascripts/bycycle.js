@@ -9,6 +9,7 @@ var byCycle = (function (globalConfig) {
       map_state: 1
     }
   };
+  config = globalConfig.debug ? config.dev : config.prod;
   $.extend(config, globalConfig);
 
   var search = window.location.search.substring(1),
@@ -25,7 +26,7 @@ var byCycle = (function (globalConfig) {
 
   return {
     debug: config.debug,
-    config: config.debug ? config.dev : config.prod,
+    config: config,
 
     // Prefixes for when app is mounted somewhere other than root (/)
     prefix: config.prefix,
