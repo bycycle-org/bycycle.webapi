@@ -190,14 +190,14 @@
       //<![CDATA[
       var byCycle = {
         debug: ${str(debug).lower()},
+        httpStatus: ${request.response.status_int},
         prefix: '${request.script_name or "/"}',
         staticPrefix: '${request.static_path("/static/")}',
-        UI: {
+        jsonData: ${json or 'null' | n},
+        uiConfig: {
           regionId: 'portlandor',
           service: '${service}',
-          q: '${q}',
-          httpStatus: ${request.response.status_int},
-          jsonData: ${json or 'null' | n}
+          q: '${q}'
         }
       };
       //]]>
@@ -206,12 +206,9 @@
     <script src="${request.static_path('/static/jquery.js')}"></script>
     <script src="${request.static_path('/static/bootstrap/js/bootstrap.min.js')}"></script>
     <script src="${request.static_path('/static/ol3/ol.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/bycycle.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/map.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/ui.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/result.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/regions.js')}"></script>
-    <script src="${request.static_path('/static/javascripts/query.js')}"></script>
+
+    <script data-main="${request.static_path('/static/javascripts/main.js')}"
+            src="${request.static_path('/static/javascripts/require.js')}"></script>
 
     % if not app.debug:
       <%include file="_google_analytics.html"/>

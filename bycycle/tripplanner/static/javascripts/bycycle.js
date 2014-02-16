@@ -1,25 +1,18 @@
-var byCycle = (function (globalConfig) {
-  var config = $.extend({}, globalConfig),
-      search = window.location.search.substring(1),
-      params = {};
-
-  search.replace(/([^=&]+)=([^&]*)/g, function (m, name, value) {
-    params[decodeURIComponent(name)] = decodeURIComponent(value);
-  });
-
-  $(document).ready(function () {
-    $('#old-news-link').on('click', function () {
-      $('#old-news').toggle();
-    });
-  });
-
+define(function () {
   return {
-    debug: config.debug,
-    config: config,
+    init: function (config) {
+      $.extend(this, config);
+      this.requestParams = this.queryStringToObject(
+        window.location.search.substring(1));
+    },
 
-    // Prefixes for when app is mounted somewhere other than root (/)
-    prefix: config.prefix,
-    staticPrefix: config.staticPrefix,
+    queryStringToObject: function (queryString) {
+      var params = {};
+      queryString.replace(/([^=&]+)=([^&]*)/g, function (m, name, value) {
+        params[decodeURIComponent(name)] = decodeURIComponent(value);
+      });
+      return params;
+    },
 
     writeScript: function (src, type) {
       type = type || 'text/javascript';
@@ -38,7 +31,7 @@ var byCycle = (function (globalConfig) {
      */
     getParamVal: function (name, processor, defaultValue) {
       // Override config setting with query string setting
-      var v = params[name];
+      var v = this.requestParams[name];
       if (typeof v === 'undefined') {
         if (typeof defaultValue !== 'undefined') {
           v = defaultValue;
@@ -66,4 +59,4 @@ var byCycle = (function (globalConfig) {
       return constructor;
     }
   };
-}(byCycle));
+});
