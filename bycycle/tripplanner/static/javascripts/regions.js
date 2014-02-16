@@ -1,5 +1,5 @@
-byCycle.regions = (function() {
-  var getCenterOfBounds = byCycle.map.base.Map.prototype.getCenterOfBounds,
+byCycle.regions = (function () {
+  var getCenterOfBounds = byCycle.map.Map.prototype.getCenterOfBounds,
       boundsAll = [180, 90, -180, -90],
       regions = {
         portlandor: {

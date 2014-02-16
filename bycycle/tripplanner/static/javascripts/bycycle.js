@@ -1,20 +1,9 @@
 var byCycle = (function (globalConfig) {
-  var config = {
-    prod: {
-      map_type: 'openlayers',
-      map_state: 1
-    },
-    dev: {
-      map_type: 'base',
-      map_state: 1
-    }
-  };
-  config = globalConfig.debug ? config.dev : config.prod;
-  $.extend(config, globalConfig);
-
-  var search = window.location.search.substring(1),
+  var config = $.extend({}, globalConfig),
+      search = window.location.search.substring(1),
       params = {};
-  search.replace(/([^=&]+)=([^&]*)/g, function(m, name, value) {
+
+  search.replace(/([^=&]+)=([^&]*)/g, function (m, name, value) {
     params[decodeURIComponent(name)] = decodeURIComponent(value);
   });
 
@@ -32,7 +21,7 @@ var byCycle = (function (globalConfig) {
     prefix: config.prefix,
     staticPrefix: config.staticPrefix,
 
-    writeScript: function(src, type) {
+    writeScript: function (src, type) {
       type = type || 'text/javascript';
       document.write('<script src="' + src + '" type="' + type + '"></script>');
     },
