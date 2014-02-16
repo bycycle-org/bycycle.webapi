@@ -100,9 +100,34 @@ a:hover {
 #col-b {
   padding: 0;
 }
+#map-context-menu {
+  position: absolute;
+  display: none;
+}
+#map-context-menu ul {
+  display: block;
+}
 #map-pane {
   background-color: #3987c9;
   height: 100%;
+}
+#map-pane .popover {
+  width: 200px;
+}
+.marker {
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  background-color: #3987c9;
+}
+.marker span {
+  font-size: 16px;
+}
+.start-marker {
+  background-color: green;
+}
+.end-marker {
+  background-color: red;
 }
 .info_win {
   width: 250px;

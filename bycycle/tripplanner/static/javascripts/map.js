@@ -1,200 +1,214 @@
-/**
- * byCycle Map namespace
- */
 byCycle.map = {};
 
 
-byCycle.map.base = {};
+byCycle.map.Map = byCycle.inheritFrom(ol.Map, {
 
+  defaultZoom: 4,
+  streetLevelZoom: 16,
 
-/**
- * Base byCycle Map
- *
- * @param parent UI object
- * @param container Widget that contains this map
- */
-byCycle.map.base.Map = function(ui, container, options) {
-  this.ui = ui;
-  this.container = container;
-  this.options = options;
-  this.map = this.createMap(container, options);
-};
+  constructor: function (opts) {
+    this.fromProjection = ol.proj.get('EPSG:4326');
+    opts = $.extend({
+      view: new ol.View2D({
+        projection: ol.proj.get('EPSG:3857'),
+        center: [0, 0],
+        zoom: this.defaultZoom
+      }),
+      renderer: ol.RendererHint.CANVAS,
+      layers: [
+        new ol.layer.Tile({
+          source: (
+            byCycle.debug ?
+            new ol.source.MapQuest({layer: 'osm'}) :
+            new ol.source.OSM())
+        })
+      ],
+      controls: ol.control.defaults().extend([
+        new ol.control.ScaleLine()
+      ])
+    }, opts);
 
-byCycle.map.base.Map.prototype = {
-  description: 'Default byCycle map type',
+    this.superType.call(this, opts);
 
-  createMap: function(container, options) {
-    return container;
+    $(window).on('click', function () {
+      this.closePopups();
+    }.bind(this));
   },
 
-  put: function(content) {
-    var div = document.createElement('div');
-    div.innerHTML = '#' + (this.put_count = (this.put_count || 1)) + ' ' +
-                    content;
-    this.put_count += 1;
-    this.map.append(div);
-    return div;
+  closePopups: function () {
+    $('.popover').hide();
   },
 
-  clear: function() {
-    this.map.html('');
+  setCenterFromLatLong: function (center) {
+    this.getView().setCenter(this.transform(center));
   },
 
-  setSize: function(dims) {
-    if (typeof(dims.w) != 'undefined') {
-      this.container.width(dims.w);
-    }
-    if (typeof(dims.h) != 'undefined') {
-      this.container.height(dims.h);
-    }
+  transform: function (coords) {
+    return ol.proj.transform(
+      coords, this.fromProjection, this.getView().getProjection());
   },
 
-  setWidth: function(width) {
-    this.container.style.width = width + 'px';
+  transformBounds: function (bounds) {
+    var sw = this.transform([bounds[0], bounds[1]]),
+        ne = this.transform([bounds[2], bounds[3]]);
+    return [sw[0], sw[1], ne[0], ne[1]];
   },
 
-  setHeight: function(height) {
-    this.container.height(height);
+  transformLine: function (coordinates) {
+    var transformedCoords = [];
+    $.each(coordinates, function (i, coord) {
+      transformedCoords.push(this.transform(coord));
+    }.bind(this));
+    return transformedCoords;
   },
 
-  getCenter: function() {
-    return {x: 0, y: 0};
-  },
-
-  getCenterString: function() {
-    var c = this.getCenter();
-    var x = Math.round(c.x * 1000000) / 1000000;
-    var y = Math.round(c.y * 1000000) / 1000000;
-    return ["longitude=", x, ", ", "latitude=", y].join('');
-  },
-
-  setCenter: function(center, zoom) {
-    this.put(['Set Center: ', center.x, ', ', center.y,
-              (zoom ? '; Zoom: ' + zoom : '')].join(''));
-  },
-
-  getZoom: function () {
-    return this.zoom;
-  },
-
-  setZoom: function(zoom) {
-    this.zoom = zoom;
-    this.map.html(this.map.html() + '<br/>New zoom level: ' + zoom);
-  },
-
-  openInfoWindowHtml: function(point, html) {},
-
-  closeInfoWindow: function() {},
-
-  addOverlay: function(overlay) {
-    var content = 'Added Overlay: ' + overlay.toString();
-    return this.put(content);
-  },
-
-  removeOverlay: function(overlay) {
-    var content = 'Removed Overlay: ' + overlay.toString();
-    this.put(content);
-  },
-
-  drawPolyLine: function(points, color, weight, opacity) {
-    var line = {
-      type: 'PolyLine',
-      toString: function() {
-        return this.type;
-      }
-    };
-    return this.addOverlay(line);
-  },
-
-  placeMarker: function(point, icon) {
-    var marker = {
-      type: 'Marker',
-      x: point.x,
-      y: point.y,
-      toString: function() {
-        return [this.type, ' at ', this.x, ', ', this.y].join('');
-      }
-    };
-    return this.addOverlay(marker);
-  },
-
-  placeGeocodeMarker: function(point, node, zoom, icon) {
-    var marker = {
-      type: 'Geocode Marker',
-      x: point.x,
-      y: point.y,
-      toString: function() {
-        return [this.type, ' at ', this.x, ', ', this.y,
-        ' [', node.innerHTML, ']'].join('');
-      }
-    };
-    this.setCenter(point, zoom);
-    return this.addOverlay(marker);
-  },
-
-  /**
-   * Put some markers on the map
-   * @param points An array of points
-   * @param icons An array of icons (optional)
-   * @return An array of the markers added
-   */
-  placeMarkers: function(points, icons) {
-    var markers = [];
-    var len = points.length;
-    for (var i = 0; i < len; ++i) {
-      p = points[i];
-      var marker = this.placeMarker(p);
-      markers.push(marker);
-    }
-    return markers;
-  },
-
-  /* Bounds */
-
-  getBoundsForPoints: function(points) {
-    var xs = [];
-    var ys = [];
-    for (var i = 0; i < points.length; ++i) {
-      var p = points[i];
-      xs.push(p.x);
-      ys.push(p.y);
-    }
-    var comp = function(a, b) { return a - b; };
-    xs.sort(comp);
-    ys.sort(comp);
-    var bounds = {
-      sw: {x: xs[0], y: ys[0]},
-      ne: {x: xs.pop(), y: ys.pop()}
-    };
-    return bounds;
-  },
-
-  /**
-   * @param bounds A set of points representing a bounding box (sw, ne)
-   * @return Center of bounding box {x: x, y: y}
-   */
-  getCenterOfBounds: function(bounds) {
+  getCenterOfBounds: function (bounds) {
     var left = bounds[0],
         bottom = bounds[1],
         right = bounds[2],
         top = bounds[3];
-    return {x: (left + right) / 2.0, y: (top + bottom) / 2.0};
+    return [(left + right) / 2.0, (top + bottom) / 2.0];
   },
 
-  zoomToExtent: function (bounds) {},
-
-  showGeocode: function(geocode) {
-    this.map.html(
-      this.map.html() + ('<br/>x: ' + geocode.x + ', y: ' + geocode.y));
+  placeMarker: function (coords, opts) {
+    var opts = opts || {},
+        position = this.transform(coords),
+        markerClass = opts.markerClass || 'marker',
+        glyphClass = opts.glyphClass || 'glyphicon-star',
+        marker = new ol.Overlay({
+          position: position,
+          positioning: 'center-center',
+          element: $('<div>').addClass('marker').addClass(markerClass)
+            .append($('<span>').addClass('glyphicon').addClass(glyphClass))
+        });
+    this.addOverlay(marker);
+    return marker;
   },
 
-  makeBounds: function(bounds) {},
-
-  makePoint: function(point) {
-    return point;
+  placeGeocodeMarker: function (geocode, opts) {
+    var map = this,
+        marker = this.placeMarker(geocode.coordinates, opts),
+        popup = new ol.Overlay({
+          element: geocode.popup
+        });
+    marker.getElement().on('click', function () {
+      map.closePopups();
+      popup.setPosition(marker.getPosition());
+      geocode.popup.popover({
+        placement: 'auto top',
+        html: true,
+        content: geocode.popupContent
+      });
+      geocode.popup.popover('show');
+    });
+    this.addOverlay(marker);
+    this.addOverlay(popup);
+    geocode.addOverlay(marker, popup);
+    return marker;
   },
 
-  addListener: function(obj, signal, func) {
-    $(obj).on(signal, func)
+  drawRoute: function (route) {
+    var coordinates = this.transformLine(route.coordinates),
+        line = new ol.geom.LineString(coordinates),
+        feature = new ol.Feature({geometry: line}),
+        overlay = new ol.FeatureOverlay({
+          features: [feature],
+          style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              width: 4,
+              color: '#000000'
+            })
+          })
+        });
+    this.addOverlay(overlay);
+    route.addOverlay(overlay);
+    return line;
+  }
+});
+
+
+byCycle.map.MapContextMenu = function (ui, map) {
+  var menu = this,
+      container = $('#map-context-menu'),
+      mapContainer = $('#' + map.getTarget());
+
+  this.ui = ui;
+  this.map = map;
+
+  mapContainer.on('contextmenu', function (event) {
+    event.preventDefault();
+    container.show();
+    container.offset({
+      top: event.pageY,
+      left: event.pageX
+    })
+  });
+
+  container.on('click', 'a', function (event) {
+    event.preventDefault();
+    var action = $(event.target).attr('action'),
+        menuOffset = container.offset(),
+        mapOffset = mapContainer.offset(),
+        x = menuOffset.left - mapOffset.left,
+        y = menuOffset.top - mapOffset.top;
+    menu[action]([x, y]);
+  });
+
+  $(window).on('click', function () {
+    container.hide();
+  });
+};
+
+byCycle.map.MapContextMenu.prototype = {
+
+  setCenter: function (px) {
+    var center = this.map.getCoordinateFromPixel(px);
+    this.map.getView().setCenter(center);
+  },
+
+  zoomIn: function (px) {
+    var view = this.map.getView();
+    this.setCenter(px);
+    view.setZoom(view.getZoom() + 1);
+  },
+
+  zoomToStreetLevel: function (px) {
+    var view = this.map.getView();
+    this.setCenter(px);
+    view.setZoom(this.map.streetLevelZoom);
+  },
+
+  zoomOut: function (px) {
+    var view = this.map.getView();
+    this.setCenter(px);
+    view.setZoom(view.getZoom() - 1);
+  },
+
+  identify: function (px) {
+    var map = this.map,
+        view = this.map.getView(),
+        coords = map.getCoordinateFromPixel(px),
+        coords = ol.proj.transform(coords, view.getProjection(), 'EPSG:4326'),
+        q = coords[0] + ',' + coords[1];
+    this.ui.queryEl.val(q);
+    this.ui.runGeocodeQuery({q: q});
+  },
+
+  getDirectionsTo: function (px) {
+    var location = this.getLocation(px);
+    this.ui.getDirectionsTo(location);
+  },
+
+  getDirectionsFrom: function (px) {
+    var location = this.getLocation(px);
+    this.ui.getDirectionsFrom(location);
+  },
+
+  getLocation: function (px) {
+    var map = this.map,
+        view = this.map.getView(),
+        coords = map.getCoordinateFromPixel(px),
+        coords = ol.proj.transform(coords, view.getProjection(), 'EPSG:4326');
+    return coords[0] + ',' + coords[1];
   }
 };

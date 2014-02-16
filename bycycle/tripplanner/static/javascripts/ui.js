@@ -1,25 +1,13 @@
 byCycle.UI = {
-  region_id: null,
-
-  map: null,
-  map_state: byCycle.getParamVal('map_state', function(mapState) {
-    // Anything but '', '0' or 'off' is on
-    return $.inArray(mapState, ['0', 'off', '']) === -1;
-  }),
-  map_type: (
-    byCycle.map[byCycle.getParamVal('map_type')] ||
-    byCycle.map[byCycle.config.map_type] ||
-    byCycle.map.base).Map,
-
+  regionId: null,
   service: null,
   query: null,  // query.Query object (not query string)
-  is_first_result: true,
+  isFirstResult: true,
   result: null,
-  results: {geocode: {}, route: {}},
-  http_status: null,
-  response_text: null,
+  results: {},
+  httpStatus: null,
 
-  status_messages: {
+  statusMessages: {
     200: 'One result was found',
     300: 'Multiple matches were found',
     400: 'Sorry, we were unable to understand your request',
@@ -27,72 +15,80 @@ byCycle.UI = {
     500: 'Something unexpected happened'
   },
 
-  route_line_color: '#000000',
-
   /* Initialization ********************************************************/
 
-  setLoadingStatus: function(msg) {
+  setLoadingStatus: function (msg) {
     $('#loading-status').html(msg);
   },
 
   /**
    * Do stuff that must happen during page load
    */
-  beforeLoad: function(props) {
+  beforeLoad: function (props) {
     $('#spinner').show();
     this.setLoadingStatus('Loading...');
     $.extend(this, props);
-    if (this.map_state && this.map_type.prototype.beforeLoad) {
-      this.map_type.prototype.beforeLoad();
-    }
     $(document).ready(this.onLoad.bind(this));
   },
 
   /**
    * Do stuff that must happen once page has loaded
    */
-  onLoad: function() {
-    this._assignUIElements();
-    this._createEventHandlers();
+  onLoad: function () {
+    this.region = byCycle.regions.regions[this.regionId];
+    this.assignUIElements();
     this.onResize();
-    this.map = new this.map_type(this, this.map_pane);
-    this.setRegion(this.region_id);
+    this.map = new byCycle.map.Map({target: 'map-pane'});
+    this.mapContextMenu = new byCycle.map.MapContextMenu(this, this.map);
+    this.setRegion(this.regionId);
+    this.createEventHandlers();
     this.handleQuery();
     $('#loading-status').remove();
     this.spinner.hide();
   },
 
-  _assignUIElements: function() {
-    this.spinner = $('#spinner');
+  assignUIElements: function () {
+    this.queryForm = $('#query-form');
+    this.routeForm = $('#route-form');
+    this.queryEl = $('#q');
+    this.startEl = $('#s');
+    this.startId = $('#s-id')
+    this.endId = $('#e-id')
+    this.endEl = $('#e');
     this.status = $('#status');
-    this.bookmark_link = $('#bookmark');
-
-    this.query_form = $('#query_form');
-    this.route_form = $('#route_form');
-    this.q_el = $('#q');
-    this.s_el = $('#s');
-    this.e_el = $('#e');
-    this.s_id_el = $('#s_id');
-    this.e_id_el = $('#e_id');
-
-    this.main_row = $('#main-row');
-    this.result_pane = $('#results');
-    this.map_pane = $('#map-pane');
+    this.bookmarkLink = $('#bookmark');
+    this.mainRow = $('#main-row');
+    this.resultPane = $('#results');
+    this.spinner = $('#spinner');
   },
 
   /* Events ****************************************************************/
 
-  _createEventHandlers: function () {
+  createEventHandlers: function () {
     $(window).on('resize', this.onResize.bind(this));
     $('#swap-s-and-e').on('click', this.swapStartAndEnd.bind(this));
-    this.query_form.on('submit', this.runGenericQuery.bind(this));
-    this.route_form.on('submit', this.runRouteQuery.bind(this));
-    $('#clear-map-link').on('click', this.clearResults.bind(this));
+
+    this.queryForm.on('submit', function (event) {
+      event.preventDefault();
+      this.runGenericQuery();
+    }.bind(this));
+
+    this.routeForm.on('submit', function (event) {
+      event.preventDefault();
+      this.runRouteQuery();
+    }.bind(this));
+
+    $('#clear-map-link').on('click', function () {
+      event.preventDefault();
+      this.removeResults();
+    }.bind(this));
   },
 
-  onResize: function() {
+  /* END map context menu actions */
+
+  onResize: function () {
     var bodyHeight = $(document.body).height(),
-        offset = this.main_row.offset().top,
+        offset = this.mainRow.offset().top,
         height = bodyHeight - offset;
     $('#col-a').height(height);
     $('#col-b').height(height);
@@ -101,33 +97,29 @@ byCycle.UI = {
   /* Display Panes *********************************************************/
 
   showContent: function (content) {
-    this.result_pane.html(content);
+    this.resultPane.html(content);
   },
 
   /* Regions ***************************************************************/
 
-  setRegionFromSelectBox: function() {
-    this.setRegion(this.region_el.val());
-  },
-
-  setRegion: function(region_id) {
-    this.region_id = region_id;
-    var regions = byCycle.regions.regions;
-    var region = regions[region_id];
+  setRegion: function (regionId) {
+    this.regionId = regionId;
+    var regions = byCycle.regions.regions,
+        region = regions[regionId],
+        bounds;
     if (region) {
-      // Zoom to a specific region
-      this.map.zoomToExtent(region.bounds);
+      bounds = region.bounds
     } else {
-      // Show all regions
-      var all_regions = byCycle.regions;
-      this.map.zoomToExtent(all_regions.bounds);
+      bounds = byCycle.regions.bounds;
     }
+    bounds = this.map.transformBounds(bounds);
+    this.map.getView().fitExtent(bounds, this.map.getSize());
   },
 
   /* Services Input ********************************************************/
 
   focusServiceElement: function (service) {
-    service == 'route' ? this.s_el.focus() : this.q_el.focus();
+    service == 'route' ? this.startEl.focus() : this.queryEl.focus();
   },
 
   selectInputTab: function (service) {
@@ -138,94 +130,154 @@ byCycle.UI = {
     }
   },
 
-  swapStartAndEnd: function(event) {
-    var s = this.s_el.val();
-    this.s_el.val(this.e_el.val());
-    this.e_el.val(s);
+  swapStartAndEnd: function () {
+    var s = this.startEl.val();
+    this.startEl.val(this.endEl.val());
+    this.endEl.val(s);
   },
 
-  setAsStart: function(addr) {
-    this.s_el.val(addr);
+  setAsStart: function (addr) {
+    this.startEl.val(addr.replace(/\n+/, ', '));
     this.selectInputTab('route');
-    this.s_el.focus();
+    this.startEl.focus();
   },
 
-  setAsEnd: function(addr) {
-    this.e_el.val(addr);
+  setAsEnd: function (addr) {
+    this.endEl.val(addr.replace(/\n+/, ', '));
     this.selectInputTab('route');
-    this.e_el.focus();
+    this.endEl.focus();
   },
 
   /* Query-related *********************************************************/
 
   // This is run on page load only. The purpose is to simulate an AJAX
   // query (i.e., the post-processing that happens).
-  handleQuery: function() {
+  handleQuery: function () {
     if (!this.jsonData) {
       return;
     }
-    var status = this.http_status,
+    var status = this.httpStatus,
         queryClassName = [
           this.service.charAt(0).toUpperCase(), this.service.substr(1),
           'Query'].join(''),
         queryClass = byCycle.UI[queryClassName],
-        queryObj = new queryClass();
-    this.request = {responseJSON: this.jsonData};
+        queryObj = new queryClass(this),
+        request = {responseJSON: this.jsonData};
     if (status === 200) {
       queryObj['on' + status](this.jsonData);
     } else if (status === 300) {
-      queryObj.on300(this.request);
+      queryObj.on300(request);
     } else {
-      queryObj.onFailure(this.request);
+      queryObj.onFailure(request);
     }
     this.query = queryObj;
+    this.query.request = request;
   },
 
-  runGenericQuery: function(event, input /* =undefined */) {
-    if (event) {
-      event.preventDefault();
-    }
-    var q = input || this.q_el.val();
+  runGenericQuery: function (q, opts) {
+    q = q || $.trim(this.queryEl.val());
     if (q) {
-      var query_class,
-          waypoints = q.toLowerCase().split(' to ');
+      var waypoints = q.toLowerCase().split(/\s+to\s+/),
+          s = waypoints[0],
+          e = waypoints[1];
       if (waypoints.length > 1) {
-        this.s_el.val(waypoints[0]);
-        this.e_el.val(waypoints[1]);
-        query_class = byCycle.UI.RouteQuery;
+        this.startEl.val(s);
+        this.endEl.val(e);
+        this.runRouteQuery({q: q}, opts);
       } else {
-        query_class = byCycle.UI.GeocodeQuery;
+        this.runGeocodeQuery({q: q}, opts);
       }
-      this.runQuery(query_class, event, input);
     } else {
-      this.q_el.focus();
+      this.queryEl.focus();
       this.showErrors(['Please enter something to search for!']);
     }
   },
 
   /* Run all queries through here for consistency. */
-  runQuery: function(query_class,
-                     event /* =undefined */,
-                     input /* =undefined */) {
-    if (event) {
-      event.preventDefault();
+  runQuery: function (queryClass, input, opts) {
+    if (typeof input.region === 'undefined') {
+      input.region = this.regionId;
     }
-    if (input && typeof input.region === 'undefined') {
-      input.region = this.region_id;
-    }
-    this.query = new query_class({input: input});
+    this.map.closePopups();
+    this.query = new queryClass(this, input,opts);
     this.query.run();
   },
 
-  runGeocodeQuery: function(event, input) {
-    this.runQuery(byCycle.UI.GeocodeQuery, event, input);
+  runGeocodeQuery: function (input, opts) {
+    if (!input) {
+      input = {q: $.trim(this.queryEl.val())};
+    }
+    if (!input.q) {
+      this.queryEl.focus();
+      this.showErrors(['Please enter an address!']);
+    } else {
+      this.runQuery(byCycle.UI.GeocodeQuery, input, opts);
+    }
   },
 
-  runRouteQuery: function(event, input) {
-    this.runQuery(byCycle.UI.RouteQuery, event, input);
+  runRouteQuery: function (input, opts) {
+    var errors = [],
+        q, start, end;
+    if (!input) {
+      input = {
+        s: $.trim(this.startEl.val()),
+        e: $.trim(this.endEl.val())
+      };
+    }
+    if (!input.s_id) {
+      input.s_id = this.startId.val();
+    }
+    if (!input.e_id) {
+      input.e_id = this.endId.val();
+    }
+    q = input.q;
+    start = input.s;
+    end = input.e;
+    if (q || (start && end)) {
+      if ((start && end) && start === end) {
+        this.showErrors(['Start and end are the same']);
+      } else {
+        $.each(this.results, function (id, result) {
+          if (result.constructor === byCycle.result.Route) {
+            this.removeResult(result);
+          }
+        }.bind(this));
+        this.runQuery(byCycle.UI.RouteQuery, input, opts);
+      }
+    } else {
+      if (!start) {
+        errors.push('Please enter a start address');
+        this.startEl.focus();
+      }
+      if (!end) {
+        errors.push('Please enter an end address');
+        if (start) {
+          this.endEl.focus();
+        }
+      }
+      this.showErrors(errors);
+    }
   },
 
-  showErrors: function(errors) {
+  getDirectionsTo: function (where) {
+    this.setAsEnd(where);
+    if (this.startEl.val()) {
+      this.runRouteQuery();
+    } else {
+      this.startEl.focus();
+    }
+  },
+
+  getDirectionsFrom: function (where) {
+    this.setAsStart(where);
+    if (this.endEl.val()) {
+      this.runRouteQuery();
+    } else {
+      this.endEl.focus();
+    }
+  },
+
+  showErrors: function (errors) {
     this.status.html('Oops!');
     this.spinner.hide();
     var content = [];
@@ -239,36 +291,44 @@ byCycle.UI = {
   /**
    * Select from multiple matching geocodes
    */
-  selectGeocode: function(select_link, i) {
+  selectGeocode: function (selectLink, i) {
     var data = this.query.request.responseJSON,
         result = this.query.makeResult(data.results[i]);
-        panel = $(select_link).closest('.panel');
+        panel = $(selectLink).closest('.panel');
+    this.results[result.id] = result;
     this.query.processResults([result]);
     this.showContent(panel.clone().wrap('<div>').parent().html());
     $('.set-as-s-or-e').show();
-    if (this.is_first_result) {
-      this.map.setZoom(this.map.default_zoom);
+    if (this.isFirstResult) {
+      this.map.getView().setZoom(this.map.streetLevelZoom);
     } else {
-      this.is_first_result = false;
+      this.isFirstResult = false;
     }
   },
 
   /**
    * Select from multiple matching geocodes for a route
    */
-  selectRouteGeocode: function(select_link, choice) {
-    var route_choices = this.query.route_choices,
-        container = $(select_link).closest('.route-choice'),
+  selectRouteGeocode: function (selectLink, choice) {
+    var routeChoices = this.query.routeChoices,
+        container = $(selectLink).closest('.route-choice'),
         next = container.next('.route-choice'),
+        startId = this.startId,
+        endId = this.endId,
         addr;
     if (choice.number) {
       addr = [choice.number, choice.network_id].join('-');
     } else {
       addr = choice.network_id
     }
-    $.each(route_choices, function (i, v) {
+    $.each(routeChoices, function (i, v) {
       if (v === null) {
-        route_choices[i] = addr;
+        if (i === 0) {
+          startId.val(addr);
+        } else if (i === 1) {
+          endId.val(addr);
+        }
+        routeChoices[i] = addr;
         return false;
       }
     })
@@ -276,32 +336,39 @@ byCycle.UI = {
     if (next.length) {
       next.show();
     } else {
-      this.runRouteQuery(null, {
-        q: this.query.route_choices.join(' to ')
+      this.runRouteQuery({
+        q: this.query.routeChoices.join(' to ')
       });
     }
   },
 
-  clearResults: function (event) {
-    if (event) {
-      event.preventDefault();
+  removeResult: function (result) {
+    if (typeof result === 'string') {
+      result = this.results[result];
     }
+    delete this.results[result.id];
+    $.each(result.overlays, function (i, overlay) {
+      this.map.removeOverlay(overlay);
+    }.bind(this));
+  },
+
+  removeResults: function (type) {
     if (confirm('Remove all of your results and clear the map?')) {
-      this.map.clear();
-      $.each(this.results, function (service, results) {
-        $.each(results, function (id, result) {
-          result.remove();
-          delete results[id];
-        })
-      });
+      $.each(this.results, function (id, result) {
+        this.removeResult(result);
+      }.bind(this));
       this.showContent('');
     }
   },
 
   reverseDirections: function (s, e) {
-    this.s_el.val(s);
-    this.e_el.val(e);
-    new byCycle.UI.RouteQuery(this.route_form).run();
+    if (!(s && e)) {
+      s = this.endEl.val();
+      e = this.startEl.val();
+    }
+    this.startEl.val(s);
+    this.endEl.val(e);
+    this.runRouteQuery({s: s, e: e});
   }
 };
 

@@ -18,7 +18,7 @@
     e_addr = h.literal(str(e_addr).replace('\n', '<br/>'))
     s_url_str = start.urlStr()
     e_url_str = end.urlStr()
-    set_center_onclick = 'byCycle.UI.map.setCenter({x: %s, y: %s}); return false;'
+    set_center_onclick = 'byCycle.UI.map.setCenterFromLatLong([{x}, {y}]); return false;'
     tab = h.literal('&nbsp;' * 4)
 %>
 
@@ -29,7 +29,7 @@
           <a class="show-on-map-link"
              href="#show-route-on-map"
              title="Show this route on the map"
-             onclick="${set_center_onclick % (centroid.x, centroid.y)}"
+             onclick="${set_center_onclick.format(x=centroid.x, y=centroid.y)}"
              >show on map</a>
         </span>
     </%def>
@@ -37,14 +37,14 @@
     <div class="start">
         <a href="#"
            title="Start of route"
-           onclick="${set_center_onclick % (start.lat_long.x, start.lat_long.y)}"
+           onclick="${set_center_onclick.format(x=start.lat_long.x, y=start.lat_long.y)}"
            >${s_addr}</a>
     </div>
 
     <div class="end">
         <a href="#"
            title="End of route"
-           onclick="${set_center_onclick % (end.lat_long.x, end.lat_long.y)};"
+           onclick="${set_center_onclick.format(x=end.lat_long.x, y=end.lat_long.y)}"
            >${e_addr}</a>
     </div>
 
@@ -81,7 +81,7 @@
             <div class="direction ${row_class}">
                 <span class="count">
                     <a href="#"
-                       onclick="${set_center_onclick % point}"
+                       onclick="${set_center_onclick.format(x=point[0], y=point[1])}"
                        >${loop.index + 1}</a>
                 </span>
                 -
@@ -104,7 +104,7 @@
         <div class="direction ${'a' if row_class == 'b' else 'b'}">
             <span class="count">
                 <a href="#"
-                   onclick="${set_center_onclick % (end.lat_long.x, end.lat_long.y)}"
+                   onclick="${set_center_onclick.format(x=end.lat_long.x, y=end.lat_long.y)}"
                    >${len(directions) + 1}</a>
             </span>
             -

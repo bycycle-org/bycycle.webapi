@@ -1,53 +1,38 @@
 /**
  * Query Base Class
  *
- * @param opts
- *        processing_message='Processing...'
- *        input=undefined
+ * @param input {Object}
+ * @param opts {Object|undefined}
+ *        processingMessage='Processing...'
  */
-byCycle.UI.Query = function(service, form, opts) {
-  this.ui = byCycle.UI;
-  this.service = service;
-  this.form = form;
-  if (opts) {
-    this.processing_message = opts.processing_message || 'Processing...';
-    this.input = opts.input;  // Hash or undefined
-  }
+byCycle.UI.Query = function (ui, input, opts) {
+  opts = opts || {};
+  this.ui = ui;
+  this.input = input;
+  this.processingMessage = opts.processingMessage || this.processingMessage;
+  this.ui.selectInputTab(this.service);
 };
 
 byCycle.UI.Query.prototype = {
-  run: function() {
-    var errors = this.before();
-    if (errors) {
-      this.ui.showErrors(errors);
-    } else {
-      this.doQuery();
-    }
-  },
 
-  before: function() {
-    this.start_ms = new Date().getTime();
-    this.ui.status.html(this.processing_message);
-    return null;
-  },
+  processingMessage: 'Processing...',
 
-  doQuery: function() {
+  run: function () {
     var path = [this.service, 'find'].join('/'),
         url = [byCycle.prefix, path].join(''),
-        params = this.input ? $.param(this.input) : this.form.serialize(),
+        params = $.param(this.input),
         bookmarkHref,
         bookmarkParams = {
-          zoom: this.ui.map.getZoom()
-        },
-        mapType = byCycle.getParamVal('map_type');
+          zoom: this.ui.map.getView().getZoom()
+        };
 
-    if (typeof mapType !== 'undefined' && mapType !== 'base') {
-      bookmarkParams.map_type = mapType;
-    }
     bookmarkHref = [url, params].join('?');
     bookmarkParams = $.param(bookmarkParams);
     bookmarkHref = [bookmarkHref, bookmarkParams].join('&');
-    this.ui.bookmark_link.attr('href', bookmarkHref);
+    this.ui.bookmarkLink.attr('href', bookmarkHref);
+
+    this.startMs = new Date().getTime();
+    this.ui.status.html(this.processingMessage);
 
     this.request = $.ajax({
       url: url,
@@ -64,19 +49,19 @@ byCycle.UI.Query.prototype = {
     });
   },
 
-  onLoading: function(request) {
+  onLoading: function (request) {
     this.ui.spinner.show();
-    this.ui.status.html(this.processing_message);
+    this.ui.status.html(this.processingMessage);
   },
 
-  on200: function(data) {
+  on200: function (data) {
     var results = [];
     try {
       this.ui.showContent(data.fragment);
       $.each(data.results, function (i, result) {
         result = this.makeResult(result);
         results.push(result);
-        this.ui.results[this.service][result.id] = result;
+        this.ui.results[result.id] = result;
       }.bind(this));
       this.processResults(results);
     } catch (e) {
@@ -85,45 +70,49 @@ byCycle.UI.Query.prototype = {
         throw e;
       }
     }
-    this.ui.is_first_result = false;
+
+    this.ui.isFirstResult = false;
   },
 
-  on300: function(request) {
+  makeResult: function (result) {
+    var result = new this.resultType(result);
+    if (this.ui.results.hasOwnProperty(result.id)) {
+      this.ui.removeResult(result.id);
+    }
+    return result;
+  },
+
+  on300: function (request) {
     this.onFailure(request);
   },
 
-  onFailure: function(request) {
+  onFailure: function (request) {
     var fragment = request.responseJSON.fragment;
     this.ui.showContent(fragment);
   },
 
-  onComplete: function(request, status) {
+  onComplete: function (request, status) {
     this.ui.spinner.hide();
-    this.http_status = request.status;
+    this.httpStatus = request.status;
     this.ui.status.html(this.getElapsedTimeMessage());
   },
 
-  makeResult: function (result) {
-    var id = [this.service, 'result', new Date().getTime()].join('_'),
-        result = new byCycle.UI.Result(this.ui, id, result, this.service);
-    return result;
-  },
-
-  getElapsedTimeMessage: function() {
-    var elapsed_time_msg = '';
-    if (this.http_status < 400 && this.start_ms) {
-      elapsed_time = (new Date().getTime() - this.start_ms) / 1000.0;
+  getElapsedTimeMessage: function () {
+    var elapsedTime,
+        elapsedTimeMsg = '';
+    if (this.httpStatus < 400 && this.startMs) {
+      elapsedTime = (new Date().getTime() - this.startMs) / 1000.0;
       var s = '';
-      if (elapsed_time < 1) {
-        elapsed_time = ' less than 1 ';
-      } else if (elapsed_time > 1) {
+      if (elapsedTime < 1) {
+        elapsedTime = ' less than 1 ';
+      } else if (elapsedTime > 1) {
         s = 's';
       }
-      elapsed_time_msg = ['in ', elapsed_time, ' second', s].join('');
+      elapsedTimeMsg = ['in ', elapsedTime, ' second', s].join('');
     }
-    var status_message = this.ui.status_messages[this.http_status || 200];
-    elapsed_time_msg = [status_message, elapsed_time_msg].join(' ');
-    return elapsed_time_msg;
+    var status_message = this.ui.statusMessages[this.httpStatus || 200];
+    elapsedTimeMsg = [status_message, elapsedTimeMsg].join(' ');
+    return elapsedTimeMsg;
   }
 };
 
@@ -131,54 +120,37 @@ byCycle.UI.Query.prototype = {
 /**
  * Geocode Query
  *
- * @param opts
- *        form=byCycle.UI.query_form
- *        processing_message='Locating address...'
- *        input=undefined
+ * @param input {Object} Should contain `q`
  */
-
 byCycle.UI.GeocodeQuery = byCycle.inheritFrom(byCycle.UI.Query, {
-  constructor: function(opts) {
-    opts = opts || {};
-    var ui = byCycle.UI;
-    var form = opts.form || ui.query_form;
-    opts.processing_message = opts.processing_message || 'Looking up address...';
-    this.superType.call(this, 'geocode', form, opts);
-  },
 
-  before: function() {
-    this.superType.prototype.before.apply(this, arguments);
-    var q;
-    if (typeof this.input === 'undefined') {
-      q = $.trim(this.ui.q_el.val());
-      if (!q) {
-        this.ui.q_el.focus();
-        return ['Please enter an address!'];
-      }
-    }
-    return null;
-  },
+  service: 'geocode',
+  resultType: byCycle.result.Geocode,
+  processingMessage: 'Looking up address...',
 
   on300: function (request) {
+    var ui = this.ui;
     this.superType.prototype.on300.call(this, request);
     $('.select-location').each(function (i, link) {
       $(link).on('click', function (event) {
         event.preventDefault();
-        byCycle.UI.selectGeocode(link, i);
+        ui.selectGeocode(link, i);
         $(link).off('click');
       });
     });
   },
 
   processResults: function (results) {
-    var zoom = this.ui.is_first_result ? this.ui.map.default_zoom : undefined;
+    var map = this.ui.map,
+        zoom = this.ui.isFirstResult ? map.streetLevelZoom : undefined;
     $.each(results, function (i, result) {
-      var r = result.result,
-          coords = r.lat_long.coordinates,
-          point = { x: coords[0], y: coords[1] },
-          marker = this.ui.map.placeGeocodeMarker(point, r.address, zoom);
-      result.addOverlay(marker);
-    }.bind(this));
+      var coords = map.transform(result.lat_long.coordinates);
+      map.getView().setCenter(coords);
+      if (typeof zoom !== 'undefined') {
+        map.getView().setZoom(zoom);
+      }
+      map.placeGeocodeMarker(result);
+    });
   }
 });
 
@@ -186,130 +158,56 @@ byCycle.UI.GeocodeQuery = byCycle.inheritFrom(byCycle.UI.Query, {
 /**
  * Route Query
  *
+ * @param input {Object} Should contain `s` and `e`
  * @param opts
- *        form=byCycle.UI.route_form
- *        processing_message='Finding route...'
- *        input=undefined
+ *        processingMessage='Finding route...'
  *
  */
 byCycle.UI.RouteQuery = byCycle.inheritFrom(byCycle.UI.Query, {
-  constructor: function(opts) {
-    opts = opts || {};
-    opts.processing_message = opts.processing_message || 'Finding route...';
-    var ui = byCycle.UI,
-        form = opts.form || ui.route_form,
-        service = 'route';
-    this.superType.call(this, service, form, opts);
-    this.ui.selectInputTab(service);
-  },
 
-  before: function() {
-    this.superType.prototype.before.apply(this, arguments);
-    if (typeof this.input === 'undefined') {
-      // Use form fields for input
-      var errors = [],
-          s = $.trim(this.ui.s_el.val()),
-          e = $.trim(this.ui.e_el.val());
-      if (!(s && e)) {
-        if (!s) {
-          errors.push('Please enter a start address');
-          this.ui.s_el.focus();
-        }
-        if (!e) {
-          errors.push('Please enter an end address');
-          if (s) {
-            this.ui.e_el.focus();
-          }
-        }
-        return errors;
-      } else if (s === e) {
-        return ['Start and end addresses are the same'];
-      }
-    }
-    return null;
-  },
+  service: 'route',
+  resultType: byCycle.result.Route,
+  processingMessage: 'Finding route...',
 
   on300: function (request) {
     this.superType.prototype.on300.call(this, request);
-    var route_choices = [],
-        multiple_choices = [];
+    var ui = this.ui,
+        routeChoices = [],
+        multipleChoices = [];
     $.each(request.responseJSON.results, function (i, item) {
       if ($.isArray(item)) {
-        route_choices.push(null);
-        multiple_choices = multiple_choices.concat(item);
+        routeChoices.push(null);
+        multipleChoices = multipleChoices.concat(item);
       } else {
-        route_choices.push(item.address.replace('\n', ', '));
+        routeChoices.push(item.address.replace('\n', ', '));
       }
     });
-    this.route_choices = route_choices;
+    this.routeChoices = routeChoices;
     $('.select-location').each(function (i, link) {
       $(link).on('click', function (event) {
         event.preventDefault();
-        byCycle.UI.selectRouteGeocode(link, multiple_choices[i]);
+        ui.selectRouteGeocode(link, multipleChoices[i]);
         $(link).off('click');
       });
     });
   },
 
   processResults: function (results) {
-    var route,
-        linestring,
-        bounds,
-        line,
-        markers,
-        startPoint, endPoint,
-        startMarker, endMarker,
-        color = this.ui.route_line_color,
-        ui = this.ui,
-        map = ui.map,
-        zoomToExtent = map.zoomToExtent.bind(map),
-        placeMarkers = map.placeMarkers.bind(map),
-        addListener = map.addListener.bind(map),
-        drawPolyLine;
-
-    if (map.drawPolyLineFromEncodedPoints) {
-      drawPolyLine = map.drawPolyLineFromEncodedPoints.bind(map);
-    } else {
-      drawPolyLine = map.drawPolyLine.bind(map);
-    }
-
-    $.each(results, function (i, result) {
-      route = result.result;
-      linestring = route.linestring;
-
-      // Zoom to linestring
-      // TODO: Compute this in back end
-      bounds = route.bounds;
-      bounds = [bounds.sw.x, bounds.sw.y, bounds.ne.x, bounds.ne.y];
-      zoomToExtent(bounds);
-
-      startPoint = linestring.coordinates[0];
-      startPoint = {x: startPoint[0], y: startPoint[1]};
-      endPoint = linestring.coordinates[linestring.coordinates.length - 1];
-      endPoint = {x: endPoint[0], y: endPoint[1]};
-
-      // Place from and to markers
-      markers = placeMarkers(
-        [startPoint, endPoint], [map.start_icon, map.end_icon]);
-
-      // Add listeners to start and end markers
-      startMarker = markers[0];
-      endMarker = markers[1];
-      addListener(startMarker, 'click', function() {
-        map.setCenter(startMarker.getPosition());
+    var map = this.ui.map;
+    $.each(results, function (i, route) {
+      var bounds = map.transformBounds(route.bounds_array),
+          startMarker, endMarker;
+      map.getView().fitExtent(bounds, map.getSize());
+      startMarker = map.placeGeocodeMarker(route.start, {
+        markerClass: 'start-marker',
+        glyphClass: 'glyphicon-play'
       });
-      addListener(endMarker, 'click', function() {
-        map.setCenter(endMarker.getPosition());
+      endMarker = map.placeGeocodeMarker(route.end, {
+        markerClass: 'end-marker',
+        glyphClass: 'glyphicon-stop'
       });
-
-      // Draw linestring
-      if (map.drawPolyLineFromEncodedPoints) {
-        line = drawPolyLine(route.google_points, {strokeColor: color});
-      } else {
-        line = drawPolyLine(linestring, {strokeColor: color});
-      }
-
-      result.addOverlay(startMarker, endMarker, line);
+      map.drawRoute(route);
+      route.addOverlay(startMarker, endMarker);
     });
   }
 });
