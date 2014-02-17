@@ -207,8 +207,12 @@
     <script src="${request.static_path('/static/bootstrap/js/bootstrap.min.js')}"></script>
     <script src="${request.static_path('/static/ol3/ol.js')}"></script>
 
-    <script data-main="${request.static_path('/static/javascripts/main.js')}"
-            src="${request.static_path('/static/javascripts/require.js')}"></script>
+    % if 1 or settings['env'] == 'production':
+      <script src="${request.static_path('/static/app.js')}"></script>
+    % else:
+      <script data-main="${request.static_path('/static/javascripts/main.js')}"
+              src="${request.static_path('/static/javascripts/require.js')}"></script>
+    % endif
 
     % if not app.debug:
       <%include file="_google_analytics.html"/>
