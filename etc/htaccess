@@ -1,0 +1,8 @@
+ExpiresActive On
+ExpiresDefault "access plus 10 years"
+FileETag None
+AddOutputFilterByType DEFLATE text/css application/javascript
+
+<FilesMatch "\.(eot|otf|woff|ttf)$">
+    Header set Access-Control-Allow-Origin "http://bycycle.org"
+</FilesMatch>
