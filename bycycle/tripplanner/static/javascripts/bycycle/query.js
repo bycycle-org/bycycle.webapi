@@ -1,4 +1,4 @@
-define(['bycycle', 'result'], function (bycycle, result) {
+define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
   /**
    * Query Base Class

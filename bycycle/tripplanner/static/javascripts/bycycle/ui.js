@@ -1,6 +1,18 @@
-define(
-  ['bycycle', 'map', 'query', 'regions', 'result'],
-  function (bycycle, map, query, regions, result) {
+define([
+  'jquery',
+  'bycycle',
+  'bycycle/map',
+  'bycycle/query',
+  'bycycle/regions',
+  'bycycle/result'
+], function (
+  $,
+  bycycle,
+  map,
+  query,
+  regions,
+  result
+) {
 
   var Route = result.Route;
 
