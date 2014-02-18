@@ -11,4 +11,4 @@ RewriteRule (.*) http://info.bycycle.org/$1 [L,QSA,R=permanent]
 
 # Redirect code and project subdomains to Bitbucket
 RewriteCond %{HTTP_HOST} (code|project).bycycle.org
-RewriteRule .* https://bitbucket.org/wyatt/bycycle.tripplanner [L,R=permanent]
+RewriteRule .* https://bitbucket.org/bycycle/bycycle.tripplanner [L,R=permanent]
