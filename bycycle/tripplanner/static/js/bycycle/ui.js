@@ -31,8 +31,6 @@ define([
       500: 'Something unexpected happened'
     },
 
-    /* Initialization ********************************************************/
-
     init: function (config) {
       $.extend(this, config);
       $('#loading-status').html('Loading...');
@@ -72,8 +70,6 @@ define([
       this.spinner = $('#spinner');
     },
 
-    /* Events ****************************************************************/
-
     createEventHandlers: function () {
       $(window).on('resize', this.onResize.bind(this));
 
@@ -99,8 +95,6 @@ define([
       }.bind(this));
     },
 
-    /* END map context menu actions */
-
     onResize: function () {
       var bodyHeight = $(document.body).height(),
           offset = this.mainRow.offset().top,
@@ -109,13 +103,9 @@ define([
       this.colB.height(height);
     },
 
-    /* Display Panes *********************************************************/
-
     showContent: function (content) {
       this.resultPane.html(content);
     },
-
-    /* Regions ***************************************************************/
 
     setRegion: function (regionId) {
       this.regionId = regionId;
