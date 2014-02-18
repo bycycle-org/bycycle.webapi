@@ -123,6 +123,7 @@ a:hover {
   height: 20px;
   padding: 2px;
   background-color: #3987c9;
+  cursor: pointer;
 }
 .marker span {
   font-size: 16px;
