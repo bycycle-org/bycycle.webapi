@@ -1,0 +1,11 @@
+# Redirect subdomains to canonical domain
+RewriteCond %{HTTP_HOST} (tripplanner|www).bycycle.org
+RewriteRule (.*) http://bycycle.org$1 [L,QSA,R=permanent]
+
+# Redirect blog subdomain to canonical info site
+RewriteCond %{HTTP_HOST} blog.bycycle.org
+RewriteRule (.*) http://info.bycycle.org$1 [L,QSA,R=permanent]
+
+# Redirect code and project subdomains to Bitbucket
+RewriteCond %{HTTP_HOST} (code|project|trac).bycycle.org
+RewriteRule .* https://bitbucket.org/wyatt/bycycle.tripplanner [L,R=permanent]
