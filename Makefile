@@ -25,6 +25,9 @@ push-static:
 	    --delete \
 	    ./bycycle/tripplanner/static/ \
 	    bycycle@static.bycycle.org:~/webapps/bycycle_static/$(VERSION)
+	rsync -rlvz \
+	    ./bycycle/tripplanner/static/{favicon.ico,robots.txt} \
+	    deploy@bycycle.org:~/apps/bycycle/static
 
 test:
 	@test -f ./bin/python || make
