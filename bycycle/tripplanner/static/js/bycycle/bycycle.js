@@ -20,9 +20,9 @@ define(['jquery'], function ($) {
     },
 
     /**
-     * Get value query string parameter. If the parameter isn't present,
-     * use the default value if supplied, or try to get the value from
-     * config.
+     * Get the value of a query string parameter. If the parameter isn't
+     * present, return the default value if it's supplied or undefined
+     * if it isn't.
      *
      * @param name
      * @param processor Iff the query parameter is present, process it
@@ -35,8 +35,6 @@ define(['jquery'], function ($) {
       if (typeof v === 'undefined') {
         if (typeof defaultValue !== 'undefined') {
           v = defaultValue;
-        } else {
-          v = config[name];
         }
       } else if (typeof processor === 'function') {
         v = processor(v);
