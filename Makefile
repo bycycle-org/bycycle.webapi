@@ -1,5 +1,7 @@
 all: build
 
+VERSION = $(shell hg id -i)
+
 build:
 	@buildout
 
@@ -17,6 +19,12 @@ build-css:
 	    cssIn=bycycle/tripplanner/static/css/base.css \
 	    optimizeCss=standard \
 	    out=bycycle/tripplanner/static/css/app.css
+
+push-static:
+	rsync -rlvz \
+	    --delete \
+	    ./bycycle/tripplanner/static/ \
+	    bycycle@static.bycycle.org:~/webapps/bycycle_static/$(VERSION)
 
 test:
 	@test -f ./bin/python || make
