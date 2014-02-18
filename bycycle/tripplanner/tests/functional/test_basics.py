@@ -10,7 +10,7 @@ class TestBasics(BaseTestCase):
         self.app.get('/static/img/logo.png', status=200)
 
     def test_javascripts_should_be_accessible(self):
-        self.app.get('/static/js/bycycle.js', status=200)
+        self.app.get('/static/js/bycycle/bycycle.js', status=200)
 
     def test_stylesheets_should_be_accessible(self):
         self.app.get('/static/css/base.css', status=200)
