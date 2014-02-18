@@ -362,7 +362,7 @@ define([
       }.bind(this));
     },
 
-    removeResults: function (type) {
+    removeResults: function () {
       if (confirm('Remove all of your results and clear the map?')) {
         $.each(this.results, function (id, result) {
           this.removeResult(result);
