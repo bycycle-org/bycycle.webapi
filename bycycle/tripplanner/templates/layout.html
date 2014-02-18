@@ -16,9 +16,9 @@
     <link rel="shortcut icon" href="${request.static_path('/static/favicon.ico')}">
 
     % if settings['env'] == 'production':
-      <link rel="stylesheet" type="text/css" href="${request.static_path('/static/stylesheets/app.css')}">
+      <link rel="stylesheet" type="text/css" href="${request.static_path('/static/css/app.css')}">
     % else:
-      <link rel="stylesheet" type="text/css" href="${request.static_path('/static/stylesheets/base.css')}">
+      <link rel="stylesheet" type="text/css" href="${request.static_path('/static/css/base.css')}">
     % endif
   </head>
 
@@ -29,7 +29,7 @@
         <div id="logo" class="col-xs-4">
           <a href="${request.application_url}" title="byCycle.org Home Page">
             <div>
-              <img src="${request.static_url('/static/images/logo.png')}" width="141" height="23" alt="byCycle.org">
+              <img src="${request.static_url('/static/img/logo.png')}" width="141" height="23" alt="byCycle.org">
             </div>
             <div>
               Bicycle Trip Planner
@@ -135,7 +135,7 @@
 
       <div id="main-row" class="row">
         <div id="col-a" class="col-xs-4">
-          <img id="spinner" src="${request.static_path('/static/images/spinner.gif')}" width="16" height="16">
+          <img id="spinner" src="${request.static_path('/static/img/spinner.gif')}" width="16" height="16">
 
           <div id="results">
             % if info:
@@ -204,10 +204,10 @@
     </script>
 
     % if settings['env'] == 'production':
-      <script src="${request.static_path('/static/javascripts/app.js')}"></script>
+      <script src="${request.static_path('/static/js/app.js')}"></script>
     % else:
-      <script data-main="${request.static_path('/static/javascripts/main.js')}"
-              src="${request.static_path('/static/javascripts/vendor/require.js')}"></script>
+      <script data-main="${request.static_path('/static/js/main.js')}"
+              src="${request.static_path('/static/js/vendor/require.js')}"></script>
     % endif
 
     % if not app.debug:

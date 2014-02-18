@@ -6,17 +6,17 @@ build:
 build-js:
 	@node --stack-size=4092 \
 	    /usr/local/bin/r.js -o \
-	    mainConfigFile=bycycle/tripplanner/static/javascripts/main.js \
-	    baseUrl=bycycle/tripplanner/static/javascripts/vendor \
+	    mainConfigFile=bycycle/tripplanner/static/js/main.js \
+	    baseUrl=bycycle/tripplanner/static/js/vendor \
 	    include=almond \
 	    name=../main \
-	    out=bycycle/tripplanner/static/javascripts/app.js
+	    out=bycycle/tripplanner/static/js/app.js
 
 build-css:
 	@r.js -o \
-	    cssIn=bycycle/tripplanner/static/stylesheets/base.css \
+	    cssIn=bycycle/tripplanner/static/css/base.css \
 	    optimizeCss=standard \
-	    out=bycycle/tripplanner/static/stylesheets/app.css
+	    out=bycycle/tripplanner/static/css/app.css
 
 test:
 	@test -f ./bin/python || make
