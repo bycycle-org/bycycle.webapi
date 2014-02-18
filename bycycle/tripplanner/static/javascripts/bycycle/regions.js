@@ -1,4 +1,4 @@
-define(['map'], function (map) {
+define(['jquery', 'bycycle/map'], function ($, map) {
   var getCenterOfBounds = map.Map.prototype.getCenterOfBounds,
       boundsAll = [180, 90, -180, -90],
       regions = {

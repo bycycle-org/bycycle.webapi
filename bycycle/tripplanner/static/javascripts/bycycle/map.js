@@ -1,4 +1,4 @@
-define(['bycycle'], function (bycycle) {
+define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
 
   var Map = bycycle.inheritFrom(ol.Map, {
 
