@@ -36,6 +36,8 @@ define([
       $('#loading-status').html('Loading...');
       $('#spinner').show();
       $(document).ready(function () {
+        var zoom = bycycle.getParamVal('zoom', parseInt);
+
         this.region = regions.regions[this.regionId];
 
         this.assignUIElements();
@@ -47,6 +49,10 @@ define([
 
         this.setRegion(this.regionId);
         this.handleQuery();
+
+        if (typeof zoom !== 'undefined') {
+          this.map.getView().setZoom(zoom)
+        }
 
         $('#loading-status').remove();
         this.spinner.hide();
