@@ -11,7 +11,7 @@ setup(
     author_email='wyatt@bycycle.org',
     keywords='bicycle bike cycle trip planner route finder',
     url='http://bycycle.org/',
-    download_url='https://bitbucket.org/wyatt/bycycle.core',
+    download_url='https://bitbucket.org/bycycle/bycycle.core',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
