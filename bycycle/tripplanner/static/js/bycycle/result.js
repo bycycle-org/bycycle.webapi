@@ -49,9 +49,9 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
           .append(
             $('<div>')
               .append(
-                $('<a>').attr('href', '#').text('Remove').click(function () {
+                $('<a>').attr('href', '#').text('Remove').click(function (event) {
                   event.preventDefault();
-                 byCycle.UI.removeResult(id);
+                  byCycle.UI.removeResult(id);
                 })
               )
           )
