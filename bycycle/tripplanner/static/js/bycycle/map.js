@@ -153,7 +153,7 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
       menu[action]([x, y]);
     });
 
-    $(window).on('click', function () {
+    $(document.body).on('click', function () {
       container.hide();
     });
   };
