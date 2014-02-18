@@ -1,5 +1,5 @@
 require.config({
-  baseUrl: '/static/javascripts/vendor',
+  baseUrl: '/static/js/vendor',
   paths: {
     bycycle: '../bycycle'
   },

@@ -1,4 +1,4 @@
-bycycle/tripplanner/static/javascripts/app.js
-bycycle/tripplanner/static/javascripts/vendor/ol.js
-bycycle/tripplanner/static/stylesheets/app.css
-bycycle/tripplanner/static/stylesheets/bootstrap.css.map
+bycycle/tripplanner/static/css/app.css
+bycycle/tripplanner/static/css/bootstrap.css.map
+bycycle/tripplanner/static/js/app.js
+bycycle/tripplanner/static/js/vendor/ol.js
