@@ -39,10 +39,19 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
             $('<div>').html(this.htmlAddress))
           .append(
             $('<div>')
-              .append($('<a>').attr('href', '#').text('Get Directions').click(
+              .append($('<a>').attr('href', '#').text('Get directions to').click(
                 function (event) {
                   event.preventDefault();
                   byCycle.UI.getDirectionsTo(address);
+                }
+              ))
+          )
+          .append(
+            $('<div>')
+              .append($('<a>').attr('href', '#').text('Get directions from').click(
+                function (event) {
+                  event.preventDefault();
+                  byCycle.UI.getDirectionsFrom(address);
                 }
               ))
           )
