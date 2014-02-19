@@ -1,5 +1,3 @@
-from subprocess import check_output
-
 from tangled.converters import as_bool
 from tangled.settings import parse_settings as _parse_settings
 from tangled.web.app import Application
@@ -43,8 +41,7 @@ def mount_resources(app):
 def mount_static_directories(app):
     static_url = app.get_setting('static_url', None)
     if static_url:
-        version = check_output(['hg', 'id', '-i']).decode('ascii')
-        static_url = static_url.format(version=version)
+        static_url = static_url.format(version=app.settings['version'])
         app.mount_static_directory('static', static_url)
     else:
         app.mount_static_directory('static', 'bycycle.tripplanner:static')
