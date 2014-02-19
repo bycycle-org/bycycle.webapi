@@ -1,10 +1,22 @@
 from subprocess import check_output
 
 from tangled.converters import as_bool
+from tangled.settings import parse_settings as _parse_settings
 from tangled.web.app import Application
 
 
 def make_app(settings, parse_settings=False, **extra_settings):
+    settings.update(_parse_settings(
+        settings,
+        conversion_map={
+            'assets.use_built': 'bool',
+            'assets.css.use_built': 'bool',
+            'assets.js.use_built': 'bool',
+        },
+        prefix='assets.',
+        strip_prefix=False,
+    ))
+
     app = Application(settings, parse_settings, **extra_settings)
     app.include(mount_resources)
     app.include(mount_static_directories)
