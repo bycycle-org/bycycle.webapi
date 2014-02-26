@@ -59,9 +59,3 @@ def add_subscribers(app):
 
     app.add_subscriber(
         'tangled.web.events:TemplateContextCreated', update_context)
-
-
-def json_default(o):
-    if hasattr(o, 'to_simple_object'):
-        return o.to_simple_object()
-    raise TypeError('{!r} is not JSON serializable'.format(o))
