@@ -62,8 +62,11 @@ class ServiceResource(Resource):
             'region': self.region,
             'service': '',
             'q': params.get('q', '').strip(),
+            'q_id': params.get('q_id', ''),
             's': params.get('s', '').strip(),
+            's_id': params.get('s_id', ''),
             'e': params.get('e', '').strip(),
+            'e_id': params.get('e_id', ''),
             'result': None,
             'json': None,
         }

@@ -49,6 +49,7 @@
               <form id="query-form" method="get" action="${request.resource_url('find')}"
                     class="form-inline">
                 <input type="hidden" name="region" value="portlandor">
+                <input type="hidden" id="q-id" name="q_id" value="${q_id}">
 
                 <div class="form-group">
                   <input id="q" name="q" value="${q}" class="form-control"
@@ -71,8 +72,8 @@
               <form id="route-form" method="get" action="${request.resource_url('find_route')}"
                     class="form-inline">
                 <input type="hidden" name="region" value="portlandor">
-                <input type="hidden" id="s-id" name="s_id" value="">
-                <input type="hidden" id="e-id" name="e_id" value="">
+                <input type="hidden" id="s-id" name="s_id" value="${s_id}">
+                <input type="hidden" id="e-id" name="e_id" value="${e_id}">
 
                 <div class="form-group">
                   <input id="s" name="s" value="${s}" class="form-control"
@@ -126,7 +127,7 @@
 
         <div class="col-xs-4">
           <span class="pull-right">
-            <a id="clear-map-link" href="" title="Clear map and results">Clear Map</a>
+            <a id="clear-map-link" href="#" title="Clear map and results">Clear Map</a>
             <a id="bookmark" href="" title="Link to last result"
                class="glyphicon glyphicon-link"></a>
           </span>

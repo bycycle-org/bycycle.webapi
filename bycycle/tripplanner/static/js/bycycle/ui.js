@@ -63,6 +63,7 @@ define([
       this.queryForm = $('#query-form');
       this.routeForm = $('#route-form');
       this.queryEl = $('#q');
+      this.queryId = $('#q-id')
       this.startEl = $('#s');
       this.startId = $('#s-id')
       this.endId = $('#e-id')
@@ -83,6 +84,18 @@ define([
         $('#old-news').toggle();
       });
 
+      this.queryEl.change(function () {
+        this.queryId.val('');
+      }.bind(this));
+
+      this.startEl.change(function () {
+        this.startId.val('');
+      }.bind(this));
+
+      this.endEl.change(function () {
+        this.endId.val('');
+      }.bind(this));
+
       this.queryForm.on('submit', function (event) {
         event.preventDefault();
         this.runGenericQuery();
@@ -95,7 +108,7 @@ define([
 
       $('#swap-s-and-e').on('click', this.swapStartAndEnd.bind(this));
 
-      $('#clear-map-link').on('click', function () {
+      $('#clear-map-link').on('click', function (event) {
         event.preventDefault();
         this.removeResults();
       }.bind(this));
@@ -127,6 +140,21 @@ define([
       service == 'route' ? this.startEl.focus() : this.queryEl.focus();
     },
 
+    setQuery: function (val, id) {
+      this.queryEl.val(val);
+      this.queryId.val(id || '');
+    },
+
+    setStart: function (val, id) {
+      this.startEl.val(val);
+      this.startId.val(id || '');
+    },
+
+    setEnd: function (val, id) {
+      this.endEl.val(val);
+      this.endId.val(id || '');
+    },
+
     selectInputTab: function (service) {
       if (service === 'route') {
         $('#find-route-tab a:first').tab('show');
@@ -136,19 +164,20 @@ define([
     },
 
     swapStartAndEnd: function () {
-      var s = this.startEl.val();
-      this.startEl.val(this.endEl.val());
-      this.endEl.val(s);
+      var s = this.startEl.val(),
+          sId = this.startId.val();
+      this.setStart(this.endEl.val(), this.endId.val());
+      this.setEnd(s, sId)
     },
 
-    setAsStart: function (addr) {
-      this.startEl.val(addr.replace(/\n+/, ', '));
+    setAsStart: function (addr, id) {
+      this.setStart(addr, id);
       this.selectInputTab('route');
       this.startEl.focus();
     },
 
-    setAsEnd: function (addr) {
-      this.endEl.val(addr.replace(/\n+/, ', '));
+    setAsEnd: function (addr, id) {
+      this.setEnd(addr, id);
       this.selectInputTab('route');
       this.endEl.focus();
     },
@@ -182,17 +211,18 @@ define([
 
     runGenericQuery: function (q, opts) {
       q = q || $.trim(this.queryEl.val());
-      if (q) {
-        var waypoints = q.toLowerCase().split(/\s+to\s+/),
-            s = waypoints[0],
-            e = waypoints[1];
+      if ($.trim(q)) {
+        var runner,
+            waypoints = q.toLowerCase().split(/\s+to\s+/),
+            input = {q: q};
         if (waypoints.length > 1) {
-          this.startEl.val(s);
-          this.endEl.val(e);
-          this.runRouteQuery({q: q}, opts);
+          runner = 'runRouteQuery';
+          this.setStart(waypoints[0]);
+          this.setEnd(waypoints[1]);
         } else {
-          this.runGeocodeQuery({q: q}, opts);
+          runner = 'runGeocodeQuery';
         }
+        this[runner](input, opts);
       } else {
         this.queryEl.focus();
         this.showErrors(['Please enter something to search for!']);
@@ -211,7 +241,10 @@ define([
 
     runGeocodeQuery: function (input, opts) {
       if (!input) {
-        input = {q: $.trim(this.queryEl.val())};
+        input = {
+          q: $.trim(this.queryEl.val()),
+          q_id: this.queryId.val()
+        };
       }
       if (!input.q) {
         this.queryEl.focus();
@@ -227,14 +260,10 @@ define([
       if (!input) {
         input = {
           s: $.trim(this.startEl.val()),
-          e: $.trim(this.endEl.val())
+          e: $.trim(this.endEl.val()),
+          s_id: this.startId.val(),
+          e_id: this.endId.val()
         };
-      }
-      if (!input.s_id) {
-        input.s_id = this.startId.val();
-      }
-      if (!input.e_id) {
-        input.e_id = this.endId.val();
       }
       q = input.q;
       start = input.s;
@@ -265,8 +294,8 @@ define([
       }
     },
 
-    getDirectionsTo: function (where) {
-      this.setAsEnd(where);
+    getDirectionsTo: function (where, id) {
+      this.setAsEnd(where, id);
       if (this.startEl.val()) {
         this.runRouteQuery();
       } else {
@@ -274,8 +303,8 @@ define([
       }
     },
 
-    getDirectionsFrom: function (where) {
-      this.setAsStart(where);
+    getDirectionsFrom: function (where, id) {
+      this.setAsStart(where, id);
       if (this.endEl.val()) {
         this.runRouteQuery();
       } else {
@@ -295,57 +324,17 @@ define([
     },
 
     /**
-     * Select from multiple matching geocodes
+     * Select from multiple matching geocodes for a route.
+     *
+     * @param selectLink The link clicked to make a choice.
+     * @param choice {Object} The choice (a result object).
+     * @param routeChoices {Array} A list of the current selections; null
+     *        entries indicate choices that have not yet been made.
      */
-    selectGeocode: function (selectLink, i) {
-      var data = this.query.request.responseJSON,
-          result = this.query.makeResult(data.results[i]),
-          panel = $(selectLink).closest('.panel');
-      this.results[result.id] = result;
-      this.query.processResults([result]);
-      this.showContent(panel.clone().wrap('<div>').parent().html());
-      $('.set-as-s-or-e').show();
-      if (this.isFirstResult) {
-        this.map.getView().setZoom(this.map.streetLevelZoom);
-      } else {
-        this.isFirstResult = false;
-      }
-    },
-
-    /**
-     * Select from multiple matching geocodes for a route
-     */
-    selectRouteGeocode: function (selectLink, choice) {
-      var routeChoices = this.query.routeChoices,
-          container = $(selectLink).closest('.route-choice'),
-          next = container.next('.route-choice'),
-          startId = this.startId,
-          endId = this.endId,
-          addr;
-      if (choice.number) {
-        addr = [choice.number, choice.network_id].join('-');
-      } else {
-        addr = choice.network_id
-      }
-      $.each(routeChoices, function (i, v) {
-        if (v === null) {
-          if (i === 0) {
-            startId.val(addr);
-          } else if (i === 1) {
-            endId.val(addr);
-          }
-          routeChoices[i] = addr;
-          return false;
-        }
-      })
-      container.remove();
-      if (next.length) {
-        next.show();
-      } else {
-        this.runRouteQuery({
-          q: this.query.routeChoices.join(' to ')
-        });
-      }
+    selectRouteGeocode: function (selectLink, choice, routeChoices) {
+      var choice = new Geocode(choice),
+          container = selectLink.closest('.route-choice'),
+          next = container.next('.route-choice');
     },
 
     removeResult: function (result) {
@@ -367,14 +356,11 @@ define([
       }
     },
 
-    reverseDirections: function (s, e) {
-      if (!(s && e)) {
-        s = this.endEl.val();
-        e = this.startEl.val();
-      }
-      this.startEl.val(s);
-      this.endEl.val(e);
-      this.runRouteQuery({s: s, e: e});
+    reverseDirections: function (input) {
+      this.setQuery([input.s, input.e].join(' to '));
+      this.setStart(input.s, input.s_id);
+      this.setEnd(input.e, input.e_id);
+      this.runRouteQuery(input);
     }
   };
 
