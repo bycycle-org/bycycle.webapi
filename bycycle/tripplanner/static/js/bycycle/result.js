@@ -7,15 +7,10 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
    */
   var Result = function (data) {
     $.extend(this, data);
-    this.id = this.sanitizeId(this.makeId(this));
     this.overlays = [];
   };
 
   Result.prototype = {
-    sanitizeId: function (id) {
-      return id.replace(/[^a-z0-9-]+/ig, '-').toLowerCase();
-    },
-
     addOverlay: function () {
       var overlays = $.makeArray(arguments);
       for (var i = 0, len = overlays.length; i < len; ++i) {
@@ -29,9 +24,11 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
     constructor: function (data) {
       this.superType.call(this, data);
       var id = this.id,
-          address = this.address;
+          address = this.address,
+          oneLineAddress = address.replace(/\n+/, ', ');
       this.coordinates = this.lat_long.coordinates,
       this.htmlAddress = address.replace(/\n+/, '<br>');
+      this.oneLineAddress = oneLineAddress;
       this.popup = $('<div>');
       this.popupContent = (
         $('<div>')
@@ -42,7 +39,7 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
               .append($('<a>').attr('href', '#').text('Get directions to').click(
                 function (event) {
                   event.preventDefault();
-                  byCycle.UI.getDirectionsTo(address);
+                  byCycle.UI.getDirectionsTo(oneLineAddress, id);
                 }
               ))
           )
@@ -51,7 +48,7 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
               .append($('<a>').attr('href', '#').text('Get directions from').click(
                 function (event) {
                   event.preventDefault();
-                  byCycle.UI.getDirectionsFrom(address);
+                  byCycle.UI.getDirectionsFrom(oneLineAddress, id);
                 }
               ))
           )
@@ -65,10 +62,6 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
               )
           )
         );
-    },
-
-    makeId: function (result) {
-      return 'geocode-result-' + result.address;
     }
   });
 
@@ -84,10 +77,6 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
       this.end.popupContent = this.end.htmlAddress;
       this.coordinates = coordinates;
       this.encodedPolyline = this.linestring.encoded;
-    },
-
-    makeId: function (result) {
-      return 'route-result-' + result.start.address + '-' + result.end.address;
     }
   });
 

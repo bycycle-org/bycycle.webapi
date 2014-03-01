@@ -1,5 +1,8 @@
 define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
+  var Geocode = result.Geocode,
+      Route = result.Route;
+
   /**
    * Query Base Class
    *
@@ -134,19 +137,27 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
       var ui = this.ui;
       this.superType.prototype.on300.call(this, request);
       $('.select-location').each(function (i, link) {
-        $(link).on('click', function (event) {
+        link = $(link);
+        link.on('click', function (event) {
+          var result = new Geocode(request.responseJSON.results[i]);
           event.preventDefault();
-          ui.selectGeocode(link, i);
-          $(link).off('click');
+          ui.setQuery(result.oneLineAddress, result.id);
+          ui.runGeocodeQuery({
+            q: result.oneLineAddress,
+            q_id: result.id
+          });
+          link.off('click');
         });
       });
     },
 
     processResults: function (results) {
-      var map = this.ui.map,
-          zoom = this.ui.isFirstResult ? map.streetLevelZoom : undefined;
+      var ui = this.ui,
+          map = ui.map,
+          zoom = ui.isFirstResult ? map.streetLevelZoom : undefined;
       $.each(results, function (i, result) {
         var coords = map.transform(result.lat_long.coordinates);
+        ui.setQuery(result.oneLineAddress, result.id);
         map.getView().setCenter(coords);
         if (typeof zoom !== 'undefined') {
           map.getView().setZoom(zoom);
@@ -168,37 +179,80 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
   var RouteQuery = bycycle.inheritFrom(Query, {
 
     service: 'route',
-    resultType: result.Route,
+    resultType: Route,
     processingMessage: 'Finding route...',
 
     on300: function (request) {
       this.superType.prototype.on300.call(this, request);
-      var ui = this.ui,
-          routeChoices = [],
-          multipleChoices = [];
-      $.each(request.responseJSON.results, function (i, item) {
+      var results = request.responseJSON.results,
+          ui = this.ui,
+          // Slots in results that require a selection.
+          choiceIndexes = [],
+          // Index into choiceIndexes; it points to the index that
+          // contains the index of the next slot in results that
+          // requires a selection.
+          choiceIndex = 0,
+          offset = 0,
+          q = [],
+          qId = [];
+
+      $.each(results, function (i, item) {
+        var geocode;
         if ($.isArray(item)) {
-          routeChoices.push(null);
-          multipleChoices = multipleChoices.concat(item);
+          choiceIndexes.push(i);
+          q.push(null);
+          qId.push(null);
         } else {
-          routeChoices.push(item.address.replace('\n', ', '));
+          geocode = new Geocode(item);
+          q.push(geocode.oneLineAddress);
+          qId.push(geocode.id);
         }
       });
-      this.routeChoices = routeChoices;
+
       $('.select-location').each(function (i, link) {
-        $(link).on('click', function (event) {
+        link = $(link);
+
+        link.on('click', function (event) {
+          var resultIndex = choiceIndexes[choiceIndex++],
+              choices = results[resultIndex],
+              choice = new Geocode(choices[i - offset]),
+              container = link.closest('.route-choice'),
+              next = container.next('.route-choice');
+
           event.preventDefault();
-          ui.selectRouteGeocode(link, multipleChoices[i]);
-          $(link).off('click');
+          link.off('click');
+          container.remove();
+
+          q[resultIndex] = choice.oneLineAddress;
+          qId[resultIndex] = choice.id;
+          offset += choices.length;
+
+          if (resultIndex === 0) {
+            ui.setStart(choice.oneLineAddress);
+          } else if (resultIndex === 1) {
+            ui.setEnd(choice.oneLineAddress);
+          }
+
+          if (next.length) {
+            next.show();
+          } else {
+            q = q.join(' to ');
+            qId = qId.join(';');
+            ui.setQuery(q, qId);
+            ui.runRouteQuery({q: q, q_id: qId});
+          }
         });
       });
     },
 
     processResults: function (results) {
-      var map = this.ui.map;
+      var ui = this.ui,
+          map = ui.map;
       $.each(results, function (i, route) {
         var bounds = map.transformBounds(route.bounds_array),
             startMarker, endMarker;
+        ui.setStart(route.start.oneLineAddress, route.start.id);
+        ui.setEnd(route.end.oneLineAddress, route.end.id);
         map.getView().fitExtent(bounds, map.getSize());
         startMarker = map.placeGeocodeMarker(route.start, {
           markerClass: 'start-marker',

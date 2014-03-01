@@ -1,23 +1,31 @@
 <%inherit file="/layout.html"/>
 
-<%! from urllib.parse import unquote_plus %>
-
 <%
     route = result
     distance = route.distance
     total_mi = distance['miles']
     total_km = distance['kilometers']
     start = route.start
-    s_addr = start.address
     end = route.end
-    e_addr = end.address
     directions = route.directions
     linestring = route.linestring_lat_long
     centroid = linestring.centroid
-    s_addr = h.literal(str(s_addr).replace('\n', '<br/>'))
-    e_addr = h.literal(str(e_addr).replace('\n', '<br/>'))
-    s_url_str = start.urlStr()
-    e_url_str = end.urlStr()
+    s_addr = h.literal(start.address.as_string('<br>'))
+    e_addr = h.literal(end.address.as_string('<br>'))
+    s_addr_one_line = start.address.as_string(', ')
+    e_addr_one_line = end.address.as_string(', ')
+    reverse_directions_href = request.resource_url('find_route', query={
+        's': e_addr_one_line, 's_id': end.id,
+        'e': s_addr_one_line, 'e_id': start.id,
+    })
+    reverse_directions_onclick = (
+        "byCycle.UI.reverseDirections({{"
+            "s: '{e_addr}', s_id: '{end.id}',"
+            "e: '{s_addr}', e_id: '{start.id}'"
+        "}});"
+        "return false;"
+        .format(e_addr=e_addr_one_line, s_addr=s_addr_one_line, start=start, end=end)
+    )
     set_center_onclick = 'byCycle.UI.map.setCenterFromLatLong([{x}, {y}]); return false;'
     tab = h.literal('&nbsp;' * 4)
 %>
@@ -53,9 +61,8 @@
     </div>
 
     <div class="noprint reverse-directions">
-        <a href="/route/find?s=${e_url_str}&e=${s_url_str}"
-           onclick="byCycle.UI.reverseDirections('${unquote_plus(e_url_str)}', '${unquote_plus(s_url_str)}'); return false;"
-           >Reverse Directions</a>
+        <a href="${reverse_directions_href}"
+           onclick="${reverse_directions_onclick}">Reverse Directions</a>
     </div>
 
     <div class="directions">
