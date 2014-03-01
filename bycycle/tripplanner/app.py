@@ -4,8 +4,10 @@ from tangled.web.app import Application
 
 
 def make_app(settings, parse_settings=False, **extra_settings):
-    settings.update(_parse_settings(
-        settings,
+    app = Application(settings, parse_settings, **extra_settings)
+
+    app.settings.update(_parse_settings(
+        app.settings,
         conversion_map={
             'assets.use_built': 'bool',
             'assets.css.use_built': 'bool',
@@ -15,7 +17,6 @@ def make_app(settings, parse_settings=False, **extra_settings):
         strip_prefix=False,
     ))
 
-    app = Application(settings, parse_settings, **extra_settings)
     app.include(mount_resources)
     app.include(mount_static_directories)
     app.include(add_subscribers)
