@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bycycle.tripplanner',
-    version='0.5a3',
+    version='0.6.dev0',
     description='byCycle Trip Planner',
     long_description='byCycle Bicycle Trip Planner Web Application',
     license='GPLv3',
@@ -23,7 +23,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'bycycle.core>=0.5a2',
+        'bycycle.core>=0.6.dev0',
         'tangled.mako>=0.1a2',
         'tangled.sqlalchemy>=0.1a2',
         'tangled.web>=0.1a6',
