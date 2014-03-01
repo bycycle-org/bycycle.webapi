@@ -17,6 +17,7 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
     ],
     packages=find_packages(),
