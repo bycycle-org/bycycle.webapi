@@ -24,111 +24,121 @@
 
 
   <body>
-    <div id="container">
+    <div class="container-fluid">
       <div id="top-row" class="row">
-        <div id="logo" class="col-xs-4">
-          <a href="${request.application_url}" title="byCycle.org Home Page">
-            <div>
-              <img src="${request.static_url('/static/img/logo.png')}" width="141" height="23" alt="byCycle.org">
-            </div>
-            <div>
-              Bicycle Trip Planner
-            </div>
-          </a>
+        <div class="col-sm-1">
+          <h1 id="logo">
+            <a href="${request.application_url}" title="byCycle.org - Get there by cycle!">byCycle</a>
+          </h1>
         </div>
 
-        <!-- Input Forms -->
-        <div class="col-xs-8">
-          <ul class="nav nav-tabs">
-            <li id="search-map-tab" class="active"><a href="#search-map" data-toggle="tab">Search Map</a></li>
-            <li id="find-route-tab"><a href="#find-route" data-toggle="tab">Find Route</a></li>
+        <div class="col-sm-1">
+          <ul class="nav">
+            <li id="input-dropdown" class="dropdown">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <span id="selected-input" class="glyphicon glyphicon-${'play' if service == 'route' else 'search'}"></span>
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <li id="search-map-tab">
+                  <a href="${request.application_url}"
+                     data-target="#search-map"
+                     data-toggle="tab"
+                     tabindex="-1" title="Search"
+                     ><span class="glyphicon glyphicon-search"></span> Search</a>
+                </li>
+                <li id="get-directions-tab">
+                  <a href="${request.resource_url('find_route')}"
+                     data-target="#get-directions" data-toggle="tab"
+                     tabindex="-1" title="Get directions"
+                     ><span class="glyphicon glyphicon-play"></span> Get Directions</a>
+                </li>
+              </ul>
+            </li>
           </ul>
+        </div>
 
-          <div class="tab-content">
-            <div id="search-map" class="tab-pane active">
-              <form id="query-form" method="get" action="${request.resource_url('find')}"
-                    class="form-inline">
-                <input type="hidden" name="region" value="portlandor">
-                <input type="hidden" id="q-id" name="q_id" value="${q_id}">
+        <div class="col-sm-8 tab-content">
+          <div id="search-map" class="tab-pane ${'active' if service != 'route' else ''}">
+            <form id="query-form" method="get" action="${request.resource_url('find')}">
+              <input type="hidden" name="region" value="portlandor">
+              <input type="hidden" id="q-id" name="q_id" value="${q_id}">
+              <div class="input-group">
+                <input id="q" name="q" value="${q}" class="form-control">
+                <span class="input-group-btn">
+                  <button class="btn btn-primary" type="submit"
+                          title="Find an address or get directions">
+                    <span class="glyphicon glyphicon-search"></span>
+                  </button>
+                </span>
+              </div>
+            </form>
+          </div>
 
-                <div class="form-group">
-                  <input id="q" name="q" value="${q}" class="form-control"
-                         placeholder="Address or route">
-                </div>
+          <div id="get-directions" class="tab-pane ${'active' if service == 'route' else ''}">
+            <form id="route-form" method="get" action="${request.resource_url('find_route')}">
+              <input type="hidden" name="region" value="portlandor">
+              <input type="hidden" id="s-id" name="s_id" value="${s_id}">
+              <input type="hidden" id="e-id" name="e_id" value="${e_id}">
 
-                <div class="form-group">
-                  <input type="submit" value="Search"
-                         class="form-control btn-primary"
-                         title="Click to search the map">
-                </div>
-              </form>
-            </div>
-
-            <div id="find-route" class="tab-pane">
-              <form id="route-form" method="get" action="${request.resource_url('find_route')}"
-                    class="form-inline">
-                <input type="hidden" name="region" value="portlandor">
-                <input type="hidden" id="s-id" name="s_id" value="${s_id}">
-                <input type="hidden" id="e-id" name="e_id" value="${e_id}">
-
-                <div class="form-group">
-                  <input id="s" name="s" value="${s}" class="form-control"
-                         placeholder="Start address">
-                  <a id="swap-s-and-e"
-                     href="#swap-start-and-end"
-                     title="Swap start and end addresses"
-                     onclick="return false;"
-                      ><span class="glyphicon glyphicon-resize-horizontal"></span></a>
-                </div>
-
-                <div class="form-group">
-                  <input id="e" name="e" value="${e}" class="form-control"
-                         placeholder="End address">
-                </div>
-
-                <div class="form-group">
-                  <select id="pref" name="pref" class="form-control">
-                    <option value="default">Route Type</option>
+              <div class="row">
+                <div class="col-xs-2">
+                  <label for="pref" class="sr-only">Select route type</label>
+                  <select id="pref" name="pref" class="form-control" title="Select route type">
                     <option value="default">Normal</option>
                     <option value="safer">Safer</option>
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <input type="submit" value="Find Route"
-                         class="form-control btn-primary"
-                         title="Click to find a route">
+                <div class="col-xs-5">
+                  <div class="input-group">
+                    <input id="s" name="s" value="${s}" class="form-control"
+                           placeholder="Start address">
+                    <span class="input-group-addon">
+                      <a id="swap-s-and-e"
+                         href="#swap-start-and-end"
+                         title="Swap start and end addresses"
+                         onclick="return false;"
+                          ><span class="glyphicon glyphicon-resize-horizontal"></span></a>
+                    </span>
+                  </div>
                 </div>
-              </form>
-            </div>
 
+                <div class="col-xs-5">
+                  <div class="input-group">
+                    <input id="e" name="e" value="${e}" class="form-control"
+                           placeholder="End address">
+                    <span class="input-group-btn">
+                      <button class="btn btn-primary" type="submit"
+                              title="Get directions">
+                        <span class="glyphicon glyphicon-play"></span>
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
-        <!-- /Input Forms -->
-      </div>
 
-      <div id="bar" class="row">
-        <div id="status" class="col-xs-8">
-          % if status:
-            ${status}
-          % else:
-            Welcome to the byCycle.org bicycle trip planner
-          % endif
-          <span id="loading-status">Loading...</span>
-        </div>
+        <div class="col-sm-2">
+          <a href="${request.application_url}"
+             id="clear-results" class="btn btn-default"
+             title="Clear results and map"
+             ><span class="glyphicon glyphicon-remove"></span></a>
 
-        <div class="col-xs-4">
-          <span class="pull-right">
-            <a id="clear-map-link" href="#" title="Clear map and results">Clear Map</a>
-            <a id="bookmark" href="" title="Link to last result"
-               class="glyphicon glyphicon-link"></a>
-          </span>
+          <a href=""
+             id="bookmark" class="btn btn-default"
+             title="Link to last result"
+              ><span class="glyphicon glyphicon-link"></span></a>
         </div>
       </div>
 
       <div id="main-row" class="row">
         <div id="col-a" class="col-xs-4">
           <img id="spinner" src="${request.static_path('/static/img/spinner.gif')}" width="16" height="16">
+
+          <div id="status" class="alert alert-info">Loading...</div>
 
           <div id="results">
             % if info:

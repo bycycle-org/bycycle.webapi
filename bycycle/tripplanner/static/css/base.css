@@ -7,6 +7,7 @@ html, body {
   padding: 0;
   overflow: hidden;
   height: 100%;
+  color: #333;
 }
 
 a {
@@ -16,57 +17,26 @@ a:hover {
   color: orange;
 }
 
-#container {
-  padding: 0 15px;
-}
-
-#top-row {
-  padding: 15px 0;
+#logo {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 16px;
+  line-height: 34px;
+  margin: 0;
+  padding: 0;
+  height: 34px;
 }
 
 #logo a {
   display: block;
-  color: black;
+  color: #333;
   text-decoration: none;
 }
 
-
-/* Input */
-.nav-tabs {
-  margin-bottom: 10px;
+#top-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #3987c9;
 }
-#q {
-  width: 450px;
-}
-#s, #e {
-  width: 201px;
-}
-#swap-s-and-e a {
-  text-decoration: none;
-}
-#pref {
-  width: 125px;
-}
-
-
-/* Status & Links */
-
-#bar {
-  padding: 5px 0;
-  color: #eee;
-  background: #444;
-  font-weight: bold;
-}
-#bar a {
-  color: #eef;
-  text-decoration: none;
-}
-#bar a:hover {
-  color: orange;
-}
-
-
-/* Loading */
 
 #spinner {
   position: absolute;
@@ -74,18 +44,13 @@ a:hover {
   right: 0;
   width: 16px;
   height: 16px;
-  margin: 4px;
+  margin: 2px 17px 0 0;
+  padding: 0;
 }
-
-#loading-status {
-  color: red;
-}
-
 
 /* Results */
 
 #col-a {
-  background-color: #f8f8f8;
   overflow: auto;
 }
 #old-news {

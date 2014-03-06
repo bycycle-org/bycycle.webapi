@@ -33,8 +33,8 @@ define([
 
     init: function (config) {
       $.extend(this, config);
-      $('#loading-status').html('Loading...');
       $('#spinner').show();
+      $('#status').show().html('Loading...');
       $(document).ready(function () {
         var zoom = bycycle.getParamVal('zoom', parseInt);
 
@@ -54,7 +54,7 @@ define([
           this.map.getView().setZoom(zoom)
         }
 
-        $('#loading-status').remove();
+        this.clearStatus();
         this.spinner.hide();
       }.bind(this));
     },
@@ -106,9 +106,16 @@ define([
         this.runRouteQuery();
       }.bind(this));
 
+      var input_dropdown = $('#input-dropdown');
+
+      input_dropdown.on('hide.bs.dropdown', function () {
+        var selected = input_dropdown.find('li.active a span');
+        $('#selected-input').removeClass().addClass(selected.attr('class'));
+      });
+
       $('#swap-s-and-e').on('click', this.swapStartAndEnd.bind(this));
 
-      $('#clear-map-link').on('click', function (event) {
+      $('#clear-results').on('click', function (event) {
         event.preventDefault();
         this.removeResults();
       }.bind(this));
@@ -136,10 +143,6 @@ define([
 
     /* Services Input ********************************************************/
 
-    focusServiceElement: function (service) {
-      service == 'route' ? this.startEl.focus() : this.queryEl.focus();
-    },
-
     setQuery: function (val, id) {
       this.queryEl.val(val);
       this.queryId.val(id || '');
@@ -157,7 +160,7 @@ define([
 
     selectInputTab: function (service) {
       if (service === 'route') {
-        $('#find-route-tab a:first').tab('show');
+        $('#get-directions-tab a:first').tab('show');
       } else {
         $('#search-map-tab a:first').tab('show');
       }
@@ -312,8 +315,17 @@ define([
       }
     },
 
+    setStatus: function (msg) {
+      this.status.show();
+      this.status.html(msg);
+    },
+
+    clearStatus: function () {
+      this.status.hide();
+      this.status.html('');
+    },
+
     showErrors: function (errors) {
-      this.status.html('Oops!');
       this.spinner.hide();
       var content = [];
       $.each(errors, function (i, error) {
@@ -321,20 +333,6 @@ define([
       });
       content = content.join(''),
       this.showContent(content);
-    },
-
-    /**
-     * Select from multiple matching geocodes for a route.
-     *
-     * @param selectLink The link clicked to make a choice.
-     * @param choice {Object} The choice (a result object).
-     * @param routeChoices {Array} A list of the current selections; null
-     *        entries indicate choices that have not yet been made.
-     */
-    selectRouteGeocode: function (selectLink, choice, routeChoices) {
-      var choice = new Geocode(choice),
-          container = selectLink.closest('.route-choice'),
-          next = container.next('.route-choice');
     },
 
     removeResult: function (result) {
@@ -349,10 +347,14 @@ define([
 
     removeResults: function () {
       if (confirm('Remove all of your results and clear the map?')) {
+        this.setQuery('');
+        this.setStart('');
+        this.setEnd('');
+        this.selectInputTab('');
+        this.showContent('');
         $.each(this.results, function (id, result) {
           this.removeResult(result);
         }.bind(this));
-        this.showContent('');
       }
     },
 

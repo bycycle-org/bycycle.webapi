@@ -36,8 +36,7 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
       bookmarkHref = [bookmarkHref, bookmarkParams].join('&');
       this.ui.bookmarkLink.attr('href', bookmarkHref);
 
-      this.startMs = new Date().getTime();
-      this.ui.status.html(this.processingMessage);
+      this.ui.setStatus(this.processingMessage);
 
       this.request = $.ajax({
         url: url,
@@ -56,7 +55,7 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
     onLoading: function (request) {
       this.ui.spinner.show();
-      this.ui.status.html(this.processingMessage);
+      this.ui.setStatus(this.processingMessage);
     },
 
     on200: function (data) {
@@ -97,27 +96,9 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
     },
 
     onComplete: function (request, status) {
+      this.ui.clearStatus();
       this.ui.spinner.hide();
       this.httpStatus = request.status;
-      this.ui.status.html(this.getElapsedTimeMessage());
-    },
-
-    getElapsedTimeMessage: function () {
-      var elapsedTime,
-          elapsedTimeMsg = '';
-      if (this.httpStatus < 400 && this.startMs) {
-        elapsedTime = (new Date().getTime() - this.startMs) / 1000.0;
-        var s = '';
-        if (elapsedTime < 1) {
-          elapsedTime = ' less than 1 ';
-        } else if (elapsedTime > 1) {
-          s = 's';
-        }
-        elapsedTimeMsg = ['in ', elapsedTime, ' second', s].join('');
-      }
-      var status_message = this.ui.statusMessages[this.httpStatus || 200];
-      elapsedTimeMsg = [status_message, elapsedTimeMsg].join(' ');
-      return elapsedTimeMsg;
     }
   };
 
@@ -153,14 +134,13 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
     processResults: function (results) {
       var ui = this.ui,
-          map = ui.map,
-          zoom = ui.isFirstResult ? map.streetLevelZoom : undefined;
+          map = ui.map;
       $.each(results, function (i, result) {
         var coords = map.transform(result.lat_long.coordinates);
         ui.setQuery(result.oneLineAddress, result.id);
         map.getView().setCenter(coords);
-        if (typeof zoom !== 'undefined') {
-          map.getView().setZoom(zoom);
+        if (ui.isFirstResult) {
+          map.getView().setZoom(map.streetLevelZoom);
         }
         map.placeGeocodeMarker(result);
       });
