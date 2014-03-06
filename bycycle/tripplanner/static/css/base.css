@@ -38,13 +38,17 @@ a:hover {
   border-bottom: 1px solid #3987c9;
 }
 
+#status-container {
+  display: none;
+}
+
 #spinner {
   position: absolute;
   top: 0;
   right: 0;
   width: 16px;
   height: 16px;
-  margin: 2px 17px 0 0;
+  margin: 1px 16px 0 0;
   padding: 0;
 }
 
