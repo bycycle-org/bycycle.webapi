@@ -1,5 +1,6 @@
 from webob.exc import HTTPNotFound
 
+from tangled.decorators import reify
 from tangled.web import config
 
 from .service import ServiceResource
@@ -7,7 +8,7 @@ from .service import ServiceResource
 
 class Error(ServiceResource):
 
-    @property
+    @reify
     def region(self):
         try:
             return super().region
