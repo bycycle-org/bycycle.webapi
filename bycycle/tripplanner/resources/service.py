@@ -139,21 +139,22 @@ class ServiceResource(Resource):
     def _render_template(self, data, for_json=False, include_json=True):
         req = self.request
         status = self.request.response.status_int
-        if status == 200:
-            result = data['result']
-            if isinstance(result, Entity):
-                template = 'show'
-            elif isinstance(result, Iterable):
-                template = 'index'
-            else:
-                raise ValueError(
-                    'Unexpected result type: {0.__class__}'.format(result))
-        elif status == 300:
-            template = '300'
+        if status in (200, 300):
+            if status == 200:
+                result = data['result']
+                if isinstance(result, Entity):
+                    template = 'show'
+                elif isinstance(result, Iterable):
+                    template = 'index'
+                else:
+                    raise ValueError(
+                        'Unexpected result type: {0.__class__}'.format(result))
+            elif status == 300:
+                template = '300'
+            directory = self.service_class.name
+            template_name = '/{0}s/{1}.html'.format(directory, template)
         else:
-            template = 'errors'
-        directory = self.service_class.name
-        template_name = '/{0}s/{1}.html'.format(directory, template)
+            template_name = '/error.html'
         if for_json:
             self.__template_name = template_name
         else:
