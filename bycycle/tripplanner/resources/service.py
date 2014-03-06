@@ -26,14 +26,19 @@ class ServiceResource(Resource):
     def region(self):
         req = self.request
         if 'region' in req.params:
-            region = req.params['region']
+            region_param = req.params['region']
             try:
-                slug = getRegionKey(region)
+                slug = getRegionKey(region_param)
             except ValueError:
-                req.abort(404, explanation='Unknown region: {}'.format(region))
-            q = req.db_session.query(Region)
-            q = q.filter_by(slug=slug)
-            return q.first()
+                region = None
+            else:
+                q = req.db_session.query(Region)
+                q = q.filter_by(slug=slug)
+                region = q.first()
+            if region is None:
+                req.abort(
+                    404, explanation='Unknown region: {}'.format(region_param))
+            return region
 
     @property
     def data(self):
@@ -217,7 +222,6 @@ class ServiceResource(Resource):
             'title': exc.title,
             'description': exc.description,
             'explanation': exc.explanation,
-            'errors': getattr(exc, 'errors', None),
         }
 
     def _exc_handler(self, exc):
