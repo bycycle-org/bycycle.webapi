@@ -1,6 +1,5 @@
 from collections import Iterable
 import logging
-import json
 import re
 
 from tangled.decorators import reify
