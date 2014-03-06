@@ -3,7 +3,6 @@ import logging
 import re
 
 from tangled.decorators import reify
-from tangled.util import load_object
 from tangled.web import Resource, config
 from tangled.web.representations import Representation
 
