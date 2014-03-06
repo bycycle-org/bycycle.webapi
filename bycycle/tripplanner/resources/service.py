@@ -36,7 +36,8 @@ class ServiceResource(Resource):
                 region = q.first()
             if region is None:
                 req.abort(
-                    404, explanation='Unknown region: {}'.format(region_param))
+                    404, detail='Unknown region: {}'.format(region_param),
+                    explanation=None)
             return region
 
     @property
@@ -217,9 +218,13 @@ class ServiceResource(Resource):
         The resulting dict is used in both templates and JSON responses.
 
         """
+        description = (
+            getattr(exc, 'description', None) or
+            getattr(exc, 'detail', None) or
+            'Something unexpected happened')
         return {
             'title': exc.title,
-            'description': exc.description,
+            'description': description,
             'explanation': exc.explanation,
         }
 

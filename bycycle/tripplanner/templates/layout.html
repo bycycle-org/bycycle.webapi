@@ -141,8 +141,8 @@
           <div id="status" class="alert alert-info">Loading...</div>
 
           <div id="results">
-            % if info:
-              ${info}
+            % if result or error:
+              ${self.body()}
             % else:
               <%include file="/news.html"/>
             % endif
@@ -219,20 +219,14 @@
   </body>
 </html>
 
+% endif ## if not wrap
 
-<%def name="errors()">
+
+<%def name="show_error()">
   <div class="errors">
-    % if hasattr(error, 'errors'):
-      % for err in error['errors']:
-        <div class="alert alert-danger">
-          ${err}
-        </div>
-      % endfor
-    % else:
-      <div class="alert alert-danger">
-        ${error['description']}
-      </div>
-    % endif
+    <div class="alert alert-danger">
+      ${error['description']}
+    </div>
     <% explanation = error.get('explanation') %>
     % if explanation:
       <div class="panel">
@@ -246,6 +240,3 @@
     % endif
   </div>
 </%def>
-
-
-% endif ## if not wrap
