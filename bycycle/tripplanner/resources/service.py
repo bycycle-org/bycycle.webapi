@@ -26,10 +26,11 @@ class ServiceResource(Resource):
     def region(self):
         req = self.request
         if 'region' in req.params:
+            region = req.params['region']
             try:
-                slug = getRegionKey(req.params['region'])
+                slug = getRegionKey(region)
             except ValueError:
-                return None
+                req.abort(404, explanation='Unknown region: {}'.format(region))
             q = req.db_session.query(Region)
             q = q.filter_by(slug=slug)
             return q.first()
