@@ -34,26 +34,6 @@ class ServiceResource(Resource):
             q = q.filter_by(slug=slug)
             return q.first()
 
-    @reify
-    def service_class(self):
-        params = self.request.params
-
-        q = params.get('q', '').strip()
-        s = params.get('s', '').strip()
-        e = params.get('e', '').strip()
-
-        if q:
-            if route_re.match(q):
-                service_class = 'bycycle.core.services.route:Service'
-            else:
-                service_class = 'bycycle.core.services.geocode:Service'
-        elif s or e:
-            service_class = 'bycycle.core.services.route:Service'
-        else:
-            self.request.abort(400)
-
-        return load_object(service_class)
-
     @property
     def data(self):
         params = self.request.params
@@ -74,6 +54,27 @@ class ServiceResource(Resource):
     @config('text/html', template='/layout.html')
     def GET(self):
         return self.data
+
+    def generic_find(self):
+        req = self.request
+        params = req.params
+
+        q = params.get('q', '').strip()
+        s = params.get('s', '').strip()
+        e = params.get('e', '').strip()
+
+        if q:
+            if route_re.match(q):
+                route_name = 'find_route'
+            else:
+                route_name = 'find_geocode'
+        elif s or e:
+            route_name = 'find_route'
+        else:
+            self.request.abort(400)
+
+        location = req.resource_url(route_name, query=req.query_string)
+        self.request.abort(303, location=location)
 
     def find(self):
         return self._render(self._find())
