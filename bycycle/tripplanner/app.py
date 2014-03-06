@@ -26,7 +26,6 @@ def make_app(settings, parse_settings=False, **extra_settings):
 
 
 def mount_resources(app):
-    # These URLs return HTML only
     app.mount_resource('home', '.resources.service:ServiceResource', '/')
     app.mount_resource(
         'find', '.resources.service:ServiceResource', '/find',
