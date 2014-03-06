@@ -129,12 +129,7 @@ class ServiceResource(Resource):
         return {}
 
     def _render(self, data):
-        req = self.request
-        renderer = self.urlvars.get('renderer')
-        render_json = (
-            renderer == '.json' or
-            req.response_content_type == 'application/json')
-        if render_json:
+        if self.request.response_content_type == 'application/json':
             return self._render_json(data)
         else:
             return self._render_template(data)
