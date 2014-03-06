@@ -31,7 +31,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'bycycle.core[dev]>=0.5a2',
+            'bycycle.core[dev]',
             'WebTest>=2.0.14',
         ],
     },
