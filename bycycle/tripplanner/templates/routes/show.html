@@ -14,6 +14,8 @@
     e_addr = h.literal(end.address.as_string('<br>'))
     s_addr_one_line = start.address.as_string(', ')
     e_addr_one_line = end.address.as_string(', ')
+    s_href = request.resource_url('find_geocode', query={'q': q, 'q_id': start.id})
+    e_href = request.resource_url('find_geocode', query={'q': q, 'q_id': end.id})
     reverse_directions_href = request.resource_url('find_route', query={
         's': e_addr_one_line, 's_id': end.id,
         'e': s_addr_one_line, 'e_id': start.id,
@@ -31,28 +33,17 @@
 %>
 
 <div>
-    <%def name="title()">
-        Route
-        <span class="small">
-          <a class="show-on-map-link"
-             href="#show-route-on-map"
-             title="Show this route on the map"
-             onclick="${set_center_onclick.format(x=centroid.x, y=centroid.y)}"
-             >show on map</a>
-        </span>
-    </%def>
-
     <div class="start">
-        <a href="#"
+        <a href="${s_href}"
            title="Start of route"
-           onclick="${set_center_onclick.format(x=start.lat_long.x, y=start.lat_long.y)}"
+           onclick="${set_center_onclick.format(x=start.lat_long.x, y=start.lat_long.y)}; return false;"
            >${s_addr}</a>
     </div>
 
     <div class="end">
-        <a href="#"
+        <a href="${e_href}"
            title="End of route"
-           onclick="${set_center_onclick.format(x=end.lat_long.x, y=end.lat_long.y)}"
+           onclick="${set_center_onclick.format(x=end.lat_long.x, y=end.lat_long.y)}; return false;"
            >${e_addr}</a>
     </div>
 
