@@ -30,7 +30,7 @@ def mount_resources(app):
     app.mount_resource('home', '.resources.service:ServiceResource', '/')
     app.mount_resource(
         'find', '.resources.service:ServiceResource', '/find',
-        method_name='find')
+        method_name='generic_find')
     app.mount_resource('geocode', '.resources.geocode:Geocode', '/geocode')
     app.mount_resource(
         'find_geocode', '.resources.geocode:Geocode', '/geocode/find',
