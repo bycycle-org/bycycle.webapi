@@ -136,9 +136,10 @@
 
       <div id="main-row" class="row">
         <div id="col-a" class="col-xs-4">
-          <img id="spinner" src="${request.static_path('/static/img/spinner.gif')}" width="16" height="16">
-
-          <div id="status" class="alert alert-info">Loading...</div>
+          <div id="status-container">
+            <img id="spinner" src="${request.static_path('/static/img/spinner.gif')}" width="16" height="16">
+            <div id="status" class="alert alert-info">Loading...</div>
+          </div>
 
           <div id="results">
             % if result or error:
@@ -170,6 +171,11 @@
         </div>
 
         <div id="col-b" class="col-xs-8">
+          <div id="no-js-msg">
+            JavaScript must be enabled to display the map and enable other
+            features.
+          </div>
+
           <div id="map-pane"></div>
 
           <div id="map-context-menu" class="dropdown clearfix">
@@ -191,6 +197,11 @@
 
     <script type="text/javascript">
       //<![CDATA[
+      var el;
+      el = document.getElementById('no-js-msg');
+      el.parentNode.removeChild(el);
+      el = document.getElementById('status-container');
+      el.style.display = 'block';
       var byCycle = {
         debug: ${str(debug).lower()},
         httpStatus: ${request.response.status_int},
