@@ -31,9 +31,11 @@ def mount_resources(app):
     app.mount_resource(
         'find', '.resources.service:ServiceResource', '/find',
         method_name='find')
+    app.mount_resource('geocode', '.resources.geocode:Geocode', '/geocode')
     app.mount_resource(
         'find_geocode', '.resources.geocode:Geocode', '/geocode/find',
         method_name='find')
+    app.mount_resource('route', '.resources.route:Route', '/route')
     app.mount_resource(
         'find_route', '.resources.route:Route', '/route/find',
         method_name='find')
