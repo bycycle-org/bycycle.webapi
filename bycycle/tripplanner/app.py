@@ -13,9 +13,14 @@ def make_app(settings, parse_settings=False, **extra_settings):
             'assets.css.use_built': 'bool',
             'assets.js.use_built': 'bool',
         },
+        required=['assets.use_built'],
         prefix='assets.',
         strip_prefix=False,
     ))
+
+    use_built = app.settings['assets.use_built']
+    app.settings.setdefault('assets.css.use_built', use_built)
+    app.settings.setdefault('assets.js.use_built', use_built)
 
     app.include(mount_resources)
     app.include(mount_static_directories)
