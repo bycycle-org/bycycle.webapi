@@ -60,6 +60,8 @@ define([
     },
 
     assignUIElements: function () {
+      this.inputDropdown = $('#input-dropdown');
+      this.selectedInput = $('#selected-input');
       this.queryForm = $('#query-form');
       this.routeForm = $('#route-form');
       this.queryEl = $('#q');
@@ -106,12 +108,10 @@ define([
         this.runRouteQuery();
       }.bind(this));
 
-      var input_dropdown = $('#input-dropdown');
 
-      input_dropdown.on('hide.bs.dropdown', function () {
-        var selected = input_dropdown.find('li.active a span');
-        $('#selected-input').removeClass().addClass(selected.attr('class'));
-      });
+      this.inputDropdown.on('hide.bs.dropdown', function () {
+        this.updateInputDropdownIcon();
+      }.bind(this));
 
       $('#swap-s-and-e').on('click', this.swapStartAndEnd.bind(this));
 
@@ -164,6 +164,12 @@ define([
       } else {
         $('#search-map-tab a:first').tab('show');
       }
+      this.updateInputDropdownIcon();
+    },
+
+    updateInputDropdownIcon: function () {
+      var selected = this.inputDropdown.find('li.active a span');
+      this.selectedInput.removeClass().addClass(selected.attr('class'));
     },
 
     swapStartAndEnd: function () {
