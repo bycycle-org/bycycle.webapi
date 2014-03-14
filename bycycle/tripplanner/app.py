@@ -1,26 +1,22 @@
 from tangled.converters import as_bool
-from tangled.settings import parse_settings as _parse_settings
-from tangled.web.app import Application
+from tangled.web import Application, make_app_settings
 
 
-def make_app(settings, parse_settings=False, **extra_settings):
-    app = Application(settings, parse_settings, **extra_settings)
-
-    app.settings.update(_parse_settings(
-        app.settings,
+def make_app(settings, **extra_settings):
+    settings = make_app_settings(
+        settings,
         conversion_map={
             'assets.use_built': 'bool',
             'assets.css.use_built': 'bool',
             'assets.js.use_built': 'bool',
         },
         required=['assets.use_built'],
-        prefix='assets.',
-        strip_prefix=False,
-    ))
+    )
+    app = Application(settings, **extra_settings)
 
-    use_built = app.settings['assets.use_built']
-    app.settings.setdefault('assets.css.use_built', use_built)
-    app.settings.setdefault('assets.js.use_built', use_built)
+    use_built = settings['assets.use_built']
+    settings.setdefault('assets.css.use_built', use_built)
+    settings.setdefault('assets.js.use_built', use_built)
 
     app.include(mount_resources)
     app.include(mount_static_directories)
