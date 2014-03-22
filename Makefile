@@ -1,32 +1,36 @@
 all: build
 
-VERSION = $(shell hg id -i)
+VERSION := $(shell hg id -i)
+STATIC_PATH := bycycle/tripplanner/static
 
 build:
 	@buildout
 
 build-js:
-	@node --stack-size=4092 \
-	    /usr/local/bin/r.js -o \
-	    mainConfigFile=bycycle/tripplanner/static/js/main.js \
-	    baseUrl=bycycle/tripplanner/static/js/vendor \
-	    include=almond \
+	@r.js -o \
+	    mainConfigFile=$(STATIC_PATH)/js/main.js \
+	    baseUrl=$(STATIC_PATH)/js/vendor \
 	    name=../main \
-	    out=bycycle/tripplanner/static/js/app.js
+	    include=almond \
+	    optimize=none \
+	    out=build/app.js
+	./bin/python -m rjsmin \
+	    <build/app.js \
+	    >$(STATIC_PATH)/js/app.js
 
 build-css:
 	@r.js -o \
-	    cssIn=bycycle/tripplanner/static/css/base.css \
+	    cssIn=$(STATIC_PATH)/css/base.css \
 	    optimizeCss=standard \
-	    out=bycycle/tripplanner/static/css/app.css
+	    out=$(STATIC_PATH)/css/app.css
 
 push-static:
 	rsync -rlvz \
 	    --delete \
-	    ./bycycle/tripplanner/static/ \
+	    $(STATIC_PATH)/ \
 	    bycycle@static.bycycle.org:~/webapps/bycycle_static/$(VERSION)
 	rsync -rlvz \
-	    ./bycycle/tripplanner/static/{favicon.ico,robots.txt} \
+	    $(STATIC_PATH)/{favicon.ico,robots.txt} \
 	    deploy@bycycle.org:~/apps/bycycle/static
 
 test:
