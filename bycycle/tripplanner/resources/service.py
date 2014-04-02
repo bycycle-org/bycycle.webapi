@@ -2,15 +2,11 @@ from collections import Iterable
 import logging
 import re
 
-from tangled.decorators import reify
 from tangled.web import Resource, config
 from tangled.web.representations import Representation
 
-from bycycle.core.model import Region
-from bycycle.core.model.entities.base import Entity
-from bycycle.core.model.regions import getRegionKey
-from bycycle.core.services.exceptions import ByCycleError
-from bycycle.core.services.exceptions import InputError, NotFoundError
+from bycycle.core.exc import ByCycleError, InputError, NotFoundError
+from bycycle.core.model import Entity
 
 
 log = logging.getLogger(__name__)
@@ -21,37 +17,20 @@ route_re = re.compile(r'.+\s+to\s+.+')
 
 class ServiceResource(Resource):
 
-    @reify
-    def region(self):
-        req = self.request
-        if 'region' in req.params:
-            region_param = req.params['region']
-            try:
-                slug = getRegionKey(region_param)
-            except ValueError:
-                region = None
-            else:
-                q = req.db_session.query(Region)
-                q = q.filter_by(slug=slug)
-                region = q.first()
-            if region is None:
-                req.abort(
-                    404, detail='Unknown region: {}'.format(region_param),
-                    explanation=None)
-            return region
-
     @property
     def data(self):
         params = self.request.params
         data = {
-            'region': self.region,
             'service': '',
             'q': params.get('q', '').strip(),
             'q_id': params.get('q_id', ''),
+            'q_point': params.get('q_point', ''),
             's': params.get('s', '').strip(),
             's_id': params.get('s_id', ''),
+            's_point': params.get('s_point', ''),
             'e': params.get('e', '').strip(),
             'e_id': params.get('e_id', ''),
+            'e_point': params.get('e_point', ''),
             'result': None,
             'json': None,
         }
@@ -73,7 +52,7 @@ class ServiceResource(Resource):
             if route_re.match(q):
                 route_name = 'find_route'
             else:
-                route_name = 'find_geocode'
+                route_name = 'do_lookup'
         elif s or e:
             route_name = 'find_route'
         else:
@@ -90,7 +69,7 @@ class ServiceResource(Resource):
         data = self.data
         data['service'] = self.service_class.name
         service = self.service_class(
-            self.request.db_session, region=self.region)
+            self.request.db_session)
         try:
             query = self._get_query()
             options = self._get_options()
@@ -157,7 +136,7 @@ class ServiceResource(Resource):
             elif status == 300:
                 template = '300'
             directory = self.service_class.name
-            template_name = '/{0}s/{1}.html'.format(directory, template)
+            template_name = '/{0}/{1}.html'.format(directory, template)
         else:
             template_name = '/error.html'
         if for_json:

@@ -8,17 +8,16 @@
     start = route.start
     end = route.end
     directions = route.directions
-    linestring = route.linestring_lat_long
-    centroid = linestring.centroid
-    s_addr = h.literal(start.address.as_string('<br>'))
-    e_addr = h.literal(end.address.as_string('<br>'))
-    s_addr_one_line = start.address.as_string(', ')
-    e_addr_one_line = end.address.as_string(', ')
-    s_href = request.resource_url('find_geocode', query={'q': q, 'q_id': start.id})
-    e_href = request.resource_url('find_geocode', query={'q': q, 'q_id': end.id})
+    linestring = route.linestring
+    s_addr = h.literal(start.address)#.as_string('<br>'))
+    e_addr = h.literal(end.address)#.as_string('<br>'))
+    s_addr_one_line = start.address#.as_string(', ')
+    e_addr_one_line = end.address#.as_string(', ')
+    s_href = request.resource_url('do_lookup', query={'q': q, 'q_id': start.id})
+    e_href = request.resource_url('do_lookup', query={'q': q, 'q_id': end.id})
     reverse_directions_href = request.resource_url('find_route', query={
-        's': e_addr_one_line, 's_id': end.id,
-        'e': s_addr_one_line, 'e_id': start.id,
+        's': e_addr_one_line, 's_id': end.id, 's_point': '{0.x},{0.y}'.format(end.point),
+        'e': s_addr_one_line, 'e_id': start.id, 'e_point': '{0.x},{0.y}'.format(start.point),
     })
     reverse_directions_onclick = (
         "byCycle.UI.reverseDirections({{"
@@ -28,7 +27,7 @@
         "return false;"
         .format(e_addr=e_addr_one_line, s_addr=s_addr_one_line, start=start, end=end)
     )
-    set_center_onclick = 'byCycle.UI.map.setCenterFromLatLong([{x}, {y}]); return false;'
+    set_center_onclick = 'byCycle.UI.map.getView().setCenter([{x}, {y}]); return false;'
     tab = h.literal('&nbsp;' * 4)
 %>
 
@@ -36,14 +35,14 @@
     <div class="start">
         <a href="${s_href}"
            title="Start of route"
-           onclick="${set_center_onclick.format(x=start.lat_long.x, y=start.lat_long.y)}; return false;"
+           onclick="${set_center_onclick.format(x=start.point.x, y=start.point.y)}; return false;"
            >${s_addr}</a>
     </div>
 
     <div class="end">
         <a href="${e_href}"
            title="End of route"
-           onclick="${set_center_onclick.format(x=end.lat_long.x, y=end.lat_long.y)}; return false;"
+           onclick="${set_center_onclick.format(x=end.point.x, y=end.point.y)}; return false;"
            >${e_addr}</a>
     </div>
 
@@ -61,15 +60,15 @@
             <%
                 turn = d['turn']
                 street = d['street']
+                toward = d['toward']
                 point = linestring.coords[d['linestring_index']]
                 if turn == 'straight':
-                    turn = 'cont.'
+                    turn = 'continue'
                     street = street[1]
-                if street == 'None':
-                    street = '[No name]'
+                ## XXX: WTF is this next line doing?
                 street = ' - '.join([s.strip() for s in street.split('-') if s])
-                if loop.first:
-                    street = street  # XXX: '{0} toward {toward}'.format(street, **d)
+                if loop.first and toward:
+                    street = '{} toward {}'.format(street, toward)
                 ls_index = d['linestring_index']
                 distance = d['distance']
                 mi = '%.2f' % distance['miles']
@@ -102,7 +101,7 @@
         <div class="direction ${'a' if row_class == 'b' else 'b'}">
             <span class="count">
                 <a href="#"
-                   onclick="${set_center_onclick.format(x=end.lat_long.x, y=end.lat_long.y)}"
+                   onclick="${set_center_onclick.format(x=end.point.x, y=end.point.y)}"
                    >${len(directions) + 1}</a>
             </span>
             -

@@ -3,21 +3,20 @@ define([
   'bycycle',
   'bycycle/map',
   'bycycle/query',
-  'bycycle/regions',
   'bycycle/result'
 ], function (
   $,
   bycycle,
   map,
   query,
-  regions,
   result
 ) {
 
-  var Route = result.Route;
+   var LookupQuery = query.LookupQuery,
+       Route = result.Route,
+       RouteQuery = query.RouteQuery;
 
   byCycle.UI = {
-    regionId: null,
     service: null,
     query: null,  // query.Query object (not query string)
     isFirstResult: true,
@@ -38,21 +37,20 @@ define([
       $(document).ready(function () {
         var zoom = bycycle.getParamVal('zoom', parseInt);
 
-        this.region = regions.regions[this.regionId];
-
         this.assignUIElements();
         this.createEventHandlers();
         this.onResize();
 
         this.map = new map.Map({target: 'map-pane'});
         this.mapContextMenu = new map.MapContextMenu(this, this.map);
-
-        this.setRegion(this.regionId);
-        this.handleQuery();
+        this.map.drawLine(byCycle.mapConfig.bbox);
+        this.map.getView().fitExtent(byCycle.mapConfig.bbox, this.map.getSize());
 
         if (typeof zoom !== 'undefined') {
           this.map.getView().setZoom(zoom)
         }
+
+        this.handleQuery();
 
         this.clearStatus();
         this.spinner.hide();
@@ -64,12 +62,19 @@ define([
       this.selectedInput = $('#selected-input');
       this.queryForm = $('#query-form');
       this.routeForm = $('#route-form');
+
       this.queryEl = $('#q');
       this.queryId = $('#q-id')
+      this.queryPoint = $('#q-point');
+
       this.startEl = $('#s');
       this.startId = $('#s-id')
-      this.endId = $('#e-id')
+      this.startPoint = $('#s-point')
+
       this.endEl = $('#e');
+      this.endId = $('#e-id')
+      this.endPoint = $('#e-point');
+
       this.status = $('#status');
       this.bookmarkLink = $('#bookmark');
       this.mainRow = $('#main-row');
@@ -133,29 +138,24 @@ define([
       this.resultPane.html(content);
     },
 
-    setRegion: function (regionId) {
-      this.regionId = regionId;
-      var region = regions.regions[regionId],
-          bounds = region ? region.bounds : regions.bounds;
-      bounds = this.map.transformBounds(bounds);
-      this.map.getView().fitExtent(bounds, this.map.getSize());
-    },
-
     /* Services Input ********************************************************/
 
-    setQuery: function (val, id) {
+    setQuery: function (val, id, point) {
       this.queryEl.val(val);
       this.queryId.val(id || '');
+      this.queryPoint.val(point || '');
     },
 
-    setStart: function (val, id) {
+    setStart: function (val, id, point) {
       this.startEl.val(val);
       this.startId.val(id || '');
+      this.startPoint.val(point || '');
     },
 
-    setEnd: function (val, id) {
+    setEnd: function (val, id, point) {
       this.endEl.val(val);
       this.endId.val(id || '');
+      this.endPoint.val(point || '');
     },
 
     selectInputTab: function (service) {
@@ -174,19 +174,20 @@ define([
 
     swapStartAndEnd: function () {
       var s = this.startEl.val(),
-          sId = this.startId.val();
-      this.setStart(this.endEl.val(), this.endId.val());
-      this.setEnd(s, sId)
+          sId = this.startId.val(),
+          sPoint = this.startPoint.val();
+      this.setStart(this.endEl.val(), this.endId.val(), this.endPoint.val());
+      this.setEnd(s, sId, sPoint);
     },
 
-    setAsStart: function (addr, id) {
-      this.setStart(addr, id);
+    setAsStart: function (addr, id, point) {
+      this.setStart(addr, id, point);
       this.selectInputTab('route');
       this.startEl.focus();
     },
 
-    setAsEnd: function (addr, id) {
-      this.setEnd(addr, id);
+    setAsEnd: function (addr, id, point) {
+      this.setEnd(addr, id, point);
       this.selectInputTab('route');
       this.endEl.focus();
     },
@@ -218,18 +219,25 @@ define([
       this.query.request = request;
     },
 
-    runGenericQuery: function (q, opts) {
-      q = q || $.trim(this.queryEl.val());
+    runGenericQuery: function (input, opts) {
+      var q;
+      if (!input) {
+        input = {
+          q: $.trim(this.queryEl.val()),
+          q_id: $.trim(this.queryId.val()),
+          q_point: $.trim(this.queryPoint.val())
+        };
+      }
+      q = input.q;
       if ($.trim(q)) {
         var runner,
-            waypoints = q.toLowerCase().split(/\s+to\s+/),
-            input = {q: q};
+            waypoints = q.toLowerCase().split(/\s+to\s+/);
         if (waypoints.length > 1) {
           runner = 'runRouteQuery';
           this.setStart(waypoints[0]);
-          this.setEnd(waypoints[1]);
+          this.setEnd(waypoints[waypoints.length - 1]);
         } else {
-          runner = 'runGeocodeQuery';
+          runner = 'runLookupQuery';
         }
         this[runner](input, opts);
       } else {
@@ -240,26 +248,24 @@ define([
 
     /* Run all queries through here for consistency. */
     runQuery: function (queryClass, input, opts) {
-      if (typeof input.region === 'undefined') {
-        input.region = this.regionId;
-      }
       this.map.closePopups();
       this.query = new queryClass(this, input,opts);
       this.query.run();
     },
 
-    runGeocodeQuery: function (input, opts) {
+    runLookupQuery: function (input, opts) {
       if (!input) {
         input = {
           q: $.trim(this.queryEl.val()),
-          q_id: this.queryId.val()
+          q_id: this.queryId.val(),
+          q_point: this.queryPoint.val()
         };
       }
       if (!input.q) {
         this.queryEl.focus();
         this.showErrors(['Please enter an address!']);
       } else {
-        this.runQuery(query.GeocodeQuery, input, opts);
+        this.runQuery(LookupQuery, input, opts);
       }
     },
 
@@ -270,15 +276,20 @@ define([
         input = {
           s: $.trim(this.startEl.val()),
           e: $.trim(this.endEl.val()),
+          e_point: $.trim(this.startPoint.val()),
           s_id: this.startId.val(),
-          e_id: this.endId.val()
+          e_id: this.endId.val(),
+          e_point: $.trim(this.endPoint.val())
         };
       }
       q = input.q;
       start = input.s;
       end = input.e;
       if (q || (start && end)) {
-        if ((start && end) && start === end) {
+        if ((start && end) &&
+              start === end &&
+              input.s_id === input.e_id &&
+              input.s_point === input.e_point) {
           this.showErrors(['Start and end are the same']);
         } else {
           $.each(this.results, function (id, result) {
@@ -286,7 +297,7 @@ define([
               this.removeResult(result);
             }
           }.bind(this));
-          this.runQuery(query.RouteQuery, input, opts);
+          this.runQuery(RouteQuery, input, opts);
         }
       } else {
         if (!start) {
@@ -303,21 +314,21 @@ define([
       }
     },
 
-    getDirectionsTo: function (where, id) {
-      this.setAsEnd(where, id);
-      if (this.startEl.val()) {
-        this.runRouteQuery();
-      } else {
-        this.startEl.focus();
-      }
-    },
-
-    getDirectionsFrom: function (where, id) {
-      this.setAsStart(where, id);
+    getDirectionsFrom: function (where, id, point) {
+      this.setAsStart(where, id, point);
       if (this.endEl.val()) {
         this.runRouteQuery();
       } else {
         this.endEl.focus();
+      }
+    },
+
+    getDirectionsTo: function (where, id, point) {
+      this.setAsEnd(where, id, point);
+      if (this.startEl.val()) {
+        this.runRouteQuery();
+      } else {
+        this.startEl.focus();
       }
     },
 
@@ -366,8 +377,8 @@ define([
 
     reverseDirections: function (input) {
       this.setQuery([input.s, input.e].join(' to '));
-      this.setStart(input.s, input.s_id);
-      this.setEnd(input.e, input.e_id);
+      this.setStart(input.s, input.s_id, input.s_point);
+      this.setEnd(input.e, input.e_id, input.e_point);
       this.runRouteQuery(input);
     }
   };

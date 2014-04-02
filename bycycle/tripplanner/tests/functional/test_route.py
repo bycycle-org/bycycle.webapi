@@ -8,7 +8,6 @@ class TestRoutes(BaseTestCase):
             '/route/find',
             params={
                 'q': '633 n alberta to 4807 se kelly, portland',
-                'region': 'portlandor',
             }
         )
 
@@ -19,7 +18,6 @@ class TestRoutes(BaseTestCase):
             params={
                 's': '633 n alberta',
                 'e': '4807 se kelly, portland',
-                'region': 'portlandor',
             }
         )
 
@@ -28,7 +26,6 @@ class TestRoutes(BaseTestCase):
             '/route/find',
             params={
                 'q': '633 alberta to 4807 se kelly',
-                'region': 'portlandor',
             },
             status=300
         )
@@ -39,7 +36,6 @@ class TestRoutes(BaseTestCase):
             params={
                 's': '100 N Fake St',
                 'e': '200 S Wut Ave',
-                'region': 'portlandor',
             },
             status=404)
 
