@@ -87,20 +87,16 @@ a:hover {
   width: 300px;
 }
 .marker {
-  width: 20px;
-  height: 20px;
-  padding: 2px;
-  background-color: #3987c9;
   cursor: pointer;
 }
 .marker span {
-  font-size: 16px;
+  font-size: 24px;
 }
 .start-marker {
-  background-color: green;
+  color: green;
 }
 .end-marker {
-  background-color: red;
+  color: red;
 }
 .info_win {
   width: 250px;
