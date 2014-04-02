@@ -1,15 +1,17 @@
 define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
 
+  var projection = ol.proj.get('EPSG:3857'),
+      llProjection = ol.proj.get('EPSG:4326');
+
   var Map = bycycle.inheritFrom(ol.Map, {
 
     defaultZoom: 4,
     streetLevelZoom: 16,
 
     constructor: function (opts) {
-      this.fromProjection = ol.proj.get('EPSG:4326');
       opts = $.extend({
         view: new ol.View2D({
-          projection: ol.proj.get('EPSG:3857'),
+          projection: projection,
           center: [0, 0],
           zoom: this.defaultZoom
         }),
@@ -38,44 +40,16 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
       $('.popover').hide();
     },
 
-    setCenterFromLatLong: function (center) {
-      this.getView().setCenter(this.transform(center));
-    },
-
-    transform: function (coords) {
-      return ol.proj.transform(
-        coords, this.fromProjection, this.getView().getProjection());
-    },
-
-    transformBounds: function (bounds) {
-      var sw = this.transform([bounds[0], bounds[1]]),
-          ne = this.transform([bounds[2], bounds[3]]);
-      return [sw[0], sw[1], ne[0], ne[1]];
-    },
-
-    transformLine: function (coordinates) {
-      var transformedCoords = [];
-      $.each(coordinates, function (i, coord) {
-        transformedCoords.push(this.transform(coord));
-      }.bind(this));
-      return transformedCoords;
-    },
-
-    getCenterOfBounds: function (bounds) {
-      var left = bounds[0],
-          bottom = bounds[1],
-          right = bounds[2],
-          top = bounds[3];
-      return [(left + right) / 2.0, (top + bottom) / 2.0];
+    transformToLL: function (coords) {
+      return ol.proj.transform(coords, projection, llProjection);
     },
 
     placeMarker: function (coords, opts) {
       var opts = opts || {},
-          position = this.transform(coords),
           markerClass = opts.markerClass || 'marker',
           glyphClass = opts.glyphClass || 'glyphicon-star',
           marker = new ol.Overlay({
-            position: position,
+            position: coords,
             positioning: 'center-center',
             element: $('<div>').addClass('marker').addClass(markerClass)
               .append($('<span>').addClass('glyphicon').addClass(glyphClass))
@@ -84,44 +58,43 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
       return marker;
     },
 
-    placeGeocodeMarker: function (geocode, opts) {
+    placeLookupMarker: function (result, opts) {
       var map = this,
-          marker = this.placeMarker(geocode.coordinates, opts),
+          marker = this.placeMarker(result.coordinates, opts),
           popup = new ol.Overlay({
-            element: geocode.popup
+            element: result.popup
           });
       marker.getElement().on('click', function () {
         map.closePopups();
         popup.setPosition(marker.getPosition());
-        geocode.popup.popover({
+        result.popup.popover({
           placement: 'auto top',
           html: true,
-          content: geocode.popupContent
+          content: result.popupContent
         });
-        geocode.popup.popover('show');
+        result.popup.popover('show');
       });
       this.addOverlay(marker);
       this.addOverlay(popup);
-      geocode.addOverlay(marker, popup);
+      result.addOverlay(marker, popup);
       return marker;
     },
 
-    drawRoute: function (route) {
-      var coordinates = this.transformLine(route.coordinates),
-          line = new ol.geom.LineString(coordinates),
+    drawLine: function (coords, color) {
+      color = color || '#000000';
+      var line = new ol.geom.LineString(coords),
           feature = new ol.Feature({geometry: line}),
           overlay = new ol.FeatureOverlay({
             features: [feature],
             style: new ol.style.Style({
               stroke: new ol.style.Stroke({
                 width: 4,
-                color: '#000000'
+                color: color
               })
             })
           });
       this.addOverlay(overlay);
-      route.addOverlay(overlay);
-      return line;
+      return overlay;
     }
   });
 
@@ -184,18 +157,9 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
     },
 
     identify: function (px) {
-      var map = this.map,
-          view = this.map.getView(),
-          coords = map.getCoordinateFromPixel(px),
-          coords = ol.proj.transform(coords, view.getProjection(), 'EPSG:4326'),
-          q = coords[0] + ',' + coords[1];
-      this.ui.queryEl.val(q);
-      this.ui.runGeocodeQuery({q: q});
-    },
-
-    getDirectionsTo: function (px) {
-      var location = this.getLocation(px);
-      this.ui.getDirectionsTo(location);
+      var q = this.getLocation(px);
+      this.ui.setQuery(q);
+      this.ui.runLookupQuery({q: q});
     },
 
     getDirectionsFrom: function (px) {
@@ -203,11 +167,15 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
       this.ui.getDirectionsFrom(location);
     },
 
+    getDirectionsTo: function (px) {
+      var location = this.getLocation(px);
+      this.ui.getDirectionsTo(location);
+    },
+
     getLocation: function (px) {
       var map = this.map,
-          view = this.map.getView(),
           coords = map.getCoordinateFromPixel(px),
-          coords = ol.proj.transform(coords, view.getProjection(), 'EPSG:4326');
+          coords = map.transformToLL(coords);
       return coords[0] + ',' + coords[1];
     }
   };

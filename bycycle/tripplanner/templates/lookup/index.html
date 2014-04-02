@@ -1,0 +1,7 @@
+<%inherit file="/layout.html"/>
+
+<%namespace file="result.html" import="show_result" />
+
+% for r in result:
+  ${show_result(r)}
+% endfor

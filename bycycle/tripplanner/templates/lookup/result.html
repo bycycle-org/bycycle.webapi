@@ -1,0 +1,45 @@
+<%def name="show_result(result, hide_links=False)">
+  <%
+    point = result.point
+    href = request.resource_url('do_lookup', query={'q': q, 'q_id': result.id, 'q_point': str(point)})
+    onclick = 'byCycle.UI.map.setCenter([{0.x}, {0.y}]); return false;'.format(point)
+    html_addr = h.literal(result.address)#.as_string('<br>'))
+    get_directions_href = (
+        "byCycle.UI.getDirectionsFrom('{addr}', '{0.id}', '{0.point}'); "
+        "return false;"
+    ).format(result, addr=result.address)
+  %>
+
+  <div class="panel">
+    <div class="panel-body">
+      <div>
+        <a class="show-location-on-map select-location"
+           href="${href}"
+           title="Select this location"
+           onclick="${onclick}"
+           >${html_addr}</a>
+
+        <a class="pull-right glyphicon glyphicon-map-marker"
+           href="${href}"
+           title="Show this location on the map"
+           onclick="${onclick}"
+           ></a>
+      </div>
+
+      <div class="set-as-s-or-e" ${h.hide_element_if(hide_links)}>
+        Get directions
+        <a class="set-as-start"
+           href="#set-as-start"
+           title="Get directions from this address"
+           onclick="${get_directions_href}"
+           >from</a>
+        or
+        <a class="set-as-end"
+           href="#set-as-end"
+           title="Get directions to this address"
+           onclick="${get_directions_href}"
+           >to</a>
+      </div>
+    </div>
+  </div>
+</%def>

@@ -1,5 +1,13 @@
+import json
+
+from shapely import wkb
+
+from sqlalchemy.sql import func
+
 from tangled.converters import as_bool
 from tangled.web import Application, make_app_settings
+
+from bycycle.core.model import Street
 
 
 def make_app(settings, **extra_settings):
@@ -23,6 +31,14 @@ def make_app(settings, **extra_settings):
     app.include(add_subscribers)
     app.include('bycycle.tripplanner.helpers')
     app.scan('.resources')
+
+    session = app['sqlalchemy.session_factory']()
+    q = session.query(func.ST_Envelope(func.ST_Extent(Street.geom)))
+    extent = q.scalar()
+    extent = wkb.loads(extent, hex=True)
+    app.settings['bbox'] = json.dumps(list(extent.exterior.coords))
+    session.close()
+
     return app
 
 
@@ -31,10 +47,12 @@ def mount_resources(app):
     app.mount_resource(
         'find', '.resources.service:ServiceResource', '/find',
         method_name='generic_find')
-    app.mount_resource('geocode', '.resources.geocode:Geocode', '/geocode')
+
+    app.mount_resource('lookup', '.resources.lookup:Lookup', '/lookup')
     app.mount_resource(
-        'find_geocode', '.resources.geocode:Geocode', '/geocode/find',
+        'do_lookup', '.resources.lookup:Lookup', '/lookup/find',
         method_name='find')
+
     app.mount_resource('route', '.resources.route:Route', '/route')
     app.mount_resource(
         'find_route', '.resources.route:Route', '/route/find',

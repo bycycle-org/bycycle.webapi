@@ -61,8 +61,8 @@
         <div class="col-sm-8 tab-content">
           <div id="search-map" class="tab-pane ${'active' if service != 'route' else ''}">
             <form id="query-form" method="get" action="${request.resource_url('find')}">
-              <input type="hidden" name="region" value="portlandor">
               <input type="hidden" id="q-id" name="q_id" value="${q_id}">
+              <input type="hidden" id="q-point" name="q_point" value="${q_point}">
               <div class="input-group">
                 <input id="q" name="q" value="${q}" class="form-control">
                 <span class="input-group-btn">
@@ -77,9 +77,10 @@
 
           <div id="get-directions" class="tab-pane ${'active' if service == 'route' else ''}">
             <form id="route-form" method="get" action="${request.resource_url('find_route')}">
-              <input type="hidden" name="region" value="portlandor">
               <input type="hidden" id="s-id" name="s_id" value="${s_id}">
+              <input type="hidden" id="s-point" name="s_point" value="${s_point}">
               <input type="hidden" id="e-id" name="e_id" value="${e_id}">
+              <input type="hidden" id="e-point" name="e_point" value="${e_point}">
 
               <div class="row">
                 <div class="col-xs-2">
@@ -187,8 +188,8 @@
               <li class="divider"></li>
               <li><a href="#" tabindex="-1" action="identify">What's here?</a></li>
               <li class="divider"></li>
-              <li><a href="#" tabindex="-1" action="getDirectionsTo">Get directions to</a></li>
               <li><a href="#" tabindex="-1" action="getDirectionsFrom">Get directions from</a></li>
+              <li><a href="#" tabindex="-1" action="getDirectionsTo">Get directions to</a></li>
             </ul>
           </div>
         </div>
@@ -212,6 +213,9 @@
           regionId: 'portlandor',
           service: '${service}',
           q: '${q}'
+        },
+        mapConfig: {
+          bbox: ${settings['bbox'] | n}
         }
       };
       //]]>

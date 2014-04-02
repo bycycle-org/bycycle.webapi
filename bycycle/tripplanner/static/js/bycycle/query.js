@@ -1,6 +1,6 @@
 define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
-  var Geocode = result.Geocode,
+  var LookupResult = result.LookupResult,
       Route = result.Route;
 
   /**
@@ -104,14 +104,14 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
 
   /**
-   * Geocode Query
+   * LookupResult Query
    *
    * @param input {Object} Should contain `q`
    */
-  var GeocodeQuery = bycycle.inheritFrom(Query, {
+  var LookupQuery = bycycle.inheritFrom(Query, {
 
-    service: 'geocode',
-    resultType: result.Geocode,
+    service: 'lookup',
+    resultType: LookupResult,
     processingMessage: 'Looking up address...',
 
     on300: function (request) {
@@ -120,12 +120,13 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
       $('.select-location').each(function (i, link) {
         link = $(link);
         link.on('click', function (event) {
-          var result = new Geocode(request.responseJSON.results[i]);
+          var result = new LookupResult(request.responseJSON.results[i]);
           event.preventDefault();
-          ui.setQuery(result.oneLineAddress, result.id);
-          ui.runGeocodeQuery({
+          ui.setQuery(result.oneLineAddress, result.id, result.llString);
+          ui.runLookupQuery({
             q: result.oneLineAddress,
-            q_id: result.id
+            q_id: result.id,
+            q_point: result.llString
           });
           link.off('click');
         });
@@ -136,13 +137,12 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
       var ui = this.ui,
           map = ui.map;
       $.each(results, function (i, result) {
-        var coords = map.transform(result.lat_long.coordinates);
-        ui.setQuery(result.oneLineAddress, result.id);
-        map.getView().setCenter(coords);
+        ui.setQuery(result.oneLineAddress, result.id, result.llString);
+        map.getView().setCenter(result.point.coordinates);
         if (ui.isFirstResult) {
           map.getView().setZoom(map.streetLevelZoom);
         }
-        map.placeGeocodeMarker(result);
+        map.placeLookupMarker(result);
       });
     }
   });
@@ -165,6 +165,7 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
     on300: function (request) {
       this.superType.prototype.on300.call(this, request);
       var results = request.responseJSON.results,
+          lastIndex = results.length - 1,
           ui = this.ui,
           // Slots in results that require a selection.
           choiceIndexes = [],
@@ -174,18 +175,21 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
           choiceIndex = 0,
           offset = 0,
           q = [],
-          qId = [];
+          qId = [],
+          qPoint = [];
 
       $.each(results, function (i, item) {
-        var geocode;
+        var result;
         if ($.isArray(item)) {
           choiceIndexes.push(i);
           q.push(null);
           qId.push(null);
+          qPoint.push(null);
         } else {
-          geocode = new Geocode(item);
-          q.push(geocode.oneLineAddress);
-          qId.push(geocode.id);
+          result = new LookupResult(item);
+          q.push(result.oneLineAddress);
+          qId.push(result.id);
+          qPoint.push(result.llString);
         }
       });
 
@@ -195,7 +199,7 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
         link.on('click', function (event) {
           var resultIndex = choiceIndexes[choiceIndex++],
               choices = results[resultIndex],
-              choice = new Geocode(choices[i - offset]),
+              choice = new LookupResult(choices[i - offset]),
               container = link.closest('.route-choice'),
               next = container.next('.route-choice');
 
@@ -209,7 +213,7 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
 
           if (resultIndex === 0) {
             ui.setStart(choice.oneLineAddress);
-          } else if (resultIndex === 1) {
+          } else if (resultIndex === lastIndex) {
             ui.setEnd(choice.oneLineAddress);
           }
 
@@ -218,8 +222,9 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
           } else {
             q = q.join(' to ');
             qId = qId.join(';');
-            ui.setQuery(q, qId);
-            ui.runRouteQuery({q: q, q_id: qId});
+            qPoint = qPoint.join(';');
+            ui.setQuery(q, qId, qPoint);
+            ui.runRouteQuery({q: q, q_id: qId, q_point: qPoint});
           }
         });
       });
@@ -229,28 +234,29 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
       var ui = this.ui,
           map = ui.map;
       $.each(results, function (i, route) {
-        var bounds = map.transformBounds(route.bounds_array),
-            startMarker, endMarker;
-        ui.setStart(route.start.oneLineAddress, route.start.id);
-        ui.setEnd(route.end.oneLineAddress, route.end.id);
-        map.getView().fitExtent(bounds, map.getSize());
-        startMarker = map.placeGeocodeMarker(route.start, {
+        var startMarker, endMarker, line;
+        ui.setStart(
+          route.start.oneLineAddress, route.start.id, route.start.llString);
+        ui.setEnd(
+          route.end.oneLineAddress, route.end.id, route.end.llString);
+        map.getView().fitExtent(route.bounds, map.getSize());
+        startMarker = map.placeLookupMarker(route.start, {
           markerClass: 'start-marker',
           glyphClass: 'glyphicon-play'
         });
-        endMarker = map.placeGeocodeMarker(route.end, {
+        endMarker = map.placeLookupMarker(route.end, {
           markerClass: 'end-marker',
           glyphClass: 'glyphicon-stop'
         });
-        map.drawRoute(route);
-        route.addOverlay(startMarker, endMarker);
+        line = map.drawLine(route.coordinates);
+        route.addOverlay(startMarker, endMarker, line);
       });
     }
   });
 
 
   return {
-    GeocodeQuery: GeocodeQuery,
+    LookupQuery: LookupQuery,
     RouteQuery: RouteQuery
   };
 });

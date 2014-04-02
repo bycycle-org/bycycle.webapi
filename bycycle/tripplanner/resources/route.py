@@ -1,7 +1,8 @@
 import re
 
-from bycycle.core.services.exceptions import InputError
-from bycycle.core.services.route import Service, MultipleMatchingAddressesError
+from bycycle.core.exc import InputError
+from bycycle.core.service import RouteService
+from bycycle.core.service.route import MultipleLookupResultsError
 
 from .service import ServiceResource
 
@@ -9,7 +10,7 @@ from .service import ServiceResource
 class Route(ServiceResource):
     """View for interfacing with byCycle Route service."""
 
-    service_class = Service
+    service_class = RouteService
 
     def _find(self):
         data = super()._find()
@@ -33,13 +34,13 @@ class Route(ServiceResource):
                 ids = [start.id, end.id]
 
             data.update({
-                's': start.address.as_string(sep),
+                's': start.address,#.as_string(sep),
                 's_id': start.id,
-                'e': end.address.as_string(sep),
+                'e': end.address,#.as_string(sep),
                 'e_id': end.id,
             })
 
-            data['q'] = ' to '.join(a.as_string(sep) for a in addrs)
+            data['q'] = ' to '.join(a for a in addrs if a)
             data['q_id'] = ';'.join(ids)
         return data
 
@@ -50,23 +51,10 @@ class Route(ServiceResource):
             route_list = re.split('\s+to\s+', q, re.I)
             if len(route_list) < 2:
                 raise InputError("That doesn't look like a route.")
-            ids = params.get('q_id')
-            if ids:
-                ids = ids.split(';')
-                for i, addr in enumerate(route_list):
-                    addr_id = ids[i]
-                    if addr_id:
-                        route_list[i] = ';'.join((addr, addr_id))
         else:
             s = params.get('s', '')
-            s_id = params.get('s_id', '')
             e = params.get('e', '')
-            e_id = params.get('e_id', '')
             if s and e:
-                if s_id:
-                    s = ';'.join((s, s_id))
-                if e_id:
-                    e = ';'.join((e, e_id))
                 route_list = [s, e]
             elif s or e:
                 if not s:
@@ -78,14 +66,26 @@ class Route(ServiceResource):
         return route_list
 
     def _get_options(self):
+        params = self.request.params
         options = {}
-        for p in ('pref', 'tmode'):
-            if p in self.request.params:
+
+        if params.get('q_id'):
+            options['ids'] = params['q_id'].split(';')
+        else:
+            options['ids'] = [params.get('s_id'), params.get('e_id')]
+
+        if params.get('q_point'):
+            options['points'] = params['q_point'].split(';')
+        else:
+            options['points'] = [params.get('s_point'), params.get('e_point')]
+
+        for p in ('pref', 'mode'):
+            if p in params:
                 options[p] = self.request.params[p]
         return options
 
     def _exc_handler(self, exc):
-        if isinstance(exc, MultipleMatchingAddressesError):
+        if isinstance(exc, MultipleLookupResultsError):
             self.request.response.status_int = 300
             return {'result': exc.choices}
         return exc

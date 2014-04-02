@@ -20,13 +20,15 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
   };
 
 
-  var Geocode = bycycle.inheritFrom(Result, {
+  var LookupResult = bycycle.inheritFrom(Result, {
     constructor: function (data) {
       this.superType.call(this, data);
       var id = this.id,
+          llString = this.lat_long.coordinates.join(','),
           address = this.address,
           oneLineAddress = address.replace(/\n+/, ', ');
-      this.coordinates = this.lat_long.coordinates,
+      this.coordinates = this.point.coordinates;
+      this.llString = llString;
       this.htmlAddress = address.replace(/\n+/, '<br>');
       this.oneLineAddress = oneLineAddress;
       this.popup = $('<div>');
@@ -36,19 +38,19 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
             $('<div>').html(this.htmlAddress))
           .append(
             $('<div>')
-              .append($('<a>').attr('href', '#').text('Get directions to').click(
+              .append($('<a>').attr('href', '#').text('Get directions from').click(
                 function (event) {
                   event.preventDefault();
-                  byCycle.UI.getDirectionsTo(oneLineAddress, id);
+                  byCycle.UI.getDirectionsFrom(oneLineAddress, id, llString);
                 }
               ))
           )
           .append(
             $('<div>')
-              .append($('<a>').attr('href', '#').text('Get directions from').click(
+              .append($('<a>').attr('href', '#').text('Get directions to').click(
                 function (event) {
                   event.preventDefault();
-                  byCycle.UI.getDirectionsFrom(oneLineAddress, id);
+                  byCycle.UI.getDirectionsTo(oneLineAddress, id, llString);
                 }
               ))
           )
@@ -71,18 +73,19 @@ define(['jquery', 'bycycle'], function ($, bycycle) {
       this.superType.call(this, data);
       var linestring = this.linestring,
           coordinates = linestring.coordinates;
-      this.start = new Geocode(this.start);
+      this.id = ['route', '-', this.start.id, '-', this.end.id].join(''),
+      this.start = new LookupResult(this.start);
       this.start.popupContent = this.start.htmlAddress;
-      this.end = new Geocode(this.end);
+      this.end = new LookupResult(this.end);
       this.end.popupContent = this.end.htmlAddress;
       this.coordinates = coordinates;
-      this.encodedPolyline = this.linestring.encoded;
+      this.encodedPolyline = this.linestring_encoded;
     }
   });
 
 
   return {
-    Geocode: Geocode,
+    LookupResult: LookupResult,
     Route: Route
   }
 });

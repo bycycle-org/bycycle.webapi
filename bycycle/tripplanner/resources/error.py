@@ -8,13 +8,6 @@ from .service import ServiceResource
 
 class Error(ServiceResource):
 
-    @reify
-    def region(self):
-        try:
-            return super().region
-        except HTTPNotFound:
-            return None
-
     @property
     def data(self):
         data = super().data

@@ -1,4 +1,0 @@
-% for r in c.routes:
-${r}
-
-% endfor

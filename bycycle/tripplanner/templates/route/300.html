@@ -1,0 +1,29 @@
+<%inherit file="/layout.html"/>
+
+<%namespace file="/lookup/result.html" import="show_result" />
+
+<%!
+  from bycycle.core.model import LookupResult
+%>
+
+<h3>Select a location</h3>
+
+## A query to the route service may find multiple matching matches for
+## any or all of the addresses it was passed as input. In this case, the
+## `result` list will contain a single `LookupResult` for each input
+## address that did *not* have multiple matches and a list of
+## `LookupResult`s for each input address that *did*. The following
+## makes a "fixed pane" for the addresses that had multiple matches. The
+## first fixed pane is visible while the others are initially hidden.
+
+<% first = True %>
+% for lookup_result in result:
+  % if not isinstance(lookup_result, LookupResult):
+    <div class="route-choice" ${h.hide_element_if(not first)}>
+      % for r in lookup_result:
+        ${show_result(r, hide_links=True)}
+      % endfor
+    </div>
+    <% first = False %>
+  % endif
+% endfor

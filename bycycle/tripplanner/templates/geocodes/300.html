@@ -1,9 +1,0 @@
-<%inherit file="/layout.html"/>
-
-<%namespace file="geocode.html" import="show_geocode" />
-
-<h3>Select a location</h3>
-
-% for i, g in enumerate(result):
-  ${show_geocode(g, hide_links=True)}
-% endfor
