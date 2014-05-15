@@ -33,7 +33,7 @@ setup(
         'dev': [
             'bycycle.core[dev]',
             'rjsmin>=1.0.9',
-            'WebTest>=2.0.14',
+            'WebTest>=2.0.15',
         ],
     },
     test_suite='bycycle.tripplanner',
