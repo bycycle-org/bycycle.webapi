@@ -281,9 +281,9 @@ define([
       if (!input) {
         input = {
           s: $.trim(this.startEl.val()),
-          e: $.trim(this.endEl.val()),
-          e_point: $.trim(this.startPoint.val()),
           s_id: this.startId.val(),
+          s_point: $.trim(this.startPoint.val()),
+          e: $.trim(this.endEl.val()),
           e_id: this.endId.val(),
           e_point: $.trim(this.endPoint.val())
         };
