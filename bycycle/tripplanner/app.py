@@ -32,12 +32,18 @@ def make_app(settings, **extra_settings):
     app.include('bycycle.tripplanner.helpers')
     app.scan('.resources')
 
-    session = app['sqlalchemy.session_factory']()
-    q = session.query(func.ST_Envelope(func.ST_Extent(Street.geom)))
+    # Map config
+    engine = app['sqlalchemy.engine']
+    q = engine.execute(func.ST_Envelope(func.ST_Extent(Street.geom)))
     extent = q.scalar()
     extent = wkb.loads(extent, hex=True)
-    app.settings['bbox'] = json.dumps(list(extent.exterior.coords))
-    session.close()
+    map_settings =  {
+        'bbox': extent.bounds,
+        'boundary': list(extent.exterior.coords),
+        'center': extent.centroid.coords[0],
+    }
+    app.settings['map'] = map_settings
+    app.settings['map.json'] = json.dumps(map_settings)
 
     return app
 
