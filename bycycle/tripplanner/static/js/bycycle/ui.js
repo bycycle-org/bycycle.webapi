@@ -41,9 +41,15 @@ define([
         this.createEventHandlers();
         this.onResize();
 
-        this.map = new map.Map({target: 'map-pane'});
+        this.map = new map.Map({
+          target: 'map-pane',
+          view: new ol.View2D({
+            center: byCycle.mapConfig.center,
+            zoom: 4
+          })
+        });
         this.mapContextMenu = new map.MapContextMenu(this, this.map);
-        this.map.drawLine(byCycle.mapConfig.bbox);
+        this.map.drawLine(byCycle.mapConfig.boundary);
         this.map.getView().fitExtent(byCycle.mapConfig.bbox, this.map.getSize());
 
         if (typeof zoom !== 'undefined') {
