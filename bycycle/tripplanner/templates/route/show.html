@@ -15,17 +15,23 @@
     e_addr_one_line = end.address#.as_string(', ')
     s_href = request.resource_url('do_lookup', query={'q': q, 'q_id': start.id})
     e_href = request.resource_url('do_lookup', query={'q': q, 'q_id': end.id})
+    s_point = '{0.x},{0.y}'.format(start.lat_long)
+    e_point = '{0.x},{0.y}'.format(end.lat_long)
     reverse_directions_href = request.resource_url('find_route', query={
-        's': e_addr_one_line, 's_id': end.id, 's_point': '{0.x},{0.y}'.format(end.point),
-        'e': s_addr_one_line, 'e_id': start.id, 'e_point': '{0.x},{0.y}'.format(start.point),
+        's': e_addr_one_line, 's_id': end.id, 's_point': e_point,
+        'e': s_addr_one_line, 'e_id': start.id, 'e_point': s_point,
     })
     reverse_directions_onclick = (
         "byCycle.UI.reverseDirections({{"
-            "s: '{e_addr}', s_id: '{end.id}',"
-            "e: '{s_addr}', e_id: '{start.id}'"
+            "s: '{e_addr}', s_id: '{end.id}', s_point: '{e_point}', "
+            "e: '{s_addr}', e_id: '{start.id}', e_point: '{s_point}'"
         "}});"
         "return false;"
-        .format(e_addr=e_addr_one_line, s_addr=s_addr_one_line, start=start, end=end)
+        .format(
+            start=start, end=end,
+            s_addr=s_addr_one_line, e_addr=e_addr_one_line,
+            s_point=s_point, e_point=e_point
+        )
     )
     set_center_onclick = 'byCycle.UI.map.getView().setCenter([{x}, {y}]); return false;'
     tab = h.literal('&nbsp;' * 4)
