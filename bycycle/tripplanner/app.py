@@ -19,8 +19,9 @@ def make_app(settings, **extra_settings):
             'assets.js.use_built': 'bool',
         },
         required=['assets.use_built'],
+        **extra_settings
     )
-    app = Application(settings, **extra_settings)
+    app = Application(settings)
 
     use_built = settings['assets.use_built']
     settings.setdefault('assets.css.use_built', use_built)
