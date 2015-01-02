@@ -26,8 +26,8 @@ setup(
     install_requires=[
         'bycycle.core>=0.6.dev0',
         'tangled.mako>=0.1a2',
-        'tangled.sqlalchemy>=0.1a2',
-        'tangled.web>=0.1a7',
+        'tangled.sqlalchemy>=0.1a3',
+        'tangled.web>=0.1a9',
     ],
     extras_require={
         'dev': [
