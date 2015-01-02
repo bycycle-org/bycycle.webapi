@@ -10,10 +10,6 @@ require.config({
   shim: {
     bootstrap: {
       deps: ['jquery']
-    },
-    ol: {
-      deps: ['jquery'],
-      exports: 'ol'
     }
   }
 });
