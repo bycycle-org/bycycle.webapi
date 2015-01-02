@@ -10,12 +10,12 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
 
     constructor: function (opts) {
       opts = $.extend({
-        view: new ol.View2D({
+        target: 'map-pane',
+        view: new ol.View({
           projection: projection,
-          center: [0, 0],
+          center: byCycle.mapConfig.center,
           zoom: this.defaultZoom
         }),
-        renderer: ol.RendererHint.CANVAS,
         layers: [
           new ol.layer.Tile({
             source: (
