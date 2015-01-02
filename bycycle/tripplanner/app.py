@@ -31,7 +31,7 @@ def make_app(settings, **extra_settings):
     app.include(mount_static_directories)
     app.include(add_subscribers)
     app.include('bycycle.tripplanner.helpers')
-    app.scan('.resources')
+    app.load_config('.resources')
 
     # Map config
     engine = app['sqlalchemy.engine']
