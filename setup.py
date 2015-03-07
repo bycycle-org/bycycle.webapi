@@ -33,8 +33,8 @@ setup(
     extras_require={
         'dev': [
             'bycycle.core[dev]',
-            'rjsmin>=1.0.9',
-            'WebTest>=2.0.15',
+            'rjsmin>=1.0.10',
+            'WebTest>=2.0.18',
         ],
     },
     test_suite='bycycle.tripplanner',
