@@ -91,8 +91,13 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
     },
 
     onFailure: function (request) {
-      var fragment = request.responseJSON.fragment;
-      this.ui.showContent(fragment);
+      var error_msg;
+      if (request.responseJSON && request.responseJSON.fragment) {
+        error_msg = request.responseJSON.fragment;
+      } else {
+        error_msg = 'Something unexpected happened.';
+      }
+      this.ui.showContent(error_msg);
     },
 
     onComplete: function (request, status) {
