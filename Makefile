@@ -5,7 +5,7 @@
     sdist \
     test
 
-BUILDOUT := buildout3
+BUILDOUT := buildout
 VERSION := $(shell hg id -i)
 STATIC_PATH := bycycle/tripplanner/static
 
