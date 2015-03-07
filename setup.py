@@ -25,7 +25,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'bycycle.core>=0.6.dev0',
-        'tangled.mako>=0.1a2',
+        'tangled.mako>=0.1a3',
+        'Mako>=1.0.1',
         'tangled.sqlalchemy>=0.1a3',
         'tangled.web>=0.1a9',
     ],
