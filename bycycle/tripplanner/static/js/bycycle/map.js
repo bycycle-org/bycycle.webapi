@@ -1,7 +1,67 @@
 define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
 
+    function LayerSwitcher (options) {
+        var layers = options.layers,
+            elAttrs = {id: 'map-layer-switcher', title: 'Select base map'},
+            elClasses = 'ol-control ol-unselectable',
+            el = $('<div>').attr(elAttrs).addClass(elClasses),
+            select = $('<select>').addClass('form-control');
+        this.layers = layers;
+        for (var label, i = 0, len = layers.length; i < len; ++i) {
+            label = layers[i].get('label');
+            select.append($('<option>').val(label).text(label));
+        }
+        select.on('change', this.switchLayer.bind(this));
+        el.append(select);
+        ol.control.Control.call(this, {
+            element: el[0]
+        });
+    }
+
+    ol.inherits(LayerSwitcher, ol.control.Control);
+
+    LayerSwitcher.prototype.switchLayer = function (event) {
+        var layers = this.layers,
+            el = $(event.target),
+            label = el.val();
+        for (var layer, i = 0, len = layers.length; i < len; ++i) {
+            layer = layers[i];
+            layer.set('visible', layer.get('label') === label);
+        }
+    };
+
+
   var projection = ol.proj.get('EPSG:3857'),
-      llProjection = ol.proj.get('EPSG:4326');
+      llProjection = ol.proj.get('EPSG:4326'),
+      baseLayers = [
+          new ol.layer.Tile({
+              label: 'Map',
+              source: new ol.source.MapQuest({layer: 'osm'})
+          }),
+          new ol.layer.Tile({
+              label: 'Satellite',
+              visible: false,
+              source: new ol.source.MapQuest({layer: 'sat'})
+          }),
+          new ol.layer.Group({
+              label: 'Hybrid',
+              visible: false,
+              layers: [
+                  new ol.layer.Tile({
+                      source: new ol.source.MapQuest({layer: 'sat'})
+                  }),
+                  new ol.layer.Tile({
+                      source: new ol.source.MapQuest({layer: 'hyb'})
+                  })
+              ]
+          }),
+          new ol.layer.Tile({
+              label: 'OpenStreetMap',
+              visible: false,
+              source: new ol.source.OSM()
+          })
+      ];
+
 
   var Map = bycycle.inheritFrom(ol.Map, {
 
@@ -16,16 +76,10 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
           center: byCycle.mapConfig.center,
           zoom: this.defaultZoom
         }),
-        layers: [
-          new ol.layer.Tile({
-            source: (
-              bycycle.debug ?
-              new ol.source.MapQuest({layer: 'osm'}) :
-              new ol.source.OSM())
-          })
-        ],
+        layers: baseLayers,
         controls: ol.control.defaults().extend([
-          new ol.control.ScaleLine()
+            new ol.control.ScaleLine(),
+            new LayerSwitcher({layers: baseLayers})
         ])
       }, opts);
 
