@@ -26,15 +26,15 @@ setup(
     install_requires=[
         'bycycle.core>=0.6.dev0',
         'tangled.mako>=0.1a3',
-        'Mako>=1.0.1',
-        'tangled.sqlalchemy>=0.1a3',
-        'tangled.web>=0.1a9',
+        'Mako>=1.0.6',
+        'tangled.sqlalchemy>=0.1a5',
+        'tangled.web>=0.1a10',
     ],
     extras_require={
         'dev': [
             'bycycle.core[dev]',
-            'rjsmin>=1.0.10',
-            'WebTest>=2.0.18',
+            'rjsmin>=1.0.12',
+            'WebTest>=2.0.27',
         ],
     },
     test_suite='bycycle.tripplanner',
