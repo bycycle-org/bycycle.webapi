@@ -1,0 +1,2 @@
+-e ../bycycle.core[dev]
+-e .[dev]

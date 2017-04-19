@@ -1,21 +1,32 @@
-.PHONY: \
-    build \
-    clean clean-buildout clean-dist clean-pycache clean-static \
-    push-static \
-    sdist \
-    test
+venv ?= .env
 
-BUILDOUT := buildout
+init: $(venv)
+	$(venv)/bin/pip install -r requirements.txt
+
+$(venv):
+	virtualenv -p python3 $(venv)
+
+sdist: clean clean-dist
+	$(venv)/bin/python setup.py sdist
+
+test:
+	$(venv)/bin/tangled test
+
+clean: clean-dist clean-pycache
+
+clean-all: clean clean-venv
+
+clean-dist:
+	rm -frv dist
+
+clean-pycache:
+	find . -type d -name __pycache__ | xargs rm -rf
+
+clean-venv:
+	rm -frv $(venv)
+
 VERSION := $(shell hg id -i)
 STATIC_PATH := bycycle/tripplanner/static
-
-all: build
-
-build:
-	@$(BUILDOUT)
-
-bin/python:
-	@$(BUILDOUT)
 
 build/app.css: $(STATIC_PATH)/css/*.css
 	@r.js -o \
@@ -26,7 +37,7 @@ build/app.css: $(STATIC_PATH)/css/*.css
 	    optimizeCss=standard \
 	    out=build/app.min.css
 
-build/app.js: bin/python $(STATIC_PATH)/js/main.js $(STATIC_PATH)/js/bycycle/*.js
+build/app.js: $(STATIC_PATH)/js/main.js $(STATIC_PATH)/js/bycycle/*.js
 	@r.js -o \
 	    mainConfigFile=$(STATIC_PATH)/js/main.js \
 	    baseUrl=$(STATIC_PATH)/js/vendor \
@@ -34,7 +45,7 @@ build/app.js: bin/python $(STATIC_PATH)/js/main.js $(STATIC_PATH)/js/bycycle/*.j
 	    include=almond \
 	    optimize=none \
 	    out=build/app.js
-	./bin/python -m rjsmin \
+	$(venv)/bin/python -m rjsmin \
 	    <build/app.js \
 	    >build/app.min.js
 
@@ -51,24 +62,4 @@ push-static: static
 	    $(STATIC_PATH)/{favicon.ico,robots.txt} \
 	    deploy@bycycle.org:~/apps/bycycle/static
 
-test: bin/python
-	@test -f ./bin/python || $(BUILDOUT)
-	@./bin/tangled test
-
-sdist: clean build
-	@./bin/python setup.py sdist
-
-clean-buildout:
-	@rm -vrf .installed.cfg bin develop-eggs parts
-
-clean-dist:
-	@rm -vrf build dist *.egg-info
-
-clean-pycache:
-	@echo "Removing __pycache__ directories"
-	@find . -type d -name __pycache__ | xargs rm -rf
-
-clean-static:
-	@rm -vrf build/app*.{css,js}
-
-clean: clean-buildout clean-dist clean-pycache clean-static
+.PHONY = init install sdist test static push-static clean clean-all clean-dist clean-pycache clean-venv
