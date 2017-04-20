@@ -1,9 +1,0 @@
-include /etc/nginx/uwsgi_params;
-
-uwsgi_param  UWSGI_SCHEME $http_x_forwarded_proto;
-
-# This causes uWSGI to strip SCRIPT_NAME from PATH_INFO before handing
-# the request off to the application. This is really only useful if the
-# app is running under a path prefix, in which case you generally want
-# the app to receive normalized PATH_INFO.
-uwsgi_modifier1 30;
