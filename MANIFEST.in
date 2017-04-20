@@ -1,4 +1,9 @@
-include *.cfg
+include CHANGELOG
+include LICENSE
+include Makefile
+include commands.cfg
+include commands.py
+include requirements.txt
 include *.ini
 recursive-include bycycle/tripplanner/static *
 recursive-include bycycle/tripplanner/templates *

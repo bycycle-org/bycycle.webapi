@@ -1,4 +1,6 @@
-from setuptools import setup, find_packages
+from setuptools import setup, PEP420PackageFinder
+
+find_packages = PEP420PackageFinder.find
 
 
 setup(
@@ -20,9 +22,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
     ],
-    packages=find_packages(),
+    packages=find_packages(include=['bycycle', 'bycycle.tripplanner', 'bycycle.tripplanner.*']),
     include_package_data=True,
-    zip_safe=False,
     install_requires=[
         'bycycle.core>=0.6.dev0',
         'tangled.mako>=0.1a3',
