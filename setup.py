@@ -5,7 +5,7 @@ find_packages = PEP420PackageFinder.find
 
 setup(
     name='bycycle.tripplanner',
-    version='0.6.dev0',
+    version='0.6.dev1',
     description='byCycle Trip Planner',
     long_description='byCycle Bicycle Trip Planner Web Application',
     license='GPLv3',
