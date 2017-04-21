@@ -1,5 +1,4 @@
 import os
-import posixpath
 import shutil
 import tarfile
 
@@ -117,26 +116,53 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     commands.remote(config, 'chmod -R ug=rwX,o= {deploy.root}')
 
     if restart:
-        restart_uwsgi(config)
+        restart_uwsgi_app(config)
 
 
 @command(env=True)
 def push_uwsgi_config(config):
+    """Push uWSGI Upstart config.
+    
+    This usually shouldn't be necessary.
+    
+    """
     commands.local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo rsync"',
         'etc/init/uwsgi.conf', '{remote.host}:/etc/init',
     ))
 
+
+@command(env=True)
+def restart_uwsgi(config):
+    """Restart uWSGI system process.
+    
+    This usually shouldn't be necessary.
+    
+    """
+    commands.remote(config, 'restart uwsgi', sudo=True)
+
+
+@command(env=True)
+def push_uwsgi_app_config(config, restart=False):
+    """Push uWSGI app config."""
     commands.local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo -u {remote.user} rsync"',
         'etc/uwsgi/bycycle.ini', '{remote.host}:{deploy.root}',
     ))
+    if restart:
+        restart_uwsgi_app(config)
 
 
 @command(env=True)
-def restart_uwsgi(config):
+def restart_uwsgi_app(config):
+    """Restart uWSGI app process.
+    
+    The uWSGI app process needs to be restarted after deploying a new
+    version (or installing a new uWSGI app config).
+    
+    """
     commands.remote(config, '/usr/local/bin/uwsgi --reload {deploy.root}/uwsgi.pid')
 
 
@@ -195,3 +221,61 @@ def push_static(config, build=True, dry_run=False):
         '--dryrun' if dry_run else '',
         source, destination,
     ))
+
+
+# Front End -----------------------------------------------------------
+
+
+FRONT_END_COMMAND_ARGS = {
+    'env': True,
+    'config': {
+        'remote.host': 'aws.bycycle.org',
+        'defaults.runcommands.runners.commands.remote.host': 'aws.bycycle.org',
+        'defaults.runcommands.runners.commands.remote.sudo': True,
+    },
+}
+
+
+@command(**FRONT_END_COMMAND_ARGS)
+def push_nginx_config(config):
+    commands.local(config, (
+        'rsync -rltvz',
+        '--rsync-path "sudo rsync"',
+        'etc/nginx/', '{remote.host}:/etc/nginx',
+    ))
+
+
+@command(**FRONT_END_COMMAND_ARGS)
+def restart_nginx(config):
+    commands.remote(config, 'service nginx restart')
+
+
+@command(**FRONT_END_COMMAND_ARGS)
+def install_certbot(config):
+    """Install Let's Encrypt client."""
+    commands.remote(config, (
+        'curl -O https://dl.eff.org/certbot-auto &&',
+        'chmod +x certbot-auto',
+    ), cd='/usr/local/bin')
+
+
+@command(**FRONT_END_COMMAND_ARGS)
+def make_cert(config, domain_name='bycycle.org', email='letsencrypt@bycycle.org'):
+    """Create Let's encrypt certificate."""
+    commands.remote(config, 'service nginx stop')
+    commands.remote(config, (
+        '/usr/local/bin/certbot-auto --debug --non-interactive',
+        'certonly --agree-tos --standalone',
+        '--domain', domain_name,
+        '--email', email,
+    ))
+    commands.remote(config, 'service nginx start')
+
+
+@command(**FRONT_END_COMMAND_ARGS)
+def make_dhparams(config, domain_name='bycycle.org'):
+    commands.remote(config, 'mkdir -p /etc/pki/nginx')
+    commands.remote(config, (
+        f'test -f /etc/pki/nginx/{domain_name}.pem ||',
+        f'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048',
+    ), timeout=120)
