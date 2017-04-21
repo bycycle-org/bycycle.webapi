@@ -44,7 +44,7 @@ define([
         this.map = new map.Map();
         this.mapContextMenu = new map.MapContextMenu(this, this.map);
         this.map.drawLine(byCycle.mapConfig.boundary);
-        this.map.getView().fitExtent(byCycle.mapConfig.bbox, this.map.getSize());
+        this.map.getView().fit(byCycle.mapConfig.bbox);
 
         if (typeof zoom !== 'undefined') {
           this.map.getView().setZoom(zoom)
@@ -358,7 +358,7 @@ define([
       }
       delete this.results[result.id];
       $.each(result.overlays, function (i, overlay) {
-        this.map.removeOverlay(overlay);
+        overlay.source.removeFeature(overlay);
       }.bind(this));
     },
 
