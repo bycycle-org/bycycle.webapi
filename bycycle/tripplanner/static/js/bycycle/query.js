@@ -1,4 +1,4 @@
-define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
+define(['jquery', 'ol', 'bycycle', 'bycycle/result'], function ($, ol, bycycle, result) {
 
   var LookupResult = result.LookupResult,
       Route = result.Route;
@@ -244,14 +244,12 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
           route.start.oneLineAddress, route.start.id, route.start.llString);
         ui.setEnd(
           route.end.oneLineAddress, route.end.id, route.end.llString);
-        map.getView().fitExtent(route.bounds, map.getSize());
+        map.getView().fit(route.bounds);
         startMarker = map.placeLookupMarker(route.start, {
-          markerClass: 'start-marker',
-          glyphClass: 'glyphicon-play'
+          style: routeStartStyle
         });
         endMarker = map.placeLookupMarker(route.end, {
-          markerClass: 'end-marker',
-          glyphClass: 'glyphicon-stop'
+          style: routeEndStyle
         });
         line = map.drawLine(route.coordinates);
         route.addOverlay(startMarker, endMarker, line);
@@ -259,6 +257,24 @@ define(['jquery', 'bycycle', 'bycycle/result'], function ($, bycycle, result) {
     }
   });
 
+  var routeStartStyle = new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 8,
+        fill: new ol.style.Fill({
+          color: 'green'
+        })
+      })
+    }),
+    routeEndStyle = new ol.style.Style({
+      image: new ol.style.RegularShape({
+        radius: 10,
+        points: 4,
+        angle: Math.PI / 4,
+        fill: new ol.style.Fill({
+          color: 'red'
+        })
+      })
+    });
 
   return {
     LookupQuery: LookupQuery,

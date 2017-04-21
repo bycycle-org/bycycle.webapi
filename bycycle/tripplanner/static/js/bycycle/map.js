@@ -33,33 +33,65 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
 
   var projection = ol.proj.get('EPSG:3857'),
       llProjection = ol.proj.get('EPSG:4326'),
+      bingMapsKey = 'AtS9vdyCM2sH9j_UJtVnxJokqK_gT927iUVBtf62VC1AVVSqVXewaYk4Nau3Lbmp',
       baseLayers = [
           new ol.layer.Tile({
               label: 'Map',
-              source: new ol.source.MapQuest({layer: 'osm'})
+              visible: true,
+              source: new ol.source.BingMaps({
+                  key: bingMapsKey,
+                  imagerySet: 'Road'
+              })
           }),
           new ol.layer.Tile({
               label: 'Satellite',
               visible: false,
-              source: new ol.source.MapQuest({layer: 'sat'})
+              source: new ol.source.BingMaps({
+                  key: bingMapsKey,
+                  imagerySet: 'Aerial'
+              })
           }),
-          new ol.layer.Group({
+          new ol.layer.Tile({
               label: 'Hybrid',
               visible: false,
-              layers: [
-                  new ol.layer.Tile({
-                      source: new ol.source.MapQuest({layer: 'sat'})
-                  }),
-                  new ol.layer.Tile({
-                      source: new ol.source.MapQuest({layer: 'hyb'})
-                  })
-              ]
+              source: new ol.source.BingMaps({
+                  key: bingMapsKey,
+                  imagerySet: 'AerialWithLabels'
+              })
           }),
           new ol.layer.Tile({
               label: 'OpenStreetMap',
               visible: false,
               source: new ol.source.OSM()
           })
+      ],
+      routeLineOverlay = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          features: new ol.Collection()
+        }),
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            width: 4,
+            color: '#000000'
+          })
+        })
+      }),
+      markerOverlay = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          features: new ol.Collection()
+        }),
+        style: new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: 8,
+            fill: new ol.style.Fill({
+              color: 'black'
+            })
+          })
+        })
+      }),
+      overlays = [
+        routeLineOverlay,
+        markerOverlay
       ];
 
 
@@ -69,25 +101,38 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
     streetLevelZoom: 16,
 
     constructor: function (opts) {
+      var self = this;
+
       opts = $.extend({
         target: 'map-pane',
         view: new ol.View({
           projection: projection,
           center: byCycle.mapConfig.center,
-          zoom: this.defaultZoom
+          zoom: self.defaultZoom
         }),
-        layers: baseLayers,
+        layers: baseLayers.concat(overlays),
         controls: ol.control.defaults().extend([
             new ol.control.ScaleLine(),
             new LayerSwitcher({layers: baseLayers})
         ])
       }, opts);
 
-      this.superType.call(this, opts);
+      self.superType.call(self, opts);
 
       $(window).on('click', function () {
-        this.closePopups();
-      }.bind(this));
+        self.closePopups();
+      });
+
+      self.on('singleclick', function (event) {
+        self.forEachFeatureAtPixel(event.pixel, function (feature) {
+          var popup = feature.popup;
+          if (popup) {
+            self.closePopups();
+            popup.setPosition(feature.getGeometry().getCoordinates());
+            $(popup.getElement()).popover('show');
+          }
+        })
+      });
     },
 
     closePopups: function () {
@@ -99,56 +144,55 @@ define(['jquery', 'bycycle', 'ol'], function ($, bycycle, ol) {
     },
 
     placeMarker: function (coords, opts) {
-      var opts = opts || {},
-          markerClass = opts.markerClass || 'marker',
-          glyphClass = opts.glyphClass || 'glyphicon-star',
-          marker = new ol.Overlay({
-            position: coords,
-            positioning: 'center-center',
-            element: $('<div>').addClass('marker').addClass(markerClass)
-              .append($('<span>').addClass('glyphicon').addClass(glyphClass))
-          });
-      this.addOverlay(marker);
-      return marker;
+      opts = opts || {};
+
+      var point = new ol.geom.Point(coords),
+          feature = new ol.Feature({geometry: point}),
+          source = markerOverlay.getSource();
+
+      feature.source = source;
+      if (opts.style) {
+        feature.setStyle(opts.style)
+      }
+
+      source.addFeature(feature)
+      return feature;
     },
 
     placeLookupMarker: function (result, opts) {
-      var map = this,
-          marker = this.placeMarker(result.coordinates, opts),
+      var marker = this.placeMarker(result.coordinates, opts),
           popup = new ol.Overlay({
-            element: result.popup
+            element: result.popup[0],
+            autoPan: true
           });
-      marker.getElement().on('click', function () {
-        map.closePopups();
-        popup.setPosition(marker.getPosition());
-        result.popup.popover({
-          placement: 'auto top',
-          html: true,
-          content: result.popupContent
-        });
-        result.popup.popover('show');
+
+      marker.popup = popup;
+
+      result.popup.popover({
+        placement: 'auto top',
+        html: true,
+        content: result.popupContent
       });
-      this.addOverlay(marker);
+
+      result.addOverlay(marker);
       this.addOverlay(popup);
-      result.addOverlay(marker, popup);
       return marker;
     },
 
-    drawLine: function (coords, color) {
-      color = color || '#000000';
+    drawLine: function (coords, opts) {
+      opts = opts || {};
+
       var line = new ol.geom.LineString(coords),
           feature = new ol.Feature({geometry: line}),
-          overlay = new ol.FeatureOverlay({
-            features: [feature],
-            style: new ol.style.Style({
-              stroke: new ol.style.Stroke({
-                width: 4,
-                color: color
-              })
-            })
-          });
-      this.addOverlay(overlay);
-      return overlay;
+          source = routeLineOverlay.getSource();
+
+      feature.source = source;
+      if (opts.style) {
+        feature.setStyle(opts.style)
+      }
+
+      source.addFeature(feature);
+      return feature;
     }
   });
 
