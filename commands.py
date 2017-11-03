@@ -16,7 +16,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     # Setup ----------------------------------------------------------
 
     if version:
-        config = config._clone(version=version)
+        config = config.copy(version=version)
     elif config.get('version'):
         printer.info('Using default version:', config.version)
     else:
