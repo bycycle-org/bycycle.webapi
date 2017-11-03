@@ -50,7 +50,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     # Create source distributions
     dist_dir = os.path.abspath(config.build.dist_dir)
-    sdist_command = f'python setup.py sdist --dist-dir {dist_dir}'
+    sdist_command = 'python setup.py sdist --dist-dir {dist_dir}'.format_map(locals())
     commands.local(config, sdist_command, hide='stdout')
     commands.local(config, sdist_command, hide='stdout', cd='../bycycle.core')
 
@@ -58,7 +58,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     if static:
         build_static(config)
 
-    tarball_name = f'{config.version}.tar.gz'
+    tarball_name = '{config.version}.tar.gz'.format_map(locals())
     tarball_path = os.path.join(config.build.dir, tarball_name)
     with tarfile.open(tarball_path, 'w:gz') as tarball:
         tarball.add(config.build.dir, config.version)
@@ -184,8 +184,12 @@ def build_static(config):
     css_in = os.path.join(css_path, 'base.css')
     css_out = os.path.join(build_dir, 'css/app.css')
     css_out_min = os.path.join(build_dir, 'css/app.min.css')
-    commands.local(config, f'r.js -o cssIn={css_in} out={css_out}')
-    commands.local(config, f'r.js -o cssIn={css_in} out={css_out_min} optimizeCss=standard')
+
+    cmd = 'r.js -o cssIn={css_in} out={css_out}'.format_map(locals())
+    commands.local(config, cmd)
+
+    cmd = 'r.js -o cssIn={css_in} out={css_out_min} optimizeCss=standard'.format_map(locals())
+    commands.local(config, cmd)
 
     # JS
     base_url = os.path.join(js_path, 'vendor')
@@ -195,15 +199,16 @@ def build_static(config):
 
     commands.local(config, (
         'r.js -o',
-        f'mainConfigFile={js_in}',
-        f'baseUrl={base_url}',
+        'mainConfigFile={js_in}'.format(js_in=js_in),
+        'baseUrl={base_url}'.format(base_url=base_url),
         'name=../main',
         'include=almond',
         'optimize=none',
-        f'out={js_out}',
+        'out={js_out}'.format(js_out=js_out),
     ))
 
-    commands.local(config, f'{config.venv.python} -m rjsmin <{js_out} >{js_out_min}')
+    cmd = '{config.venv.python} -m rjsmin <{js_out} >{js_out_min}'.format_map(locals())
+    commands.local(config, cmd)
 
 
 @command(env=True)
@@ -276,6 +281,6 @@ def make_cert(config, domain_name='bycycle.org', email='letsencrypt@bycycle.org'
 def make_dhparams(config, domain_name='bycycle.org'):
     commands.remote(config, 'mkdir -p /etc/pki/nginx')
     commands.remote(config, (
-        f'test -f /etc/pki/nginx/{domain_name}.pem ||',
-        f'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048',
+        'test -f /etc/pki/nginx/{domain_name}.pem ||'.format_map(locals()),
+        'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048'.format_map(locals()),
     ), timeout=120)
