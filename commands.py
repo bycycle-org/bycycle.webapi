@@ -2,8 +2,8 @@ import os
 import shutil
 import tarfile
 
-from runcommands import command, commands
-from runcommands.commands import show_config
+from runcommands import command
+from runcommands.commands import local, remote, show_config
 from runcommands.util import abort, asset_path, printer
 
 from bycycle.core.commands import *
@@ -51,8 +51,8 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     # Create source distributions
     dist_dir = os.path.abspath(config.build.dist_dir)
     sdist_command = 'python setup.py sdist --dist-dir {dist_dir}'.format_map(locals())
-    commands.local(config, sdist_command, hide='stdout')
-    commands.local(config, sdist_command, hide='stdout', cd='../bycycle.core')
+    local(config, sdist_command, hide='stdout')
+    local(config, sdist_command, hide='stdout', cd='../bycycle.core')
 
     # Collect static files
     if static:
@@ -64,7 +64,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
         tarball.add(config.build.dir, config.version)
 
     if push:
-        commands.local(config, (
+        local(config, (
             'rsync -rltvz',
             '--rsync-path "sudo -u {remote.user} rsync"',
             tarball_path, '{remote.host}:{deploy.root}',
@@ -72,31 +72,31 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     # Remote ----------------------------------------------------------
 
-    deploy_dir_exists = commands.remote(config, 'test -d {deploy.dir}', abort_on_failure=False)
+    deploy_dir_exists = remote(config, 'test -d {deploy.dir}', abort_on_failure=False)
 
     if deploy_dir_exists and overwrite:
-        commands.remote(config, 'rm -r {deploy.dir}')
+        remote(config, 'rm -r {deploy.dir}')
 
-    commands.remote(config, ('tar -xvzf', tarball_name), cd='{deploy.root}')
+    remote(config, ('tar -xvzf', tarball_name), cd='{deploy.root}')
 
     # Create virtualenv for this version
-    venv_exists = commands.remote(config, 'test -d {deploy.venv}', abort_on_failure=False)
+    venv_exists = remote(config, 'test -d {deploy.venv}', abort_on_failure=False)
 
     if venv_exists and overwrite_venv:
-        commands.remote(config, 'rm -r {deploy.venv}')
+        remote(config, 'rm -r {deploy.venv}')
         venv_exists = False
 
     if not venv_exists:
-        commands.remote(config, (
+        remote(config, (
             '/usr/local/bin/virtualenv',
             '-p /usr/local/bin/python{python.version}',
             '{deploy.venv}',
         ))
-        commands.remote(config, '{deploy.pip.exe} install --upgrade pip')
+        remote(config, '{deploy.pip.exe} install --upgrade pip')
 
     # Build source
     if install:
-        commands.remote(config, (
+        remote(config, (
             '{deploy.pip.exe}',
             'install',
             '--find-links {deploy.pip.find_links}',
@@ -110,10 +110,10 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     # Make this version the current version
     if link:
-        commands.remote(config, 'ln -sfn {deploy.dir} {deploy.link}')
+        remote(config, 'ln -sfn {deploy.dir} {deploy.link}')
 
     # Set permissions
-    commands.remote(config, 'chmod -R ug=rwX,o= {deploy.root}')
+    remote(config, 'chmod -R ug=rwX,o= {deploy.root}')
 
     if restart:
         restart_uwsgi_app(config)
@@ -126,7 +126,7 @@ def push_uwsgi_config(config):
     This usually shouldn't be necessary.
     
     """
-    commands.local(config, (
+    local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo rsync"',
         'etc/init/uwsgi.conf', '{remote.host}:/etc/init',
@@ -140,13 +140,13 @@ def restart_uwsgi(config):
     This usually shouldn't be necessary.
     
     """
-    commands.remote(config, 'restart uwsgi', sudo=True)
+    remote(config, 'restart uwsgi', sudo=True)
 
 
 @command(env=True)
 def push_uwsgi_app_config(config, restart=False):
     """Push uWSGI app config."""
-    commands.local(config, (
+    local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo -u {remote.user} rsync"',
         'etc/uwsgi/bycycle.ini', '{remote.host}:{deploy.root}',
@@ -163,7 +163,7 @@ def restart_uwsgi_app(config):
     version (or installing a new uWSGI app config).
     
     """
-    commands.remote(config, '/usr/local/bin/uwsgi --reload {deploy.root}/uwsgi.pid')
+    remote(config, '/usr/local/bin/uwsgi --reload {deploy.root}/uwsgi.pid')
 
 
 @command
@@ -178,7 +178,7 @@ def build_static(config):
     css_path = os.path.join(static_path, 'css')
     js_path = os.path.join(static_path, 'js')
 
-    commands.local(config, ('rsync -rltvz', static_path + '/', build_dir))
+    local(config, ('rsync -rltvz', static_path + '/', build_dir))
 
     # CSS
     css_in = os.path.join(css_path, 'base.css')
@@ -186,10 +186,10 @@ def build_static(config):
     css_out_min = os.path.join(build_dir, 'css/app.min.css')
 
     cmd = 'r.js -o cssIn={css_in} out={css_out}'.format_map(locals())
-    commands.local(config, cmd)
+    local(config, cmd)
 
     cmd = 'r.js -o cssIn={css_in} out={css_out_min} optimizeCss=standard'.format_map(locals())
-    commands.local(config, cmd)
+    local(config, cmd)
 
     # JS
     base_url = os.path.join(js_path, 'vendor')
@@ -197,7 +197,7 @@ def build_static(config):
     js_out = os.path.join(build_dir, 'js/app.js')
     js_out_min = os.path.join(build_dir, 'js/app.min.js')
 
-    commands.local(config, (
+    local(config, (
         'r.js -o',
         'mainConfigFile={js_in}'.format(js_in=js_in),
         'baseUrl={base_url}'.format(base_url=base_url),
@@ -208,7 +208,7 @@ def build_static(config):
     ))
 
     cmd = '{config.venv.python} -m rjsmin <{js_out} >{js_out_min}'.format_map(locals())
-    commands.local(config, cmd)
+    local(config, cmd)
 
 
 @command(env=True)
@@ -220,7 +220,7 @@ def push_static(config, build=True, dry_run=False):
     source = config.build.static_dir
     destination = config.deploy.static_dir
 
-    commands.local(config, (
+    local(config, (
         'aws s3 sync',
         '--acl public-read',
         '--dryrun' if dry_run else '',
@@ -243,7 +243,7 @@ FRONT_END_COMMAND_ARGS = {
 
 @command(**FRONT_END_COMMAND_ARGS)
 def push_nginx_config(config):
-    commands.local(config, (
+    local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo rsync"',
         'etc/nginx/', '{remote.host}:/etc/nginx',
@@ -252,13 +252,13 @@ def push_nginx_config(config):
 
 @command(**FRONT_END_COMMAND_ARGS)
 def restart_nginx(config):
-    commands.remote(config, 'service nginx restart')
+    remote(config, 'service nginx restart')
 
 
 @command(**FRONT_END_COMMAND_ARGS)
 def install_certbot(config):
     """Install Let's Encrypt client."""
-    commands.remote(config, (
+    remote(config, (
         'curl -O https://dl.eff.org/certbot-auto &&',
         'chmod +x certbot-auto',
     ), cd='/usr/local/bin')
@@ -267,20 +267,20 @@ def install_certbot(config):
 @command(**FRONT_END_COMMAND_ARGS)
 def make_cert(config, domain_name='bycycle.org', email='letsencrypt@bycycle.org'):
     """Create Let's encrypt certificate."""
-    commands.remote(config, 'service nginx stop')
-    commands.remote(config, (
+    remote(config, 'service nginx stop')
+    remote(config, (
         '/usr/local/bin/certbot-auto --debug --non-interactive',
         'certonly --agree-tos --standalone',
         '--domain', domain_name,
         '--email', email,
     ))
-    commands.remote(config, 'service nginx start')
+    remote(config, 'service nginx start')
 
 
 @command(**FRONT_END_COMMAND_ARGS)
 def make_dhparams(config, domain_name='bycycle.org'):
-    commands.remote(config, 'mkdir -p /etc/pki/nginx')
-    commands.remote(config, (
+    remote(config, 'mkdir -p /etc/pki/nginx')
+    remote(config, (
         'test -f /etc/pki/nginx/{domain_name}.pem ||'.format_map(locals()),
         'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048'.format_map(locals()),
     ), timeout=120)
