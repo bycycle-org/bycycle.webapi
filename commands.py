@@ -9,9 +9,103 @@ from runcommands.util import abort, asset_path, printer
 from bycycle.core.commands import *
 
 
+# Provisioning ---------------------------------------------------------
+
+
+PROVISIONING_CONFIG = {
+    'defaults.runcommands.runners.commands.remote.run_as': None,
+    'defaults.runcommands.runners.commands.remote.sudo': True,
+    'defaults.runcommands.runners.commands.remote.timeout': 120,
+}
+
+
+@command(env=True, config=PROVISIONING_CONFIG)
+def provision(config, packages=(), set_timezone=True, upgrade=True, install=True,
+              create_user=True, create_site_dir=True, make_dhparams=True, make_cert=True):
+    commands = config.run.commands
+
+    if set_timezone:
+        remote(config, (
+            'echo "America/Los_Angeles" > /etc/timezone &&',
+            'dpkg-reconfigure -f noninteractive tzdata',
+        ))
+
+    if upgrade:
+        commands['upgrade'](config, dist_upgrade=True)
+
+    if install:
+        remote(config, (
+            'apt-get --yes install software-properties-common &&',
+            'add-apt-repository --yes ppa:certbot/certbot',
+        ))
+        remote(config, (
+            'apt-get --yes update &&',
+            'apt-get --yes install', packages,
+        ))
+
+    if create_user:
+        remote(config, (
+            'id -u bycycle ||',
+            'adduser --disabled-password --gecos byCycle bycycle',
+        ), use_pty=False)
+
+    if create_site_dir:
+        remote(config, (
+            'mkdir -p /sites &&',
+            'chgrp www-data /sites &&',
+            'mkdir -p /sites/bycycle &&',
+            'chown bycycle:www-data /sites/bycycle &&',
+            'chmod -R u=rwX,g=rX,o=rX /sites/bycycle'
+        ))
+
+    if make_dhparams:
+        commands['make-dhparams'](config)
+
+    if make_cert:
+        commands['make-cert'](config)
+
+
+@command(env=True, config=PROVISIONING_CONFIG)
+def upgrade(config, dist_upgrade=False):
+    remote(config, (
+        'apt-get --yes update &&',
+        'apt-get --yes upgrade &&',
+        'apt-get --yes dist-upgrade &&' if dist_upgrade else '',
+        'apt-get --yes autoremove &&',
+        'apt-get --yes autoclean',
+    ))
+
+
+@command(env=True, config=PROVISIONING_CONFIG)
+def make_dhparams(config, domain_name='bycycle.org'):
+    remote(config, 'mkdir -p /etc/pki/nginx', sudo=True)
+    remote(config, (
+        'test -f /etc/pki/nginx/{domain_name}.pem ||'.format_map(locals()),
+        'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048'.format_map(locals()),
+    ))
+
+
+@command(env=True, config=PROVISIONING_CONFIG)
+def make_cert(config, domain='bycycle.org', email='letsencrypt@bycycle.org'):
+    """Create Let's encrypt certificate."""
+    nginx(config, 'stop', abort_on_failure=False)
+    remote(config, (
+        'certbot',
+        'certonly',
+        '--agree-tos',
+        '--standalone',
+        '--domain', domain,
+        '--email', email,
+    ))
+    nginx(config, 'start')
+
+
+# Deployment -----------------------------------------------------------
+
+
 @command(env=True)
 def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=True, static=True,
-           push=True, link=True, restart=False):
+           push=True, link=True, restart=True):
 
     # Setup ----------------------------------------------------------
 
@@ -50,7 +144,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     # Create source distributions
     dist_dir = os.path.abspath(config.build.dist_dir)
-    sdist_command = 'python setup.py sdist --dist-dir {dist_dir}'.format_map(locals())
+    sdist_command = ('python setup.py sdist --dist-dir', dist_dir)
     local(config, sdist_command, hide='stdout')
     local(config, sdist_command, hide='stdout', cd='../bycycle.core')
 
@@ -58,7 +152,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     if static:
         build_static(config)
 
-    tarball_name = '{config.version}.tar.gz'.format_map(locals())
+    tarball_name = '{config.version}.tar.gz'.format(config=config)
     tarball_path = os.path.join(config.build.dir, tarball_name)
     with tarfile.open(tarball_path, 'w:gz') as tarball:
         tarball.add(config.build.dir, config.version)
@@ -66,7 +160,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     if push:
         local(config, (
             'rsync -rltvz',
-            '--rsync-path "sudo -u {remote.user} rsync"',
+            '--rsync-path "sudo -u bycycle rsync"',
             tarball_path, '{remote.host}:{deploy.root}',
         ))
 
@@ -88,11 +182,10 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     if not venv_exists:
         remote(config, (
-            '/usr/local/bin/virtualenv',
-            '-p /usr/local/bin/python{python.version}',
-            '{deploy.venv}',
+            'python{python.version} -m venv {deploy.venv} &&',
+            '{deploy.bin}/python -m ensurepip &&',
+            '{deploy.pip.exe} install --upgrade setuptools pip wheel'
         ))
-        remote(config, '{deploy.pip.exe} install --upgrade pip')
 
     # Build source
     if install:
@@ -103,7 +196,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
             '--cache-dir {deploy.pip.cache_dir}',
             '--disable-pip-version-check',
             'bycycle.tripplanner',
-        ))
+        ), cd='{deploy.root}', timeout=120)
 
     if static:
         push_static(config, build=False)
@@ -116,54 +209,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     remote(config, 'chmod -R ug=rwX,o= {deploy.root}')
 
     if restart:
-        restart_uwsgi_app(config)
-
-
-@command(env=True)
-def push_uwsgi_config(config):
-    """Push uWSGI Upstart config.
-    
-    This usually shouldn't be necessary.
-    
-    """
-    local(config, (
-        'rsync -rltvz',
-        '--rsync-path "sudo rsync"',
-        'etc/init/uwsgi.conf', '{remote.host}:/etc/init',
-    ))
-
-
-@command(env=True)
-def restart_uwsgi(config):
-    """Restart uWSGI system process.
-    
-    This usually shouldn't be necessary.
-    
-    """
-    remote(config, 'restart uwsgi', sudo=True)
-
-
-@command(env=True)
-def push_uwsgi_app_config(config, restart=False):
-    """Push uWSGI app config."""
-    local(config, (
-        'rsync -rltvz',
-        '--rsync-path "sudo -u {remote.user} rsync"',
-        'etc/uwsgi/bycycle.ini', '{remote.host}:{deploy.root}',
-    ))
-    if restart:
-        restart_uwsgi_app(config)
-
-
-@command(env=True)
-def restart_uwsgi_app(config):
-    """Restart uWSGI app process.
-    
-    The uWSGI app process needs to be restarted after deploying a new
-    version (or installing a new uWSGI app config).
-    
-    """
-    remote(config, '/usr/local/bin/uwsgi --reload {deploy.root}/uwsgi.pid')
+        restart_uwsgi(config)
 
 
 @command
@@ -228,20 +274,10 @@ def push_static(config, build=True, dry_run=False):
     ))
 
 
-# Front End -----------------------------------------------------------
+# Services --------------------------------------------------------
 
 
-FRONT_END_COMMAND_ARGS = {
-    'env': True,
-    'config': {
-        'remote.host': 'aws.bycycle.org',
-        'defaults.runcommands.runners.commands.remote.host': 'aws.bycycle.org',
-        'defaults.runcommands.runners.commands.remote.sudo': True,
-    },
-}
-
-
-@command(**FRONT_END_COMMAND_ARGS)
+@command(env=True)
 def push_nginx_config(config):
     local(config, (
         'rsync -rltvz',
@@ -250,37 +286,32 @@ def push_nginx_config(config):
     ))
 
 
-@command(**FRONT_END_COMMAND_ARGS)
-def restart_nginx(config):
-    remote(config, 'service nginx restart')
+@command(env=True, config={
+    'defaults.runcommands.runners.commands.remote.run_as': None,
+    'defaults.runcommands.runners.commands.remote.sudo': True,
+})
+def nginx(config, command, abort_on_failure=True):
+    remote(config, ('service nginx', command), abort_on_failure=abort_on_failure)
 
 
-@command(**FRONT_END_COMMAND_ARGS)
-def install_certbot(config):
-    """Install Let's Encrypt client."""
-    remote(config, (
-        'curl -O https://dl.eff.org/certbot-auto &&',
-        'chmod +x certbot-auto',
-    ), cd='/usr/local/bin')
-
-
-@command(**FRONT_END_COMMAND_ARGS)
-def make_cert(config, domain_name='bycycle.org', email='letsencrypt@bycycle.org'):
-    """Create Let's encrypt certificate."""
-    remote(config, 'service nginx stop')
-    remote(config, (
-        '/usr/local/bin/certbot-auto --debug --non-interactive',
-        'certonly --agree-tos --standalone',
-        '--domain', domain_name,
-        '--email', email,
+@command(env=True)
+def push_uwsgi_config(config, restart=False):
+    """Push uWSGI app config."""
+    local(config, (
+        'rsync -rltvz',
+        '--rsync-path "sudo rsync"',
+        'etc/uwsgi/apps-available/bycycle.ini', '{remote.host}:/etc/uwsgi/apps-available',
     ))
-    remote(config, 'service nginx start')
+    if restart:
+        restart_uwsgi(config)
 
 
-@command(**FRONT_END_COMMAND_ARGS)
-def make_dhparams(config, domain_name='bycycle.org'):
-    remote(config, 'mkdir -p /etc/pki/nginx')
-    remote(config, (
-        'test -f /etc/pki/nginx/{domain_name}.pem ||'.format_map(locals()),
-        'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048'.format_map(locals()),
-    ), timeout=120)
+@command(env=True)
+def restart_uwsgi(config):
+    """Restart uWSGI app process.
+
+    The uWSGI app process needs to be restarted after deploying a new
+    version (or installing a new uWSGI app config).
+
+    """
+    remote(config, '/usr/bin/uwsgi --reload /run/uwsgi/app/bycycle/pid')
