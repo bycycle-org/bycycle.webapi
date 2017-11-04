@@ -8,6 +8,9 @@ init: $(venv)
 $(venv):
 	virtualenv -p python3 $(venv)
 
+run:
+	$(venv)/bin/tangled serve -f development.ini
+
 sdist: clean clean-dist
 	$(venv)/bin/python setup.py sdist
 
@@ -30,4 +33,4 @@ clean-pycache:
 clean-venv:
 	rm -frv $(venv)
 
-.PHONY = init install sdist test clean clean-all clean-build clean-dist clean-pycache clean-venv
+.PHONY = init install run sdist test clean clean-all clean-build clean-dist clean-pycache clean-venv
