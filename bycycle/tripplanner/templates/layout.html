@@ -238,16 +238,16 @@
 <%def name="show_error()">
   <div class="errors">
     <div class="alert alert-danger">
-      ${error['description']}
+      ${error['explanation']}
     </div>
-    <% explanation = error.get('explanation') %>
-    % if explanation:
+    <% detail = error.get('detail') %>
+    % if detail:
       <div class="panel">
         <div class="panel-heading">
           <div class="panel-title">What This Means</div>
         </div>
         <div class="panel-body">
-          <p>${h.literal(explanation.strip().replace('\n', '</p><p>'))}</p>
+          <p>${h.literal(detail.strip().replace('\n', '</p><p>'))}</p>
         </div>
       </div>
     % endif

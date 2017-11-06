@@ -160,9 +160,8 @@ class ServiceResource(Resource):
             fragment: An HTML fragment representing the result
             error:
                 title: A string
-                description: A string
                 explanation: A string
-                errors: A list of strings
+                detail: A string
 
         """
         result = data.get('result')
@@ -197,14 +196,10 @@ class ServiceResource(Resource):
         The resulting dict is used in both templates and JSON responses.
 
         """
-        description = (
-            getattr(exc, 'description', None) or
-            getattr(exc, 'detail', None) or
-            'Something unexpected happened')
         return {
             'title': exc.title,
-            'description': description,
             'explanation': exc.explanation,
+            'detail': exc.detail,
         }
 
     def _exc_handler(self, exc):
