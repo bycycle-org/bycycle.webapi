@@ -120,10 +120,10 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     build_dir = config.build.dir
 
-    if overwrite and os.path.exists(config.build.dir):
-        shutil.rmtree(config.build.dir)
+    if overwrite and os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
 
-    os.makedirs(config.build.dir, exist_ok=True)
+    os.makedirs(build_dir, exist_ok=True)
 
     # Add config files
     copy_file(config, 'application.wsgi', build_dir, template=True)
@@ -143,9 +143,9 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
         build_static(config)
 
     tarball_name = '{config.version}.tar.gz'.format(config=config)
-    tarball_path = os.path.join(config.build.dir, tarball_name)
+    tarball_path = os.path.join(build_dir, tarball_name)
     with tarfile.open(tarball_path, 'w:gz') as tarball:
-        tarball.add(config.build.dir, config.version)
+        tarball.add(build_dir, config.version)
 
     if push:
         local(config, (
