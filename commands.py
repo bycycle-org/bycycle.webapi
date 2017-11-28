@@ -3,7 +3,7 @@ import shutil
 import tarfile
 
 from runcommands import command
-from runcommands.commands import local, remote, show_config
+from runcommands.commands import copy_file, local, remote, show_config
 from runcommands.util import abort, asset_path, printer
 
 from bycycle.core.commands import *
@@ -118,29 +118,19 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     # Local ----------------------------------------------------------
 
+    build_dir = config.build.dir
+
     if overwrite and os.path.exists(config.build.dir):
         shutil.rmtree(config.build.dir)
 
     os.makedirs(config.build.dir, exist_ok=True)
 
-    def copy(source, destination=config.build.dir, template=False):
-        source = source.format_map(config)
-        destination = destination.format_map(config)
-        if os.path.isdir(destination):
-            destination = os.path.join(destination, os.path.basename(source))
-        with open(source) as source:
-            contents = source.read()
-        if template:
-            contents = contents.format_map(config)
-        with open(destination, 'w') as destination:
-            destination.write(contents)
-
     # Add config files
-    copy('application.wsgi', template=True)
-    copy('base.ini')
-    copy('{env}.ini', template=True)
-    copy('commands.py')
-    copy('commands.cfg')
+    copy_file(config, 'application.wsgi', build_dir, template=True)
+    copy_file(config, 'base.ini', build_dir)
+    copy_file(config, '{env}.ini', build_dir, template=True)
+    copy_file(config, 'commands.py', build_dir)
+    copy_file(config, 'commands.cfg', build_dir)
 
     # Create source distributions
     dist_dir = os.path.abspath(config.build.dist_dir)
