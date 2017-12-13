@@ -21,21 +21,21 @@ class Directions(ServiceResource):
                 result = results[0]
                 start = result.start
                 end = result.end
-                addrs = [start.address, end.address]
+                addrs = [start.name, end.name]
                 ids = [start.id, end.id]
             else:
                 start = results[0].start
                 end = results[0].end
                 last_end = results[-1].end
-                addrs = [g.start.address for g in results]
-                addrs.append(last_end.address)
+                addrs = [g.start.name for g in results]
+                addrs.append(last_end.name)
                 ids = [g.start.id for g in results]
                 ids.append(last_end.id)
 
             data.update({
-                'from': start.address,
+                'from': start.name,
                 'from_id': start.id,
-                'to': end.address,
+                'to': end.name,
                 'to_id': end.id,
             })
 
@@ -56,9 +56,9 @@ class Directions(ServiceResource):
             if start and end:
                 waypoints = [start, end]
             elif start:
-                raise InputError('Please enter a to address.')
+                raise InputError('Please enter a starting point.')
             elif end:
-                raise InputError('Please enter a from address.')
+                raise InputError('Please enter a destination.')
             else:
                 raise InputError('Please enter something to search for.')
         return waypoints
