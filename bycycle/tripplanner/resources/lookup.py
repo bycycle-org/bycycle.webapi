@@ -1,5 +1,5 @@
 from bycycle.core.exc import InputError
-from bycycle.core.service.lookup import LookupService
+from bycycle.core.service.lookup import LookupService, MultipleLookupResultsError
 
 from .service import ServiceResource
 
@@ -33,3 +33,9 @@ class Lookup(ServiceResource):
         if point:
             options['point_hint'] = point
         return options
+
+    def _exc_handler(self, exc):
+        if isinstance(exc, MultipleLookupResultsError):
+            self.request.response.status_int = 300
+            return {'results': exc.choices}
+        return exc
