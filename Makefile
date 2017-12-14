@@ -14,9 +14,6 @@ run:
 sdist: clean clean-dist
 	$(venv)/bin/python setup.py sdist
 
-test:
-	$(venv)/bin/tangled test
-
 clean: clean-dist clean-pycache
 
 clean-all: clean-build clean-dist clean-pycache clean-venv
@@ -33,4 +30,4 @@ clean-pycache:
 clean-venv:
 	rm -frv $(venv)
 
-.PHONY = init install run sdist test clean clean-all clean-build clean-dist clean-pycache clean-venv
+.PHONY = init install run sdist clean clean-all clean-build clean-dist clean-pycache clean-venv
