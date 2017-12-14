@@ -4,10 +4,10 @@ find_packages = PEP420PackageFinder.find
 
 
 setup(
-    name='bycycle.tripplanner',
+    name='bycycle.webapi',
     version='0.6.dev5',
-    description='byCycle Trip Planner',
-    long_description='byCycle Bicycle Trip Planner Web Application',
+    description='byCycle Web API',
+    long_description='byCycle Web API',
     license='GPLv3',
     author='Wyatt L Baldwin, byCycle.org',
     author_email='wyatt@bycycle.org',
@@ -22,7 +22,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
     ],
-    packages=find_packages(include=['bycycle', 'bycycle.tripplanner', 'bycycle.tripplanner.*']),
+    packages=find_packages(include=['bycycle', 'bycycle.webapi', 'bycycle.webapi.*']),
     include_package_data=True,
     install_requires=[
         'bycycle.core>=0.6.dev5',
@@ -37,5 +37,5 @@ setup(
             'WebTest>=2.0.29',
         ],
     },
-    test_suite='bycycle.tripplanner',
+    test_suite='bycycle.webapi',
 )

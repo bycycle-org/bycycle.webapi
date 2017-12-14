@@ -181,7 +181,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
             '--find-links {deploy.pip.find_links}',
             '--cache-dir {deploy.pip.cache_dir}',
             '--disable-pip-version-check',
-            'bycycle.tripplanner',
+            '{package}',
         ), cd='{deploy.root}', timeout=120)
 
     # Make this version the current version

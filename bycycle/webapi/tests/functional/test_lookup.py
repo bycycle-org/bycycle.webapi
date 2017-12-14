@@ -1,4 +1,4 @@
-from bycycle.tripplanner.tests.functional import BaseTestCase
+from bycycle.webapi.tests.functional import BaseTestCase
 
 
 class TestLookup(BaseTestCase):
