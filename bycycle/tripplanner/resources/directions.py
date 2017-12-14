@@ -2,7 +2,7 @@ import re
 
 from bycycle.core.exc import InputError
 from bycycle.core.service import RouteService
-from bycycle.core.service.route import MultipleLookupResultsError
+from bycycle.core.service.route import MultipleRouteLookupResultsError
 
 from .service import ServiceResource
 
@@ -83,7 +83,7 @@ class Directions(ServiceResource):
         return options
 
     def _exc_handler(self, exc):
-        if isinstance(exc, MultipleLookupResultsError):
+        if isinstance(exc, MultipleRouteLookupResultsError):
             self.request.response.status_int = 300
             return {'results': exc.choices}
         return exc
