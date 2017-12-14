@@ -34,7 +34,6 @@ setup(
     extras_require={
         'dev': [
             'bycycle.core[dev]',
-            'rjsmin>=1.0.12',
             'WebTest>=2.0.29',
         ],
     },

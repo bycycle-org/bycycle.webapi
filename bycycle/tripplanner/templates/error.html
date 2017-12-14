@@ -1,2 +1,7 @@
-<%inherit file="/layout.html"/>
-${self.show_error()}
+<h1>${error['title']}</h1>
+
+<h2>${error['explanation']}</h2>
+
+% if error['detail']:
+    <p>${error['detail']}</p>
+% endif

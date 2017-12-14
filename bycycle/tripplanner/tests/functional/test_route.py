@@ -5,7 +5,7 @@ class TestRoutes(BaseTestCase):
 
     def test_query(self):
         self.app.get(
-            '/route/find',
+            '/route',
             params={
                 'q': '633 n alberta to 4807 se kelly, portland',
             }
@@ -13,7 +13,7 @@ class TestRoutes(BaseTestCase):
 
     def test_query_json(self):
         self.app.get(
-            '/route/find',
+            '/route',
             headers={'accept': 'application/json'},
             params={
                 's': '633 n alberta',
@@ -23,7 +23,7 @@ class TestRoutes(BaseTestCase):
 
     def test_query_300(self):
         self.app.get(
-            '/route/find',
+            '/route',
             params={
                 'q': '633 alberta to 4807 se kelly',
             },
@@ -32,7 +32,7 @@ class TestRoutes(BaseTestCase):
 
     def test_query_address_not_found(self):
         self.app.get(
-            '/route/find',
+            '/route',
             params={
                 's': '100 N Fake St',
                 'e': '200 S Wut Ave',
@@ -40,4 +40,4 @@ class TestRoutes(BaseTestCase):
             status=404)
 
     def test_query_missing_q(self):
-        self.app.get('/route/find', status=400)
+        self.app.get('/route', status=400)

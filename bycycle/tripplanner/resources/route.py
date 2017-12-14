@@ -8,30 +8,29 @@ from .service import ServiceResource
 
 
 class Route(ServiceResource):
-    """View for interfacing with byCycle Route service."""
 
     service_class = RouteService
 
-    def _find(self):
-        data = super()._find()
-        result = data['result']
+    def GET(self):
+        data = super()._GET()
         status = self.request.response.status_int
         if status == 200:
-            sep = ', '
+            results = data['results']
 
-            if isinstance(result, list):
-                start = result[0].start
-                end = result[0].end
-                last_end = result[-1].end
-                addrs = [g.start.address for g in result]
-                addrs.append(last_end.address)
-                ids = [g.start.id for g in result]
-                ids.append(last_end.id)
-            else:
+            if len(results) == 1:
+                result = results[0]
                 start = result.start
                 end = result.end
                 addrs = [start.address, end.address]
                 ids = [start.id, end.id]
+            else:
+                start = results[0].start
+                end = results[0].end
+                last_end = results[-1].end
+                addrs = [g.start.address for g in results]
+                addrs.append(last_end.address)
+                ids = [g.start.id for g in results]
+                ids.append(last_end.id)
 
             data.update({
                 's': start.address,#.as_string(sep),
@@ -87,5 +86,5 @@ class Route(ServiceResource):
     def _exc_handler(self, exc):
         if isinstance(exc, MultipleLookupResultsError):
             self.request.response.status_int = 300
-            return {'result': exc.choices}
+            return {'results': exc.choices}
         return exc

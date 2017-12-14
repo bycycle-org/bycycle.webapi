@@ -5,15 +5,14 @@ class TestLookup(BaseTestCase):
 
     def test_query(self):
         self.app.get(
-            '/lookup/find',
+            '/lookup',
             params={
                 'q': '633 n alberta',
             }
         )
 
     def test_query_json(self):
-        self.app.get(
-            '/lookup/find',
+        self.app.get('/lookup',
             headers={
                 'accept': 'application/json',
             },
@@ -24,7 +23,7 @@ class TestLookup(BaseTestCase):
 
     def test_query_300(self):
         self.app.get(
-            '/lookup/find',
+            '/lookup',
             params={
                 'q': '633 alberta',
             }
@@ -32,11 +31,11 @@ class TestLookup(BaseTestCase):
 
     def test_query_404(self):
         self.app.get(
-            '/lookup/find',
+            '/lookup',
             params={
                 'q': '100 N Fake St',
             },
             status=404)
 
     def test_query_missing_q(self):
-        self.app.get('/lookup/find', status=400)
+        self.app.get('/lookup', status=400)

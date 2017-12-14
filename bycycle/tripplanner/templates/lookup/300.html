@@ -1,9 +1,0 @@
-<%inherit file="/layout.html"/>
-
-<%namespace file="result.html" import="show_result" />
-
-<h3>Select a location</h3>
-
-% for i, r in enumerate(result):
-  ${show_result(r, hide_links=True)}
-% endfor

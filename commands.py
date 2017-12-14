@@ -104,8 +104,8 @@ def make_cert(config, domain='bycycle.org', email='letsencrypt@bycycle.org'):
 
 
 @command(env=True)
-def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=True, static=True,
-           push=True, link=True, restart=True):
+def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=True, push=True,
+           link=True, restart=True):
 
     # Setup ----------------------------------------------------------
 
@@ -137,10 +137,6 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     sdist_command = ('python setup.py sdist --dist-dir', dist_dir)
     local(config, sdist_command, hide='stdout')
     local(config, sdist_command, hide='stdout', cd='../bycycle.core')
-
-    # Collect static files
-    if static:
-        build_static(config)
 
     tarball_name = '{config.version}.tar.gz'.format(config=config)
     tarball_path = os.path.join(build_dir, tarball_name)
@@ -188,9 +184,6 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
             'bycycle.tripplanner',
         ), cd='{deploy.root}', timeout=120)
 
-    if static:
-        push_static(config, build=False)
-
     # Make this version the current version
     if link:
         remote(config, 'ln -sfn {deploy.dir} {deploy.link}')
@@ -200,68 +193,6 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
     if restart:
         restart_uwsgi(config)
-
-
-@command
-def build_static(config):
-    build_dir = config.build.static_dir
-
-    if os.path.exists(build_dir):
-        shutil.rmtree(build_dir)
-    os.makedirs(build_dir)
-
-    static_path = asset_path('bycycle.tripplanner:static')
-    css_path = os.path.join(static_path, 'css')
-    js_path = os.path.join(static_path, 'js')
-
-    local(config, ('rsync -rltvz', static_path + '/', build_dir))
-
-    # CSS
-    css_in = os.path.join(css_path, 'base.css')
-    css_out = os.path.join(build_dir, 'css/app.css')
-    css_out_min = os.path.join(build_dir, 'css/app.min.css')
-
-    cmd = 'r.js -o cssIn={css_in} out={css_out}'.format_map(locals())
-    local(config, cmd)
-
-    cmd = 'r.js -o cssIn={css_in} out={css_out_min} optimizeCss=standard'.format_map(locals())
-    local(config, cmd)
-
-    # JS
-    base_url = os.path.join(js_path, 'vendor')
-    js_in = os.path.join(js_path, 'main.js')
-    js_out = os.path.join(build_dir, 'js/app.js')
-    js_out_min = os.path.join(build_dir, 'js/app.min.js')
-
-    local(config, (
-        'r.js -o',
-        'mainConfigFile={js_in}'.format(js_in=js_in),
-        'baseUrl={base_url}'.format(base_url=base_url),
-        'name=../main',
-        'include=almond',
-        'optimize=none',
-        'out={js_out}'.format(js_out=js_out),
-    ))
-
-    cmd = '{config.venv.python} -m rjsmin <{js_out} >{js_out_min}'.format_map(locals())
-    local(config, cmd)
-
-
-@command(env=True)
-def push_static(config, build=True, dry_run=False):
-    """Copy static files to S3 bucket."""
-    if build:
-        build_static(config)
-
-    source = config.build.static_dir
-    destination = config.deploy.static_dir
-
-    local(config, (
-        'aws s3 sync',
-        '--acl public-read',
-        '--dryrun' if dry_run else '',
-        source, destination,
-    ))
 
 
 # Services --------------------------------------------------------
