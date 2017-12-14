@@ -11,7 +11,7 @@ setup(
     license='GPLv3',
     author='Wyatt L Baldwin, byCycle.org',
     author_email='wyatt@bycycle.org',
-    keywords='bicycle bike cycle trip planner route finder',
+    keywords='bicycle bike cycle trip planner route finder directions',
     url='http://bycycle.org/',
     download_url='https://bitbucket.org/bycycle/bycycle.core',
     classifiers=[

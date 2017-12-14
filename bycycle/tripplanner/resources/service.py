@@ -10,7 +10,7 @@ from bycycle.core.model import Entity
 log = logging.getLogger(__name__)
 
 
-ROUTE_RE = re.compile(r'.+\s+to\s+.+')
+DIRECTIONS_RE = re.compile(r'.+\s+to\s+.+')
 
 
 class ServiceResource(Resource):
@@ -23,17 +23,17 @@ class ServiceResource(Resource):
         if not params:
             return {}
 
-        q = params.get('q', '').strip()
-        s = params.get('s', '').strip()
-        e = params.get('e', '').strip()
+        term = params.get('term', '').strip()
+        from_ = params.get('from', '').strip()
+        to = params.get('to', '').strip()
 
-        if q:
-            if ROUTE_RE.match(q):
-                resource = Route
+        if term:
+            if DIRECTIONS_RE.match(term):
+                resource = Directions
             else:
                 resource = Lookup
-        elif s or e:
-            resource = Route
+        elif from_ or to:
+            resource = Directions
         else:
             self.request.abort(400)
 
@@ -63,7 +63,7 @@ class ServiceResource(Resource):
             data['error'] = self._exc_as_dict(exc)
             data.update(extra_data)
         else:
-            data['q'] = query
+            data['term'] = query
             data['results'] = [result] if isinstance(result, Entity) else result
         return data
 
@@ -73,10 +73,10 @@ class ServiceResource(Resource):
         Parse request data for query. If bad or missing data is found,
         an InputError may be raised.
 
-        The `q` query param is used as-is by default.
+        The `term` query param is used as-is by default.
 
         """
-        return self.request.params.get('q', '').strip()
+        return self.request.params.get('term', '').strip()
 
     def _get_options(self):
         """Return keyword args for service.
@@ -85,7 +85,7 @@ class ServiceResource(Resource):
         service-specific options (i.e., the **kwargs for the service).
         Like `_get_query()`, this may raise an `InputError`.
 
-        E.g., for a route query: `{'tmode': 'bike', 'pref': 'safer'}`.
+        E.g., for a directions query: `{'tmode': 'bike', 'pref': 'safer'}`.
 
         """
         return {}
@@ -124,4 +124,4 @@ class ServiceResource(Resource):
 
 # XXX: Avoid circular import
 from .lookup import Lookup
-from .route import Route
+from .directions import Directions

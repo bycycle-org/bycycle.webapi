@@ -7,7 +7,7 @@ from bycycle.core.service.route import MultipleLookupResultsError
 from .service import ServiceResource
 
 
-class Route(ServiceResource):
+class Directions(ServiceResource):
 
     service_class = RouteService
 
@@ -33,54 +33,53 @@ class Route(ServiceResource):
                 ids.append(last_end.id)
 
             data.update({
-                's': start.address,#.as_string(sep),
-                's_id': start.id,
-                'e': end.address,#.as_string(sep),
-                'e_id': end.id,
+                'from': start.address,
+                'from_id': start.id,
+                'to': end.address,
+                'to_id': end.id,
             })
 
-            data['q'] = ' to '.join(a for a in addrs if a)
-            data['q_id'] = ';'.join(ids)
+            data['term'] = ' to '.join(a for a in addrs if a)
+            data['id'] = ';'.join(ids)
         return data
 
     def _get_query(self):
         params = self.request.params
-        q = params.get('q', '')
-        if q:
-            route_list = re.split('\s+to\s+', q, re.I)
-            if len(route_list) < 2:
-                raise InputError("That doesn't look like a route.")
+        term = params.get('term', '').strip()
+        if term:
+            waypoints = re.split('\s+to\s+', term, re.I)
+            if len(waypoints) < 2:
+                raise InputError("That doesn't look like a valid directions request.")
         else:
-            s = params.get('s', '')
-            e = params.get('e', '')
-            if s and e:
-                route_list = [s, e]
-            elif s or e:
-                if not s:
-                    raise InputError('Please enter a start address.')
-                else:
-                    raise InputError('Please enter an end address.')
+            start = params.get('from', '').strip()
+            end = params.get('to', '').strip()
+            if start and end:
+                waypoints = [start, end]
+            elif start:
+                raise InputError('Please enter a to address.')
+            elif end:
+                raise InputError('Please enter a from address.')
             else:
                 raise InputError('Please enter something to search for.')
-        return route_list
+        return waypoints
 
     def _get_options(self):
         params = self.request.params
         options = {}
 
-        if params.get('q_id'):
-            options['ids'] = params['q_id'].split(';')
+        if params.get('id'):
+            options['ids'] = params['id'].split(';')
         else:
-            options['ids'] = [params.get('s_id'), params.get('e_id')]
+            options['ids'] = [params.get('from_id'), params.get('to_id')]
 
-        if params.get('q_point'):
-            options['points'] = params['q_point'].split(';')
+        if params.get('point'):
+            options['points'] = params['point'].split(';')
         else:
-            options['points'] = [params.get('s_point'), params.get('e_point')]
+            options['points'] = [params.get('from_point'), params.get('to_point')]
 
-        for p in ('pref', 'mode'):
-            if p in params:
-                options[p] = self.request.params[p]
+        for name in ('pref', 'mode'):
+            if name in params:
+                options[name] = self.request.params[name]
         return options
 
     def _exc_handler(self, exc):

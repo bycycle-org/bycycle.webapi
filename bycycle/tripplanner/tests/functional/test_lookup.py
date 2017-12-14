@@ -7,7 +7,7 @@ class TestLookup(BaseTestCase):
         self.app.get(
             '/lookup',
             params={
-                'q': '633 n alberta',
+                'term': '633 n alberta',
             }
         )
 
@@ -17,7 +17,7 @@ class TestLookup(BaseTestCase):
                 'accept': 'application/json',
             },
             params={
-                'q': '633 n alberta',
+                'term': '633 n alberta',
             }
         )
 
@@ -25,7 +25,7 @@ class TestLookup(BaseTestCase):
         self.app.get(
             '/lookup',
             params={
-                'q': '633 alberta',
+                'term': '633 alberta',
             }
         )
 
@@ -33,9 +33,9 @@ class TestLookup(BaseTestCase):
         self.app.get(
             '/lookup',
             params={
-                'q': '100 N Fake St',
+                'term': '100 N Fake St',
             },
             status=404)
 
-    def test_query_missing_q(self):
+    def test_query_missing_term(self):
         self.app.get('/lookup', status=400)

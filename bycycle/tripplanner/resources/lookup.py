@@ -26,10 +26,10 @@ class Lookup(ServiceResource):
 
     def _get_options(self):
         options = {}
-        term_id = self.request.params.get('term_id')
-        if term_id:
-            options['id_hint'] = term_id
-        q_point = self.request.params.get('q_point')
-        if q_point:
-            options['point_hint'] = q_point
+        id_ = self.request.params.get('id')
+        if id_:
+            options['id_hint'] = id_
+        point = self.request.params.get('point')
+        if point:
+            options['point_hint'] = point
         return options
