@@ -5,7 +5,7 @@ find_packages = PEP420PackageFinder.find
 
 setup(
     name='bycycle.tripplanner',
-    version='0.6.dev1',
+    version='0.6.dev5',
     description='byCycle Trip Planner',
     long_description='byCycle Bicycle Trip Planner Web Application',
     license='GPLv3',
@@ -25,7 +25,7 @@ setup(
     packages=find_packages(include=['bycycle', 'bycycle.tripplanner', 'bycycle.tripplanner.*']),
     include_package_data=True,
     install_requires=[
-        'bycycle.core>=0.6.dev0',
+        'bycycle.core>=0.6.dev5',
         'Mako>=1.0.7',
         'tangled.mako>=0.1a3',
         'tangled.sqlalchemy>=0.1a5',
@@ -33,7 +33,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'bycycle.core[dev]',
+            'bycycle.core[dev]>=0.6.dev5',
             'WebTest>=2.0.29',
         ],
     },
