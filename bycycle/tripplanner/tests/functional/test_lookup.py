@@ -7,17 +7,7 @@ class TestLookup(BaseTestCase):
         self.app.get(
             '/lookup',
             params={
-                'term': '633 n alberta',
-            }
-        )
-
-    def test_query_json(self):
-        self.app.get('/lookup',
-            headers={
-                'accept': 'application/json',
-            },
-            params={
-                'term': '633 n alberta',
+                'term': 'NE 9th & Holladay',
             }
         )
 
@@ -25,7 +15,7 @@ class TestLookup(BaseTestCase):
         self.app.get(
             '/lookup',
             params={
-                'term': '633 alberta',
+                'term': '6th & Burnside',
             }
         )
 

@@ -7,17 +7,7 @@ class TestDirections(BaseTestCase):
         self.app.get(
             '/directions',
             params={
-                'term': '633 n alberta to 4807 se kelly, portland',
-            }
-        )
-
-    def test_query_json(self):
-        self.app.get(
-            '/directions',
-            headers={'accept': 'application/json'},
-            params={
-                'from': '633 n alberta',
-                'to': '4807 se kelly, portland',
+                'term': 'NE 9th & Holladay to NE 15th & Fremont',
             }
         )
 
@@ -25,7 +15,8 @@ class TestDirections(BaseTestCase):
         self.app.get(
             '/directions',
             params={
-                'term': '633 alberta to 4807 se kelly',
+                'from': 'NE 9th & Holladay',
+                'to': '6th & Burnside',
             },
             status=300
         )
