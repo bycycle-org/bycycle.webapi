@@ -85,8 +85,6 @@ class ServiceResource(Resource):
         service-specific options (i.e., the **kwargs for the service).
         Like `_get_query()`, this may raise an `InputError`.
 
-        E.g., for a directions query: `{'tmode': 'bike', 'pref': 'safer'}`.
-
         """
         return {}
 
