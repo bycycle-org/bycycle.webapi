@@ -26,9 +26,6 @@ class Lookup(ServiceResource):
 
     def _get_options(self):
         options = {}
-        id_ = self.request.params.get('id')
-        if id_:
-            options['id_hint'] = id_
         point = self.request.params.get('point')
         if point:
             options['point_hint'] = point

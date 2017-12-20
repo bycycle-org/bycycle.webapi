@@ -22,24 +22,18 @@ class Directions(ServiceResource):
                 start = result.start
                 end = result.end
                 names = [start.name, end.name]
-                ids = [start.id, end.id]
             else:
                 start = results[0].start
                 end = results[-1].end
                 names = [result.start.name for result in results]
                 names.append(end.name)
-                ids = [result.start.id for result in results]
-                ids.append(end.id)
 
             data.update({
                 'from': start.name,
-                'from_id': start.id,
                 'to': end.name,
-                'to_id': end.id,
             })
 
             data['name'] = ' to '.join(name for name in names if name)
-            data['id'] = ';'.join(ids)
         return data
 
     def _get_query(self):
@@ -66,16 +60,7 @@ class Directions(ServiceResource):
         params = self.request.params
         options = {}
 
-        id = params.get('id', '').strip()
         point = params.get('point', '').strip()
-
-        if id:
-            ids = id.split(';')
-            ids.extend([''] * (2 - len(ids)))
-        else:
-            from_id = params.get('from_id', '').strip()
-            to_id = params.get('to_id', '').strip()
-            ids = from_id, to_id
 
         if point:
             points = point.split(';')
@@ -85,7 +70,6 @@ class Directions(ServiceResource):
             to_point = params.get('to_point', '').strip()
             points = (from_point, to_point)
 
-        options['ids'] = ids
         options['points'] = points
 
         return options
