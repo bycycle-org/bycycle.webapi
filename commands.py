@@ -25,10 +25,7 @@ def provision(config, packages=(), set_timezone=True, upgrade=True, install=True
     commands = config.run.commands
 
     if set_timezone:
-        remote(config, (
-            'echo "America/Los_Angeles" > /etc/timezone &&',
-            'dpkg-reconfigure -f noninteractive tzdata',
-        ))
+        remote(config, 'timedatectl set-timezone America/Los_Angeles')
 
     if upgrade:
         commands['upgrade'](config, dist_upgrade=True)
@@ -45,17 +42,17 @@ def provision(config, packages=(), set_timezone=True, upgrade=True, install=True
 
     if create_user:
         remote(config, (
-            'id -u bycycle ||',
-            'adduser --disabled-password --gecos byCycle bycycle',
+            'id -u {deploy.user} ||',
+            'adduser --disabled-password --gecos {deploy.user} {deploy.user}',
         ), use_pty=False)
 
     if create_site_dir:
         remote(config, (
             'mkdir -p /sites &&',
             'chgrp www-data /sites &&',
-            'mkdir -p /sites/bycycle &&',
-            'chown bycycle:www-data /sites/bycycle &&',
-            'chmod -R u=rwX,g=rX,o=rX /sites/bycycle'
+            'mkdir -p {deploy.root} &&',
+            'chown {deploy.user}:www-data {deploy.root} &&',
+            'chmod -R u=rwX,g=rX,o=rX {deploy.root}',
         ))
 
     if make_dhparams:
@@ -77,7 +74,7 @@ def upgrade(config, dist_upgrade=False):
 
 
 @command(env=True, config=PROVISIONING_CONFIG)
-def make_dhparams(config, domain_name='bycycle.org'):
+def make_dhparams(config, domain_name='{deploy.domain_name}'):
     remote(config, 'mkdir -p /etc/pki/nginx', sudo=True)
     remote(config, (
         'test -f /etc/pki/nginx/{domain_name}.pem ||'.format_map(locals()),
@@ -86,7 +83,7 @@ def make_dhparams(config, domain_name='bycycle.org'):
 
 
 @command(env=True, config=PROVISIONING_CONFIG)
-def make_cert(config, domain='bycycle.org', email='letsencrypt@bycycle.org'):
+def make_cert(config, domain='{deploy.domain_name}', email='letsencrypt@{deploy.domain_name}'):
     """Create Let's encrypt certificate."""
     nginx(config, 'stop', abort_on_failure=False)
     remote(config, (
@@ -105,7 +102,7 @@ def make_cert(config, domain='bycycle.org', email='letsencrypt@bycycle.org'):
 
 @command(env=True)
 def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=True, push=True,
-           link=True, restart=True):
+           link=True, reload=True):
 
     # Setup ----------------------------------------------------------
 
@@ -136,7 +133,8 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     dist_dir = os.path.abspath(config.build.dist_dir)
     sdist_command = ('python setup.py sdist --dist-dir', dist_dir)
     local(config, sdist_command, hide='stdout')
-    local(config, sdist_command, hide='stdout', cd='../bycycle.core')
+    for path in config.deploy.sdists:
+        local(config, sdist_command, hide='stdout', cd=path)
 
     tarball_name = '{config.version}.tar.gz'.format(config=config)
     tarball_path = os.path.join(build_dir, tarball_name)
@@ -146,7 +144,7 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     if push:
         local(config, (
             'rsync -rltvz',
-            '--rsync-path "sudo -u bycycle rsync"',
+            '--rsync-path "sudo -u {deploy.user} rsync"',
             tarball_path, '{remote.host}:{deploy.root}',
         ))
 
@@ -169,8 +167,9 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     if not venv_exists:
         remote(config, (
             'python{python.version} -m venv {deploy.venv} &&',
-            '{deploy.bin}/python -m ensurepip &&',
-            '{deploy.pip.exe} install --upgrade setuptools pip wheel'
+            '{deploy.pip.exe} install',
+            '--cache-dir {deploy.pip.cache_dir}',
+            '--upgrade setuptools pip wheel',
         ))
 
     # Build source
@@ -191,11 +190,19 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
     # Set permissions
     remote(config, 'chmod -R ug=rwX,o= {deploy.root}')
 
-    if restart:
-        restart_uwsgi(config)
+    if reload:
+        reload_uwsgi(config)
 
 
 # Services --------------------------------------------------------
+
+
+@command(env=True, config={
+    'defaults.runcommands.runners.commands.remote.run_as': None,
+    'defaults.runcommands.runners.commands.remote.sudo': True,
+})
+def nginx(config, command, abort_on_failure=True):
+    remote(config, ('service nginx', command), abort_on_failure=abort_on_failure)
 
 
 @command(env=True)
@@ -211,28 +218,31 @@ def push_nginx_config(config):
     'defaults.runcommands.runners.commands.remote.run_as': None,
     'defaults.runcommands.runners.commands.remote.sudo': True,
 })
-def nginx(config, command, abort_on_failure=True):
-    remote(config, ('service nginx', command), abort_on_failure=abort_on_failure)
+def uwsgi(config, command, abort_on_failure=True):
+    remote(config, ('service uwsgi', command), abort_on_failure=abort_on_failure)
 
 
 @command(env=True)
-def push_uwsgi_config(config, restart=False):
+def push_uwsgi_config(config):
     """Push uWSGI app config."""
     local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo rsync"',
-        'etc/uwsgi/apps-available/bycycle.ini', '{remote.host}:/etc/uwsgi/apps-available',
+        config.deploy.uwsgi.config_file.lstrip('/'),
+        '{remote.host}:/etc/uwsgi/apps-available/',
     ))
-    if restart:
-        restart_uwsgi(config)
+    remote(config, (
+        'test -f', config.deploy.uwsgi.config_link,
+        '|| ln -s', config.deploy.uwsgi.config_file, config.deploy.uwsgi.config_link,
+    ), run_as=None, sudo=True)
 
 
 @command(env=True)
-def restart_uwsgi(config):
-    """Restart uWSGI app process.
+def reload_uwsgi(config):
+    """Reload uWSGI app process.
 
-    The uWSGI app process needs to be restarted after deploying a new
-    version (or installing a new uWSGI app config).
+    The uWSGI app process needs to be reloaded after deploying a new
+    version.
 
     """
-    remote(config, '/usr/bin/uwsgi --reload /run/uwsgi/app/bycycle/pid')
+    remote(config, '/usr/bin/uwsgi --reload /run/uwsgi/app/{deploy.domain_name}/pid')
