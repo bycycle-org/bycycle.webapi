@@ -222,19 +222,21 @@ def uwsgi(config, command, abort_on_failure=True):
     remote(config, ('service uwsgi', command), abort_on_failure=abort_on_failure)
 
 
-@command(env=True)
-def push_uwsgi_config(config):
+@command(env=True, config={
+    'defaults.remote.run_as': None,
+    'defaults.remote.sudo': True,
+})
+def push_uwsgi_config(config, enable=True):
     """Push uWSGI app config."""
+    file = config.deploy.uwsgi.config_file
+    link = config.deploy.uwsgi.config_link
     local(config, (
         'rsync -rltvz',
         '--rsync-path "sudo rsync"',
-        config.deploy.uwsgi.config_file.lstrip('/'),
-        '{remote.host}:/etc/uwsgi/apps-available/',
+        file.lstrip('/'), ':'.join((config.remote.host, file)),
     ))
-    remote(config, (
-        'test -f', config.deploy.uwsgi.config_link,
-        '|| ln -s', config.deploy.uwsgi.config_file, config.deploy.uwsgi.config_link,
-    ), run_as=None, sudo=True)
+    if enable:
+        remote(config, ('ln -sf', file, link), run_as=None, sudo=True)
 
 
 @command(env=True)
