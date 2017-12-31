@@ -13,9 +13,9 @@ from bycycle.core.commands import *
 
 
 PROVISIONING_CONFIG = {
-    'defaults.runcommands.runners.commands.remote.run_as': None,
-    'defaults.runcommands.runners.commands.remote.sudo': True,
-    'defaults.runcommands.runners.commands.remote.timeout': 120,
+    'defaults.remote.run_as': None,
+    'defaults.remote.sudo': True,
+    'defaults.remote.timeout': 120,
 }
 
 
@@ -198,8 +198,8 @@ def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=
 
 
 @command(env=True, config={
-    'defaults.runcommands.runners.commands.remote.run_as': None,
-    'defaults.runcommands.runners.commands.remote.sudo': True,
+    'defaults.remote.run_as': None,
+    'defaults.remote.sudo': True,
 })
 def nginx(config, command, abort_on_failure=True):
     remote(config, ('service nginx', command), abort_on_failure=abort_on_failure)
@@ -215,8 +215,8 @@ def push_nginx_config(config):
 
 
 @command(env=True, config={
-    'defaults.runcommands.runners.commands.remote.run_as': None,
-    'defaults.runcommands.runners.commands.remote.sudo': True,
+    'defaults.remote.run_as': None,
+    'defaults.remote.sudo': True,
 })
 def uwsgi(config, command, abort_on_failure=True):
     remote(config, ('service uwsgi', command), abort_on_failure=abort_on_failure)
