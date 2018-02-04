@@ -4,9 +4,10 @@ import tarfile
 
 from runcommands import command
 from runcommands.commands import copy_file, local, remote, show_config
-from runcommands.util import abort, asset_path, printer
+from runcommands.util import abort, asset_path, include, printer
 
-from bycycle.core.commands import *
+
+include('bycycle.core.commands')
 
 
 # Provisioning ---------------------------------------------------------
