@@ -25,8 +25,8 @@ setup(
     ],
     extras_require={
         'dev': [
-            'bycycle.core[dev]>=0.6.dev5',
-            'WebTest>=2.0.29',
+            'bycycle.core[dev]',
+            'WebTest',
         ],
     },
     classifiers=[
