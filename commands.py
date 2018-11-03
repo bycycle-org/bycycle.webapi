@@ -1,251 +1,241 @@
 import os
+import posixpath
 import shutil
 import tarfile
 
 from runcommands import command
-from runcommands.commands import copy_file, local, remote, show_config
-from runcommands.util import abort, asset_path, include, printer
+from runcommands.commands import copy_file, local, remote, sync
 
-
-include('bycycle.core.commands')
+from bycycle.core.commands import *
 
 
 # Provisioning ---------------------------------------------------------
 
 
-PROVISIONING_CONFIG = {
-    'defaults.remote.run_as': None,
-    'defaults.remote.sudo': True,
-    'defaults.remote.timeout': 120,
-}
-
-
-@command(env=True, config=PROVISIONING_CONFIG)
-def provision(config, packages=(), set_timezone=True, upgrade=True, install=True,
-              create_user=True, create_site_dir=True, make_dhparams=True, make_cert=True):
-    commands = config.run.commands
-
+@command
+def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=True, install=True,
+              create_user=True, create_site_dir=True, make_dhparams_=True, make_cert_=True):
     if set_timezone:
-        remote(config, 'timedatectl set-timezone America/Los_Angeles')
+        remote('timedatectl set-timezone America/Los_Angeles', sudo=True)
 
-    if upgrade:
-        commands['upgrade'](config, dist_upgrade=True)
+    if upgrade_:
+        upgrade(dist_upgrade=True)
 
     if install:
-        remote(config, (
+        remote((
             'apt-get --yes install software-properties-common &&',
             'add-apt-repository --yes ppa:certbot/certbot',
-        ))
-        remote(config, (
+        ), sudo=True)
+        remote((
             'apt-get --yes update &&',
             'apt-get --yes install', packages,
-        ))
+        ), sudo=True)
 
     if create_user:
-        remote(config, (
-            'id -u {deploy.user} ||',
-            'adduser --disabled-password --gecos {deploy.user} {deploy.user}',
-        ), use_pty=False)
+        remote((
+            'id -u', deploy_user, '||',
+            'adduser --disabled-password --gecos', deploy_user, deploy_user,
+        ), stdout='hide', sudo=True)
 
     if create_site_dir:
-        remote(config, (
+        remote((
             'mkdir -p /sites &&',
             'chgrp www-data /sites &&',
-            'mkdir -p {deploy.root} &&',
-            'chown {deploy.user}:www-data {deploy.root} &&',
-            'chmod -R u=rwX,g=rX,o=rX {deploy.root}',
-        ))
+            'mkdir -p', deploy_root, '&&',
+            'chown {user}:www-data'.format(user=deploy_user), deploy_root, '&&',
+            'chmod -R u=rwX,g=rX,o=rX', deploy_root,
+        ), sudo=True)
 
-    if make_dhparams:
-        commands['make-dhparams'](config)
+    if make_dhparams_:
+        make_dhparams()
 
-    if make_cert:
-        commands['make-cert'](config)
+    if make_cert_:
+        make_cert()
 
 
-@command(env=True, config=PROVISIONING_CONFIG)
-def upgrade(config, dist_upgrade=False):
-    remote(config, (
+@command
+def upgrade(dist_upgrade=False):
+    remote((
         'apt-get --yes update &&',
         'apt-get --yes upgrade &&',
-        'apt-get --yes dist-upgrade &&' if dist_upgrade else '',
+        'apt-get --yes dist-upgrade &&' if dist_upgrade else None,
         'apt-get --yes autoremove &&',
         'apt-get --yes autoclean',
-    ))
+    ), sudo=True)
+
+    remote((
+        'test -f /var/run/reboot-required &&',
+        'echo Rebooting due to upgrade... &&',
+        'reboot',
+    ), sudo=True, raise_on_error=False)
 
 
-@command(env=True, config=PROVISIONING_CONFIG)
-def make_dhparams(config, domain_name='{deploy.domain_name}'):
-    remote(config, 'mkdir -p /etc/pki/nginx', sudo=True)
-    remote(config, (
+@command
+def make_dhparams(domain_name):
+    remote('mkdir -p /etc/pki/nginx', sudo=True)
+    remote((
         'test -f /etc/pki/nginx/{domain_name}.pem ||'.format_map(locals()),
         'openssl dhparam -out /etc/pki/nginx/{domain_name}.pem 2048'.format_map(locals()),
-    ))
+    ), sudo=True)
 
 
-@command(env=True, config=PROVISIONING_CONFIG)
-def make_cert(config, domain='{deploy.domain_name}', email='letsencrypt@{deploy.domain_name}'):
+@command
+def make_cert(domain_name, email='letsencrypt@{domain_name}'):
     """Create Let's encrypt certificate."""
-    nginx(config, 'stop', abort_on_failure=False)
-    remote(config, (
+    email = email.format(domain_name=domain_name)
+    nginx('stop', raise_on_error=False)
+    remote((
         'certbot',
         'certonly',
         '--agree-tos',
         '--standalone',
-        '--domain', domain,
+        '--domain', domain_name,
         '--email', email,
-    ))
-    nginx(config, 'start')
+    ), sudo=True)
+    nginx('start')
 
 
 # Deployment -----------------------------------------------------------
 
 
-@command(env=True)
-def deploy(config, version=None, overwrite=False, overwrite_venv=False, install=True, push=True,
-           link=True, reload=True):
-
-    # Setup ----------------------------------------------------------
-
-    if version:
-        config = config.copy(version=version)
-    elif config.get('version'):
-        printer.info('Using default version:', config.version)
-    else:
-        abort(1, 'Version must be specified via config or passed as an option')
+@command
+def deploy(package,
+           version,
+           settings_file,
+           root,
+           dir_,
+           user,
+           host,
+           db,
+           # Local
+           build_dir='build',
+           clean=False,
+           sdists=(),
+           # Remote
+           overwrite=False,
+           install=True,
+           pip_find_links=None,
+           pip_cache_dir=None,
+           push=True,
+           link=True,
+           reload=True):
 
     # Local ----------------------------------------------------------
 
-    build_dir = config.build.dir
-
-    if overwrite and os.path.exists(build_dir):
+    if clean and os.path.exists(build_dir):
         shutil.rmtree(build_dir)
 
     os.makedirs(build_dir, exist_ok=True)
 
     # Add config files
-    copy_file(config, 'application.wsgi', build_dir, template=True)
-    copy_file(config, 'base.ini', build_dir)
-    copy_file(config, '{env}.ini', build_dir, template=True)
-    copy_file(config, 'commands.py', build_dir)
-    copy_file(config, 'commands.cfg', build_dir)
+    copy_file('application.wsgi', build_dir, template=True, context=locals())
+    copy_file('base.ini', build_dir)
+    copy_file(settings_file, build_dir, template=True, context=locals())
+    copy_file('commands.py', build_dir)
+    copy_file('commands.yaml', build_dir)
 
     # Create source distributions
-    dist_dir = os.path.abspath(config.build.dist_dir)
-    sdist_command = ('python setup.py sdist --dist-dir', dist_dir)
-    local(config, sdist_command, hide='stdout')
-    for path in config.deploy.sdists:
-        local(config, sdist_command, hide='stdout', cd=path)
+    dist_dir = os.path.abspath(os.path.join(build_dir, 'dist'))
+    sdist_command = ('python', 'setup.py', 'sdist', '--dist-dir', dist_dir)
+    local(sdist_command, stdout='hide')
+    for path in sdists:
+        local(sdist_command, stdout='hide', cd=path)
 
-    tarball_name = '{config.version}.tar.gz'.format(config=config)
+    tarball_name = '{version}.tar.gz'.format_map(locals())
     tarball_path = os.path.join(build_dir, tarball_name)
     with tarfile.open(tarball_path, 'w:gz') as tarball:
-        tarball.add(build_dir, config.version)
+        tarball.add(build_dir, version)
 
     if push:
-        local(config, (
-            'rsync -rltvz',
-            '--rsync-path "sudo -u {deploy.user} rsync"',
-            tarball_path, '{remote.host}:{deploy.root}',
-        ))
+        sync(tarball_path, root, host, run_as=user)
 
     # Remote ----------------------------------------------------------
 
-    deploy_dir_exists = remote(config, 'test -d {deploy.dir}', abort_on_failure=False)
+    deploy_dir_exists = remote(('test -d', dir_), raise_on_error=False)
 
     if deploy_dir_exists and overwrite:
-        remote(config, 'rm -r {deploy.dir}')
+        remote(('rm -r', dir_))
 
-    remote(config, ('tar -xvzf', tarball_name), cd='{deploy.root}')
+    remote(('tar -xvzf', tarball_name), cd=root)
 
     # Create virtualenv for this version
-    venv_exists = remote(config, 'test -d {deploy.venv}', abort_on_failure=False)
+    venv_dir = posixpath.join(dir_, 'venv')
+    venv_exists = remote(('test -d', venv_dir), raise_on_error=False)
 
-    if venv_exists and overwrite_venv:
-        remote(config, 'rm -r {deploy.venv}')
+    if venv_exists and overwrite:
+        remote(('rm -r', venv_dir))
         venv_exists = False
 
     if not venv_exists:
-        remote(config, (
-            'python{python.version} -m venv {deploy.venv} &&',
-            '{deploy.pip.exe} install',
-            '--cache-dir {deploy.pip.cache_dir}',
+        remote((
+            'python{python.version} -m venv', venv_dir, '&&',
+            posixpath.join(venv_dir, 'bin/pip'),
+            'install',
+            '--cache-dir', posixpath.join(root, 'pip/cache'),
             '--upgrade setuptools pip wheel',
         ))
 
     # Build source
     if install:
-        remote(config, (
-            '{deploy.pip.exe}',
+        remote((
             'install',
-            '--find-links {deploy.pip.find_links}',
-            '--cache-dir {deploy.pip.cache_dir}',
+            '--find-links', posixpath.join(dir_, 'dist'),
+            '--cache-dir', posixpath.join(root, 'pip/cache'),
             '--disable-pip-version-check',
-            '{package}',
-        ), cd='{deploy.root}', timeout=120)
+            package,
+        ), cd=root)
 
     # Make this version the current version
     if link:
-        remote(config, 'ln -sfn {deploy.dir} {deploy.link}')
+        remote(('ln -sfn', dir_, posixpath.join(root, 'current')))
 
     # Set permissions
-    remote(config, 'chmod -R ug=rwX,o= {deploy.root}')
+    remote(('chmod -R ug=rwX,o=', root))
 
     if reload:
-        reload_uwsgi(config)
+        reload_uwsgi()
 
 
 # Services --------------------------------------------------------
 
 
-@command(env=True, config={
-    'defaults.remote.run_as': None,
-    'defaults.remote.sudo': True,
-})
-def nginx(config, command, abort_on_failure=True):
-    remote(config, ('service nginx', command), abort_on_failure=abort_on_failure)
+@command
+def nginx(command, raise_on_error=True):
+    remote(('service nginx', command), sudo=True, raise_on_error=raise_on_error)
 
 
-@command(env=True)
-def push_nginx_config(config):
-    local(config, (
-        'rsync -rltvz',
-        '--rsync-path "sudo rsync"',
-        'etc/nginx/', '{remote.host}:/etc/nginx',
-    ))
+@command
+def push_nginx_config(host):
+    sync('etc/nginx/', '/etc/nginx/', host, sudo=True)
 
 
-@command(env=True, config={
-    'defaults.remote.run_as': None,
-    'defaults.remote.sudo': True,
-})
-def uwsgi(config, command, abort_on_failure=True):
-    remote(config, ('service uwsgi', command), abort_on_failure=abort_on_failure)
+@command
+def uwsgi(command, raise_on_error=True):
+    remote(('service uwsgi', command), sudo=True, raise_on_error=raise_on_error)
 
 
-@command(env=True, config={
-    'defaults.remote.run_as': None,
-    'defaults.remote.sudo': True,
-})
-def push_uwsgi_config(config, enable=True):
+@command
+def push_uwsgi_config(host, config_file, config_link, enable=True):
     """Push uWSGI app config."""
-    file = config.deploy.uwsgi.config_file
-    link = config.deploy.uwsgi.config_link
-    local(config, (
-        'rsync -rltvz',
-        '--rsync-path "sudo rsync"',
-        file.lstrip('/'), ':'.join((config.remote.host, file)),
-    ))
+    sync(config_file.lstrip('/'), config_file, host, sudo=True)
     if enable:
-        remote(config, ('ln -sf', file, link), run_as=None, sudo=True)
+        remote(('ln -sf', config_file, config_link), sudo=True)
 
 
-@command(env=True)
-def reload_uwsgi(config):
+@command
+def reload_uwsgi(pid_file):
     """Reload uWSGI app process.
 
     The uWSGI app process needs to be reloaded after deploying a new
     version.
 
     """
-    remote(config, '/usr/bin/uwsgi --reload /run/uwsgi/app/{deploy.domain_name}/pid')
+    remote(('/usr/bin/uwsgi --reload', pid_file))
+
+
+# Local -----------------------------------------------------------
+
+
+@command
+def dev_server(settings_file):
+    local(('tangled serve -f', settings_file), shell=True)

@@ -1,7 +1,7 @@
 from tangled.util import load_object
 
 FACTORY = load_object('tangled.web:Application')
-SETTINGS_FILE = '{deploy.dir}/{env}.ini'
+SETTINGS_FILE = '{settings_file}'
 EXTRA_SETTINGS = {{
     'version': '{version}',
 }}

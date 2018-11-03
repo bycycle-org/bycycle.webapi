@@ -1,0 +1,73 @@
+---
+extends: "bycycle.core:commands.yaml"
+
+globals:
+  package: "bycycle.webapi"
+  settings_file: "{{ env }}.ini"
+
+envs:
+  development:
+    osm:
+      data_path: "osm.data"
+  production:
+    db:
+      user: "bycycle"
+      password: ""
+      host: "pg1.cwitqu7drify.us-west-2.rds.amazonaws.com"
+      port: 5432
+      database: "bycycle"
+    domain_name: "bycycle.org"
+    deploy_user: "bycycle"
+    deploy_root: "/sites/{{ domain_name }}"
+    osm:
+      data_path: "{{ deploy_root }}/osm.data"
+
+args:
+  remote:
+    run_as: "{{ deploy_user }}"
+    host: "{{ domain_name }}"
+
+  provision:
+    packages:
+      - "certbot"
+      - "gcc"
+      - "libgeos-dev"
+      - "libproj-dev"
+      - "nginx-full"
+      - "postgresql-client"
+      - "python3.5"
+      - "python3.5-dev"
+      - "python3.5-venv"
+      - "uwsgi"
+      - "uwsgi-plugin-python3"
+    deploy_user: "{{ deploy.user }}"
+
+  make_dhparams:
+    domain_name: "{{ domain_name }}"
+
+  make_cert:
+    domain_name: "{{ domain_name }}"
+
+  deploy:
+    root: "{{ deploy_root }}"
+    dir: "{{ deploy_root }}/{{ version }}"
+    user: "{{ deploy_user }}"
+    host: "{{ domain_name }}"
+    sdists: ["../bycycle.core"]
+
+  push_nginx_config:
+    host: "{{ remote.host }}"
+
+  push_uwsgi_config:
+    host: "{{ remote.host }}"
+    config_file: "/etc/uwsgi/apps-available/{{ domain_name }}.ini"
+    config_link: "/etc/uwsgi/apps-enabled/{{ domain_name }}.ini"
+
+  reload_uwsgi:
+    pid_file: "/run/uwsgi/app/{{ domain_name }}/pid"
+
+  fetch_osm_data:
+    path: "{{ osm.data_path }}"
+
+  load_osm_data:
+    path: "{{ osm.data_path }}"
