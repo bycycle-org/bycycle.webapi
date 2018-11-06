@@ -5,12 +5,8 @@ from tangled.web import Application
 
 from webtest import TestApp
 
+
 default_config_file = os.path.join(os.getcwd(), 'test.ini')
-
-
-def configure(config_file):
-    global default_config_file
-    default_config_file = config_file
 
 
 class BaseTestCase(unittest.TestCase):
