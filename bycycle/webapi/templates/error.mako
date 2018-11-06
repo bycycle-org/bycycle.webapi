@@ -5,3 +5,7 @@
 % if error['detail']:
     <p>${error['detail']}</p>
 % endif
+
+<p>
+    <a href="${request.route_url('home')}">Home</a>
+</p>

@@ -4,15 +4,15 @@ from bycycle.core.exc import InputError
 from bycycle.core.service import RouteService
 from bycycle.core.service.route import MultipleRouteLookupResultsError
 
-from .service import ServiceResource
+from .service import ServiceView
 
 
-class Directions(ServiceResource):
+class DirectionsView(ServiceView):
 
     service_class = RouteService
 
-    def GET(self):
-        data = super()._GET()
+    def get(self):
+        data = super()._get()
         status = self.request.response.status_int
         if status == 200:
             results = data['results']

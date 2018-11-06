@@ -1,15 +1,15 @@
 from bycycle.core.exc import InputError
 from bycycle.core.service.lookup import LookupService, MultipleLookupResultsError
 
-from .service import ServiceResource
+from .service import ServiceView
 
 
-class Lookup(ServiceResource):
+class LookupView(ServiceView):
 
     service_class = LookupService
 
-    def GET(self):
-        data = super()._GET()
+    def get(self):
+        data = super()._get()
         status = self.request.response.status_int
         if status == 200:
             results = data['results']

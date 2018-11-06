@@ -1,26 +1,26 @@
 from shapely import wkb
-from sqlalchemy.sql import func
 
-from tangled.web import Resource
+from sqlalchemy.sql import func
 
 from bycycle.core.model import Street
 
 
-class Info(Resource):
+class InfoView:
 
-    def GET(self):
-        settings = self.app.settings
+    def __init__(self, request):
+        self.request = request
+
+    def get(self):
+        settings = self.request.registry.settings
         info = {
             'debug': settings['debug'],
             'env': settings['env'],
-            'name': settings['tangled.app.name'],
-            'package': settings['package'],
         }
         info.update(self._get_extent())
         return info
 
     def _get_extent(self):
-        q = self.request.db_session.execute(func.ST_Envelope(func.ST_Extent(Street.geom)))
+        q = self.request.dbsession.execute(func.ST_Envelope(func.ST_Extent(Street.geom)))
         extent = q.scalar()
         extent = wkb.loads(extent, hex=True)
         return {

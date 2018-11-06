@@ -1,7 +1,8 @@
 import logging
 import re
 
-from tangled.web import config, Resource
+from pyramid.decorator import reify
+from pyramid.httpexceptions import exception_response
 
 from bycycle.core.exc import ByCycleError, InputError, NotFoundError
 from bycycle.core.model import Entity
@@ -13,10 +14,12 @@ log = logging.getLogger(__name__)
 DIRECTIONS_RE = re.compile(r'.+\s+to\s+.+')
 
 
-class ServiceResource(Resource):
+class ServiceView:
 
-    @config('text/html', template='home.html')
-    def GET(self):
+    def __init__(self, request):
+        self.request = request
+
+    def get(self):
         req = self.request
         params = req.params
 
@@ -29,23 +32,33 @@ class ServiceResource(Resource):
 
         if term:
             if DIRECTIONS_RE.match(term):
-                resource = Directions
+                view_class = self.DirectionsView
             else:
-                resource = Lookup
+                view_class = self.LookupView
         elif from_ or to:
-            resource = Directions
+            view_class = self.DirectionsView
         else:
-            self.request.abort(400)
+            raise exception_response(400)
 
-        instance = resource(self.app, self.request, self.name, self.urlvars)
-        return instance.GET()
+        view = view_class(self.request)
+        return view.get()
 
-    def _GET(self):
+    @reify
+    def LookupView(self):
+        from .lookup import LookupView
+        return LookupView
+
+    @reify
+    def DirectionsView(self):
+        from .directions import DirectionsView
+        return DirectionsView
+
+    def _get(self):
         """Query service and return data."""
         data = {
             'service': self.service_class.name,
         }
-        service = self.service_class(self.request.db_session)
+        service = self.service_class(self.request.dbsession)
         try:
             query = self._get_query()
             options = self._get_options()
@@ -118,8 +131,3 @@ class ServiceResource(Resource):
 
         """
         return exc
-
-
-# XXX: Avoid circular import
-from .lookup import Lookup
-from .directions import Directions

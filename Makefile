@@ -8,9 +8,6 @@ init: $(venv)
 $(venv):
 	python3 -m venv $(venv)
 
-run:
-	$(venv)/bin/tangled serve -f development.ini
-
 sdist: clean clean-dist
 	$(venv)/bin/python setup.py sdist
 

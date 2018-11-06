@@ -16,17 +16,31 @@ setup(
     license='GPLv3',
     packages=find_packages(include=['bycycle', 'bycycle.webapi', 'bycycle.webapi.*']),
     include_package_data=True,
+    zip_safe=False,
     install_requires=[
         'bycycle.core>=0.6.dev5',
         'Mako>=1.0.7',
-        'tangled.mako>=1.0a5',
-        'tangled.sqlalchemy>=0.1a5',
-        'tangled.web>=1.0a12',
+        'plaster_pastedeploy>=0.6',
+        'pyramid>=1.10',
+        'pyramid_mako>=1.0.2',
+        'pyramid_retry>=1.0',
+        'pyramid_sqlalchemy>=1.6',
+        'pyramid_tm>=2.2.1',
+        'transaction>=2.4.0',
+        'zope.sqlalchemy>=1.0',
     ],
     extras_require={
         'dev': [
             'bycycle.core[dev]',
+            'coverage',
+            'pyramid_debugtoolbar',
+            'waitress',
             'WebTest',
+        ],
+    },
+    entry_points={
+        'paste.app_factory': [
+            'main = bycycle.webapi:main',
         ],
     },
     classifiers=[

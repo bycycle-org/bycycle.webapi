@@ -129,7 +129,6 @@ def deploy(package,
 
     # Add config files
     copy_file('application.wsgi', build_dir, template=True, context=locals())
-    copy_file('base.ini', build_dir)
     copy_file(settings_file, build_dir, template=True, context=locals())
     copy_file('commands.py', build_dir)
     copy_file('commands.yaml', build_dir)
@@ -238,4 +237,4 @@ def reload_uwsgi(pid_file):
 
 @command
 def dev_server(settings_file):
-    local(('tangled serve -f', settings_file), shell=True)
+    local(('pserve', '--reload', settings_file), shell=True)

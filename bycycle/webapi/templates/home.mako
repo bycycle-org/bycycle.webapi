@@ -36,12 +36,12 @@
 
 <p>
     To access the main UI, go into the <code>bycycle.webui</code> repo, run <code>npm start</code>,
-    then <a href="${request.get_setting('frontend.url')}">click here</a>.
+    then <a href="${request.registry.settings['frontend.url']}">click here</a>.
 </p>
 
 <h3>Search</h3>
 
-<form action="${request.make_path('/lookup')}">
+<form action="${request.route_url('lookup')}">
     <p>
         <p class="help">Ex: -122.662709,45.522952</p>
         <input type="search" name="term">
@@ -53,7 +53,7 @@
 
 <h3>Directions</h3>
 
-<form action="${request.make_path('/directions')}">
+<form action="${request.route_url('directions')}">
     <p>
         <label for="from">From</label>
         <p class="help">Ex: -122.662709, 45.522952</p>

@@ -1,9 +1,6 @@
-from tangled.util import load_object
+from pyramid.paster import get_app, setup_logging
 
-FACTORY = load_object('tangled.web:Application')
-SETTINGS_FILE = '{settings_file}'
-EXTRA_SETTINGS = {{
-    'version': '{version}',
-}}
-
-application = FACTORY(SETTINGS_FILE, **EXTRA_SETTINGS)
+settings_file = '{settings_file}'
+setup_logging(settings_file)
+application = get_app(settings_file, 'main')
+application.registry.settings['version'] = '{version}'
