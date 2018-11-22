@@ -8,6 +8,7 @@ globals:
 envs:
   development:
     osm:
+      bbox: [-122.7248, 45.4975, -122.6190, 45.5537]
       data_path: "osm.data"
   production:
     db:
@@ -20,6 +21,7 @@ envs:
     deploy_user: "bycycle"
     deploy_root: "/sites/{{ domain_name }}"
     osm:
+      bbox: [-122.836692, 45.4975, -122.472427, 45.650521]
       data_path: "{{ deploy_root }}/osm.data"
 
 args:
@@ -68,6 +70,7 @@ args:
 
   fetch_osm_data:
     path: "{{ osm.data_path }}"
+    bbox: "{{ osm.bbox }}"
 
   load_osm_data:
     path: "{{ osm.data_path }}"
