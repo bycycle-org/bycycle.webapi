@@ -19,7 +19,7 @@ def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=Tr
         remote('timedatectl set-timezone America/Los_Angeles', sudo=True)
 
     if upgrade_:
-        upgrade(dist_upgrade=True)
+        upgrade(dist_upgrade=True, reboot=False)
 
     if install:
         remote((
@@ -54,7 +54,7 @@ def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=Tr
 
 
 @command
-def upgrade(dist_upgrade=False):
+def upgrade(dist_upgrade=False, reboot=True):
     remote((
         'apt-get --yes update &&',
         'apt-get --yes upgrade &&',
@@ -63,12 +63,13 @@ def upgrade(dist_upgrade=False):
         'apt-get --yes autoclean',
     ), sudo=True)
 
-    remote((
-        'test -f /var/run/reboot-required &&',
-        'echo Rebooting due to upgrade... &&',
-        'reboot',
-    ), sudo=True, raise_on_error=False)
-
+    result = remote('test -f /var/run/reboot-required', sudo=True, raise_on_error=False)
+    if result.succeeded:
+        if reboot:
+            printer.warning('Rebooting due to upgrade...')
+            remote('reboot', sudo=True, raise_on_error=False)
+        else:
+            printer.warning('Reboot required due to upgrade')
 
 @command
 def make_dhparams(domain_name):
