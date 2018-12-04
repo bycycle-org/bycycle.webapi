@@ -42,7 +42,7 @@ def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=Tr
             'mkdir -p /sites &&',
             'chgrp www-data /sites &&',
             'mkdir -p', deploy_root, '&&',
-            'chown {user}:www-data'.format(user=deploy_user), deploy_root, '&&',
+            'chown {deploy_user}:www-data'.format_map(locals()), deploy_root, '&&',
             'chmod -R u=rwX,g=rX,o=rX', deploy_root,
         ), sudo=True)
 
@@ -70,6 +70,7 @@ def upgrade(dist_upgrade=False, reboot=True):
             remote('reboot', sudo=True, raise_on_error=False)
         else:
             printer.warning('Reboot required due to upgrade')
+
 
 @command
 def make_dhparams(domain_name):
@@ -161,6 +162,8 @@ def deploy(package,
     # Create virtualenv for this version
     venv_dir = posixpath.join(dir_, 'venv')
     venv_exists = remote(('test -d', venv_dir), raise_on_error=False)
+    pip = posixpath.join(venv_dir, 'bin/pip')
+    pip_cache_dir = posixpath.join(root, 'pip/cache')
 
     if venv_exists and overwrite:
         remote(('rm -r', venv_dir))
@@ -168,19 +171,18 @@ def deploy(package,
 
     if not venv_exists:
         remote((
-            'python{python.version} -m venv', venv_dir, '&&',
-            posixpath.join(venv_dir, 'bin/pip'),
-            'install',
-            '--cache-dir', posixpath.join(root, 'pip/cache'),
+            'python3 -m venv', venv_dir, '&&',
+            pip, 'install',
+            '--cache-dir', pip_cache_dir,
             '--upgrade setuptools pip wheel',
         ))
 
     # Build source
     if install:
         remote((
-            'install',
+            pip, 'install',
             '--find-links', posixpath.join(dir_, 'dist'),
-            '--cache-dir', posixpath.join(root, 'pip/cache'),
+            '--cache-dir', pip_cache_dir,
             '--disable-pip-version-check',
             package,
         ), cd=root)
@@ -193,7 +195,7 @@ def deploy(package,
     remote(('chmod -R ug=rwX,o=', root))
 
     if reload:
-        reload_uwsgi()
+        uwsgi('reload')
 
 
 # Services --------------------------------------------------------
@@ -201,36 +203,25 @@ def deploy(package,
 
 @command
 def nginx(command, raise_on_error=True):
-    remote(('service nginx', command), sudo=True, raise_on_error=raise_on_error)
+    remote(('systemctl', command, 'nginx.service'), sudo=True, raise_on_error=raise_on_error)
 
 
 @command
 def push_nginx_config(host):
-    sync('etc/nginx/', '/etc/nginx/', host, sudo=True)
+    sync('etc/nginx/', '/etc/nginx/', host, sudo=True, mode='u=rw,g=r,o=r')
 
 
 @command
 def uwsgi(command, raise_on_error=True):
-    remote(('service uwsgi', command), sudo=True, raise_on_error=raise_on_error)
+    remote(('systemctl', command, 'uwsgi.service'), sudo=True, raise_on_error=raise_on_error)
 
 
 @command
 def push_uwsgi_config(host, config_file, config_link, enable=True):
     """Push uWSGI app config."""
-    sync(config_file.lstrip('/'), config_file, host, sudo=True)
+    sync(config_file.lstrip('/'), config_file, host, sudo=True, mode='u=rw,g=r,o=r')
     if enable:
         remote(('ln -sf', config_file, config_link), sudo=True)
-
-
-@command
-def reload_uwsgi(pid_file):
-    """Reload uWSGI app process.
-
-    The uWSGI app process needs to be reloaded after deploying a new
-    version.
-
-    """
-    remote(('/usr/bin/uwsgi --reload', pid_file))
 
 
 # Local -----------------------------------------------------------
