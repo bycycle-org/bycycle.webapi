@@ -5,6 +5,7 @@ import tarfile
 
 from runcommands import command
 from runcommands.commands import copy_file, local, remote, sync
+from runcommands.util import printer
 
 from bycycle.core.commands import *
 
