@@ -24,12 +24,12 @@ def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=Tr
 
     if install:
         remote((
-            'apt-get --yes install software-properties-common &&',
+            'apt --yes install software-properties-common &&',
             'add-apt-repository --yes ppa:certbot/certbot',
         ), sudo=True)
         remote((
-            'apt-get --yes update &&',
-            'apt-get --yes install', packages,
+            'apt --yes update &&',
+            'apt --yes install', packages,
         ), sudo=True)
 
     if create_user:
@@ -57,11 +57,11 @@ def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=Tr
 @command
 def upgrade(dist_upgrade=False, reboot=True):
     remote((
-        'apt-get --yes update &&',
-        'apt-get --yes upgrade &&',
-        'apt-get --yes dist-upgrade &&' if dist_upgrade else None,
-        'apt-get --yes autoremove &&',
-        'apt-get --yes autoclean',
+        'apt --yes update &&',
+        'apt --yes upgrade &&',
+        'apt --yes dist-upgrade &&' if dist_upgrade else None,
+        'apt --yes autoremove &&',
+        'apt --yes autoclean',
     ), sudo=True)
 
     result = remote('test -f /var/run/reboot-required', sudo=True, raise_on_error=False)
