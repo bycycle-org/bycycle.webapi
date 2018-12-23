@@ -5,10 +5,11 @@ from sqlalchemy.sql import func
 from bycycle.core.model import Street
 
 
-class InfoView:
+class InfoResource:
 
-    def __init__(self, request):
+    def __init__(self, request, context=None):
         self.request = request
+        self.context = context
 
     def get(self):
         settings = self.request.registry.settings

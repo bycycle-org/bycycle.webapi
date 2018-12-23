@@ -41,7 +41,7 @@
 
 <h3>Search</h3>
 
-<form action="${request.route_url('lookup')}">
+<form action="${request.route_url('query')}">
     <p>
         <p class="help">Ex: -122.662709,45.522952</p>
         <input type="search" name="term">

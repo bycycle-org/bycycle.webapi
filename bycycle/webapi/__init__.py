@@ -8,6 +8,7 @@ def main(global_config, **settings):
     settings['cors.permissive'] = asbool(settings.get('cors.permissive', False))
     settings['mvt.enabled'] = asbool(settings.get('mvt.enabled', False))
     with Configurator(settings=settings) as config:
+        config.include('cornice')
         config.include('pyramid_mako')
         config.include('.cors')
         config.include('.model')

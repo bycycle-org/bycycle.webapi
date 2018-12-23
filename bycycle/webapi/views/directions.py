@@ -4,10 +4,10 @@ from bycycle.core.exc import InputError
 from bycycle.core.service import RouteService
 from bycycle.core.service.route import MultipleRouteLookupResultsError
 
-from .service import ServiceView
+from .service import ServiceResource
 
 
-class DirectionsView(ServiceView):
+class DirectionsResource(ServiceResource):
 
     service_class = RouteService
 

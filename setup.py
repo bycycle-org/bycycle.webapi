@@ -19,6 +19,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'bycycle.core>=0.6.dev5',
+        'cornice>=3.4.4',
         'Mako>=1.0.7',
         'plaster_pastedeploy>=0.6',
         'pyramid>=1.10',

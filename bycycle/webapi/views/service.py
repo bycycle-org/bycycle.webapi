@@ -1,8 +1,4 @@
 import logging
-import re
-
-from pyramid.decorator import reify
-from pyramid.httpexceptions import exception_response
 
 from bycycle.core.exc import ByCycleError, InputError, NotFoundError
 from bycycle.core.model import Entity
@@ -11,47 +7,11 @@ from bycycle.core.model import Entity
 log = logging.getLogger(__name__)
 
 
-DIRECTIONS_RE = re.compile(r'.+\s+to\s+.+')
+class ServiceResource:
 
-
-class ServiceView:
-
-    def __init__(self, request):
+    def __init__(self, request, context=None):
         self.request = request
-
-    def get(self):
-        req = self.request
-        params = req.params
-
-        if not params:
-            return {}
-
-        term = params.get('term', '').strip()
-        from_ = params.get('from', '').strip()
-        to = params.get('to', '').strip()
-
-        if term:
-            if DIRECTIONS_RE.match(term):
-                view_class = self.DirectionsView
-            else:
-                view_class = self.LookupView
-        elif from_ or to:
-            view_class = self.DirectionsView
-        else:
-            raise exception_response(400)
-
-        view = view_class(self.request)
-        return view.get()
-
-    @reify
-    def LookupView(self):
-        from .lookup import LookupView
-        return LookupView
-
-    @reify
-    def DirectionsView(self):
-        from .directions import DirectionsView
-        return DirectionsView
+        self.context = context
 
     def _get(self):
         """Query service and return data."""

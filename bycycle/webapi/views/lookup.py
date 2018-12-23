@@ -1,10 +1,10 @@
 from bycycle.core.exc import InputError
 from bycycle.core.service.lookup import LookupService, MultipleLookupResultsError
 
-from .service import ServiceView
+from .service import ServiceResource
 
 
-class LookupView(ServiceView):
+class LookupResource(ServiceResource):
 
     service_class = LookupService
 
