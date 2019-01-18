@@ -55,22 +55,29 @@ def provision(packages, deploy_user, deploy_root, set_timezone=True, upgrade_=Tr
 
 
 @command
-def upgrade(dist_upgrade=False, reboot=True):
-    remote((
-        'apt --yes update &&',
-        'apt --yes upgrade &&',
-        'apt --yes dist-upgrade &&' if dist_upgrade else None,
-        'apt --yes autoremove &&',
-        'apt --yes autoclean',
-    ), sudo=True)
+def upgrade(env, dist_upgrade=False, reboot=True):
+    printer.header('Upgrading environment {env}...'.format_map(locals()))
 
-    result = remote('test -f /var/run/reboot-required', sudo=True, raise_on_error=False)
-    if result.succeeded:
-        if reboot:
-            printer.warning('Rebooting due to upgrade...')
-            remote('reboot', sudo=True, raise_on_error=False)
-        else:
-            printer.warning('Reboot required due to upgrade')
+    if env == 'development':
+        install(upgrade=True)
+    else:
+        remote((
+            'apt --yes update &&',
+            'apt --yes upgrade &&',
+            'apt --yes dist-upgrade &&' if dist_upgrade else None,
+            'apt --yes autoremove &&',
+            'apt --yes autoclean',
+        ), sudo=True)
+
+        result = remote('test -f /var/run/reboot-required', sudo=True, raise_on_error=False)
+        if result.succeeded:
+            if reboot:
+                printer.warning('Rebooting due to upgrade...')
+                remote('reboot', sudo=True, raise_on_error=False)
+            else:
+                printer.warning('Reboot required due to upgrade')
+
+    printer.success('Upgrade complete')
 
 
 @command
