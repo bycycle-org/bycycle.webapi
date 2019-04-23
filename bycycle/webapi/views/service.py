@@ -2,8 +2,10 @@ import logging
 
 from bycycle.core.exc import ByCycleError, InputError, NotFoundError
 from bycycle.core.geometry import is_coord
-from bycycle.core.model import Entity, Street
+from bycycle.core.model import Entity, Intersection
 from bycycle.core.model.util import get_extent
+
+from tangled.decorators import cached_property
 
 
 log = logging.getLogger(__name__)
@@ -80,7 +82,7 @@ class ServiceResource:
                 raise InputError('bbox param miny must be less than maxy')
             bbox = tuple(float(c) for c in coords)
         else:
-            bbox = get_extent(self.request.dbsession, Street).bbox
+            bbox = self._default_bbox
 
         settings = self.request.registry.settings
         mapbox_access_token = settings.get('mapbox.access_token')
@@ -90,6 +92,14 @@ class ServiceResource:
             'bbox': bbox or None,
             'mapbox_access_token': mapbox_access_token,
         }
+
+    @cached_property
+    def _default_bbox(self):
+        cls = self.__class__
+        if not hasattr(cls, '_default_bbox_value'):
+            cls._default_bbox_value = get_extent(self.request.dbsession, Intersection).bbox
+            log.debug('Computed default BBOX for streets: %s', cls._default_bbox_value)
+        return cls._default_bbox_value
 
     def _get_query(self):
         """Return a query the back end service understands.
