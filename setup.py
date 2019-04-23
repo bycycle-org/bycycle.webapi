@@ -19,16 +19,16 @@ setup(
     zip_safe=False,
     install_requires=[
         'bycycle.core>=0.6.dev5',
-        'cornice>=3.4.4',
-        'Mako>=1.0.7',
-        'plaster_pastedeploy>=0.6',
-        'pyramid>=1.10',
+        'cornice>=3.5.1',
+        'Mako>=1.0.9',
+        'plaster_pastedeploy>=0.7',
+        'pyramid>=1.10.4',
         'pyramid_mako>=1.0.2',
         'pyramid_retry>=1.0',
         'pyramid_sqlalchemy>=1.6',
         'pyramid_tm>=2.2.1',
         'transaction>=2.4.0',
-        'zope.sqlalchemy>=1.0',
+        'zope.sqlalchemy>=1.1',
     ],
     extras_require={
         'dev': [
