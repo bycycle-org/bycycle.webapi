@@ -1,8 +1,5 @@
-from shapely import wkb
-
-from sqlalchemy.sql import func
-
 from bycycle.core.model import Street
+from bycycle.core.model.util import get_extent
 
 
 class InfoResource:
@@ -21,11 +18,5 @@ class InfoResource:
         return info
 
     def _get_extent(self):
-        q = self.request.dbsession.execute(func.ST_Envelope(func.ST_Extent(Street.geom)))
-        extent = q.scalar()
-        extent = wkb.loads(extent, hex=True)
-        return {
-            'bbox': extent.bounds,
-            'boundary': list(extent.exterior.coords),
-            'center': extent.centroid.coords[0],
-        }
+        info = get_extent(self.request.dbsession, Street)
+        return info._asdict()
