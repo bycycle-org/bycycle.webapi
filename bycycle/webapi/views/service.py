@@ -1,7 +1,9 @@
 import logging
 
 from bycycle.core.exc import ByCycleError, InputError, NotFoundError
-from bycycle.core.model import Entity
+from bycycle.core.geometry import is_coord
+from bycycle.core.model import Entity, Street
+from bycycle.core.model.util import get_extent
 
 
 log = logging.getLogger(__name__)
@@ -18,7 +20,7 @@ class ServiceResource:
         data = {
             'service': self.service_class.name,
         }
-        service = self.service_class(self.request.dbsession)
+        service = self._get_service()
         try:
             query = self._get_query()
             options = self._get_options()
@@ -39,6 +41,53 @@ class ServiceResource:
             data['term'] = query
             data['results'] = [result] if isinstance(result, Entity) else result
         return data
+
+    def _get_service(self):
+        """Return configured service instance."""
+        config = self._get_config()
+        return self.service_class(self.request.dbsession, **config)
+
+    def _get_config(self):
+        """Get configuration for service.
+
+        Extract service config from query params and return a dict of
+        keyword args that will be passed when constructing the service
+        instance.
+
+        Raises:
+            InputError: On bad input
+
+        """
+        center = self.request.params.get('center', '').strip()
+        if center:
+            coords = center.split(',')
+            coords = tuple(c.strip() for c in coords)
+            coords = tuple(c for c in coords if c)
+            if not (len(center) == 2 and all(is_coord(c for c in coords))):
+                raise InputError('center param must contain exactly 2 numbers (comma separated)')
+            center = tuple(float(c) for c in coords)
+
+        bbox = self.request.params.get('bbox', '').strip()
+        if bbox:
+            coords = bbox.split(',')
+            coords = tuple(c.strip() for c in coords)
+            coords = tuple(c for c in coords if c)
+            if not (len(coords) == 4 and all(is_coord(c for c in coords))):
+                raise InputError('bbox param must contain exactly 4 numbers (comma separated)')
+            if coords[0] > coords[2]:
+                raise InputError('bbox param minx must be less than maxx')
+            if coords[1] > coords[3]:
+                raise InputError('bbox param miny must be less than maxy')
+            bbox = tuple(float(c) for c in coords)
+        else:
+            bbox = get_extent(self.request.dbsession, Street).bbox
+
+        settings = self.request.registry.settings
+
+        return {
+            'center': center or None,
+            'bbox': bbox or None,
+        }
 
     def _get_query(self):
         """Return a query the back end service understands.
