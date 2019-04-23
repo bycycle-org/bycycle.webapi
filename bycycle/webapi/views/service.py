@@ -41,22 +41,27 @@ class ServiceResource:
         return data
 
     def _get_query(self):
-        """Return a query the relevant back end service understands.
+        """Return a query the back end service understands.
 
-        Parse request data for query. If bad or missing data is found,
-        an InputError may be raised.
+        Parse request data for query to send to back end service. The
+        `term` query param, stripped of leading and trailing whitespace,
+        is used by default.
 
-        The `term` query param is used as-is by default.
+        Raises:
+            InputError: On bad input (missing or malformed data)
 
         """
         return self.request.params.get('term', '').strip()
 
     def _get_options(self):
-        """Return keyword args for service.
+        """Return keyword args for querying service.
 
-        Extract service options from query params and return a dict of
-        service-specific options (i.e., the **kwargs for the service).
-        Like `_get_query()`, this may raise an `InputError`.
+        Extract service query options from request query params and
+        return a dict of service-specific options (i.e., the **kwargs
+        for the service's `query` method).
+
+        Raises:
+            InputError: On bad input
 
         """
         return {}
