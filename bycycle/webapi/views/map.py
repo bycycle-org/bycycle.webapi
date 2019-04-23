@@ -6,7 +6,6 @@ from pyramid.response import Response
 
 from zope.sqlalchemy import mark_changed
 
-from bycycle.core.geometry import make_transformer
 from bycycle.core.geometry.sqltypes import Geometry
 from bycycle.core.model import MVTCache
 
@@ -58,7 +57,6 @@ def make_mvt_view(table, column=None, layer_name=None, srid=None, properties=Non
     srid = srid or 3857
     properties = ', '.join('"%s"' % name for name in properties)
     statement = MVT_STATEMENT.strip().format_map(locals())
-    projector = make_transformer(4326, srid)
 
     def view(request):
         dbsession = request.dbsession
