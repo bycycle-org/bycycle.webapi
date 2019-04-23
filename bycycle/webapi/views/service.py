@@ -83,10 +83,12 @@ class ServiceResource:
             bbox = get_extent(self.request.dbsession, Street).bbox
 
         settings = self.request.registry.settings
+        mapbox_access_token = settings.get('mapbox.access_token')
 
         return {
             'center': center or None,
             'bbox': bbox or None,
+            'mapbox_access_token': mapbox_access_token,
         }
 
     def _get_query(self):
