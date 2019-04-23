@@ -1,0 +1,16 @@
+---
+- name: Restart Nginx
+  listen: "restart nginx"
+  become: yes
+  become_user: root
+  service:
+    name: nginx
+    state: restarted
+
+- name: Restart uWSGI
+  listen: "restart uwsgi"
+  become: yes
+  become_user: root
+  service:
+    name: uwsgi
+    state: restarted

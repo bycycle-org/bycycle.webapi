@@ -32,6 +32,7 @@ setup(
     ],
     extras_require={
         'dev': [
+            'ansible>=2.7.10',
             'bycycle.core[dev]',
             'coverage',
             'pyramid_debugtoolbar',

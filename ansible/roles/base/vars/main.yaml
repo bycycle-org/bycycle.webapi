@@ -1,0 +1,40 @@
+---
+root: "{{ playbook_dir }}/.."
+
+local_settings_file: "{{ root }}/{{ env }}.ini"
+
+build_root: "{{ root }}/build"
+build_dir: "{{ build_root }}/{{ version }}"
+build_archive_name: "{{ version }}.tgz"
+build_archive: "{{ build_root }}/{{ build_archive_name }}"
+
+wsgi_module: "{{ root }}/application.wsgi"
+
+core_root: "{{ root }}/../bycycle.core"
+
+frontend_root: "{{ root }}/../bycycle.webui"
+frontend_build_dir: "{{ frontend_root }}/build"
+
+hostname: bycycle.org
+
+site_user: bycycle
+
+remote_site_root: "/sites/{{ hostname }}"
+remote_build_root: "{{ remote_site_root }}/builds"
+
+remote_build_dir: "{{ remote_build_root }}/{{ version }}"
+remote_settings_file: "{{ remote_build_dir }}/{{ env }}.ini"
+remote_dist_dir: "{{ remote_build_dir }}/dist"
+remote_venv: "{{ remote_build_dir }}/venv"
+
+remote_frontend_dir: "{{ remote_build_dir }}/frontend/{{ version }}"
+
+remote_pip_root: "{{ remote_site_root }}/pip"
+remote_pip_cache_dir: "{{ remote_pip_root }}/cache"
+remote_pip_wheel_dir: "{{ remote_pip_root }}/wheels"
+
+database_user: bycycle
+database_password: bycycle
+database_host: localhost
+database_port: 5432
+database_name: bycycle

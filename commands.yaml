@@ -13,8 +13,8 @@ envs:
   production:
     db:
       user: "bycycle"
-      password: ""
-      host: "pg1.cwitqu7drify.us-west-2.rds.amazonaws.com"
+      password: "bycycle"
+      host: "localhost"
       port: 5432
       database: "bycycle"
     domain_name: "bycycle.org"
@@ -30,33 +30,10 @@ args:
     host: "{{ domain_name }}"
 
   provision:
-    packages:
-      - "certbot"
-      - "gcc"
-      - "libgeos-dev"
-      - "libproj-dev"
-      - "nginx-full"
-      - "postgresql-client"
-      - "python3"
-      - "python3-dev"
-      - "python3-venv"
-      - "uwsgi"
-      - "uwsgi-plugin-python3"
-    deploy_root: "{{ deploy_root }}"
-    deploy_user: "{{ deploy_user }}"
-
-  make_dhparams:
-    domain_name: "{{ domain_name }}"
-
-  make_cert:
-    domain_name: "{{ domain_name }}"
+    env: "production"
 
   deploy:
-    root: "{{ deploy_root }}"
-    dir: "{{ deploy_root }}/{{ version }}"
-    user: "{{ deploy_user }}"
-    host: "{{ domain_name }}"
-    sdists: ["../bycycle.core"]
+    env: "production"
 
   push_nginx_config:
     host: "{{ remote.host }}"

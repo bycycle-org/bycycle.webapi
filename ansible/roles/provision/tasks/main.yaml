@@ -1,0 +1,252 @@
+---
+# Basics
+
+- name: Set host name
+  tags:
+    - provision-hostname
+  hostname:
+    name: "{{ hostname }}"
+
+- name: Set timezone
+  tags:
+    - provision-timezone
+  timezone:
+    name: America/Los_Angeles
+
+- name: Update packages
+  tags:
+    - provision-update-packages
+  apt:
+    update_cache: yes
+    upgrade: yes
+    force_apt_get: yes
+
+- name: Install base packages
+  tags:
+    - provision-install-packages
+  apt:
+    name:
+      - gcc
+    state: latest
+
+- name: Use vi keybindings
+  tags:
+    - provision-bash
+  blockinfile:
+    path: /etc/bash.bashrc
+    content: |
+      set -o vi
+      bind -m vi-insert "\C-l":clear-screen
+
+# PostgreSQL
+
+- name: Install Postgres server
+  tags:
+    - provision-postgres
+  apt:
+    name:
+      - postgresql
+      - postgresql-10-postgis-2.4
+      - python3-psycopg2
+    state: latest
+
+- name: Create application database user
+  tags:
+    - provision-postgres
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ database_user }}"
+    password: "{{ database_password }}"
+
+- name: Create application database
+  tags:
+    - provision-postgres
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: "{{ database_name }}"
+    owner: "{{ database_user }}"
+    encoding: UTF-8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    template: template0
+
+- name: Enable postgis extension in application database
+  tags:
+    - provision-postgres
+  become: yes
+  become_user: postgres
+  postgresql_ext:
+    name: postgis
+    db: "{{ database_name }}"
+
+# Nginx
+
+- name: Install Nginx
+  tags:
+    - provision-nginx
+  apt:
+    name: nginx
+    state: latest
+
+- name: Remove unused Nginx config
+  tags:
+    - provision-nginx
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/nginx/sites-available
+    - /etc/nginx/snippets
+    - /var/www/html/index.nginx-debian.html
+  notify: "restart nginx"
+
+- name: Copy Nginx config
+  tags:
+    - provision-nginx
+  copy:
+    src: etc/nginx/nginx.conf
+    dest: /etc/nginx
+  notify: "restart nginx"
+
+- name: Copy Nginx vhosts
+  tags:
+    - provision-nginx
+  copy:
+    src: "etc/nginx/sites-available/{{ hostname }}.conf"
+    dest: "/etc/nginx/sites-enabled"
+  notify: "restart nginx"
+
+# uWSGI
+
+- name: Install uWSGI
+  tags:
+    - provision-uwsgi
+  apt:
+    name:
+      - "uwsgi"
+      - "uwsgi-plugin-python3"
+    state: latest
+
+- name: Remove unused uWSGI config
+  tags:
+    - provision-uwsgi
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/uwsgi/apps-available
+  notify: "restart uwsgi"
+
+- name: Copy uWSGI app config
+  tags:
+    - provision-uwsgi
+  copy:
+    src: "etc/uwsgi/apps-available/{{ hostname }}.ini"
+    dest: "/etc/uwsgi/apps-enabled"
+  notify: "restart uwsgi"
+
+# SSL (Let's Encrypt)
+
+- name: Add certbot apt repo
+  tags:
+    - provision-ssl
+  apt_repository:
+    repo: ppa:certbot/certbot
+
+- name: Install certbot
+  tags:
+    - provision-ssl
+  apt:
+    name: certbot
+    state: latest
+
+- name: Stop Nginx
+  tags:
+    - provision-ssl
+  service:
+    name: nginx
+    state: stopped
+
+- name: Create cert
+  tags:
+    - provision-ssl
+  command: >
+    certbot
+    certonly
+    --agree-tos
+    --domain {{ hostname }}
+    --email letsencrypt@{{ hostname }}
+    --standalone
+  args:
+    creates: /etc/letsencrypt/live/{{ hostname }}/fullchain.pem
+
+- name: Create /etc/pki/nginx for DH params
+  tags:
+    - provision-ssl
+  file:
+    path: /etc/pki/nginx
+    state: directory
+
+- name: Create DH params
+  tags:
+    - provision-ssl
+  openssl_dhparam:
+    path: /etc/pki/nginx/{{ hostname }}.pem
+    size: 2048
+
+- name: Start Nginx
+  tags:
+    - provision-ssl
+  service:
+    name: nginx
+    state: started
+
+# Python
+
+- name: Install Python
+  tags:
+    - provision-python
+  apt:
+    name:
+      - "python3"
+      - "python3-dev"
+      - "python3-venv"
+    state: latest
+
+# APT Cleanup
+
+- name: APT Cleanup
+  tags:
+    - provision-apt
+  apt:
+    autoclean: yes
+    autoremove: yes
+
+# Site
+
+- name: Create directory for sites
+  tags:
+    - provision-site
+  file:
+    path: /sites
+    state: directory
+    owner: www-data
+    group: www-data
+
+- name: Create application user and home directory
+  tags:
+    - provision-site
+  user:
+    name: "{{ site_user }}"
+    home: "{{ remote_site_root }}"
+    shell: /bin/bash
+
+- name: Set application home directory group and permissions
+  tags:
+    - provision-site
+  file:
+    path: "{{ remote_site_root }}"
+    group: www-data
+    mode: u=rwX,g=rwX,o=

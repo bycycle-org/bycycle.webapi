@@ -1,0 +1,118 @@
+---
+
+# Back end
+
+- name: Remove remote build directory
+  tags:
+    - overwrite
+  file:
+    path: "{{ remote_build_dir }}"
+    state: absent
+
+- name: Configure build/release directories
+  tags:
+    - link
+  deploy_helper:
+    state: present
+    path: "{{ remote_site_root }}"
+    releases_path: "builds"
+    release: "{{ version }}"
+    current_path: "current"
+    shared_path: ""
+
+- name: Copy and extract build archive
+  tags:
+    - archive
+  unarchive:
+    src: "{{ build_archive }}"
+    dest: "{{ remote_build_root }}"
+
+- name: Create virtualenv
+  tags:
+    - virtualenv
+  pip:
+    name:
+      - pip
+      - setuptools
+      - wheel
+    state: latest
+    virtualenv: "{{ remote_venv }}"
+    virtualenv_command: "/usr/bin/python3 -m venv"
+
+- name: Find old wheels
+  tags:
+    - install
+    - wheels
+  find:
+    paths: "{{ remote_pip_wheel_dir }}"
+    patterns:
+      - "bycycle.core-*.whl"
+      - "bycycle.webapi-*.whl"
+  register: old_wheels
+
+- name: Remove old wheels
+  tags:
+    - install
+    - wheels
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ old_wheels.files }}"
+
+- name: Build wheels
+  tags:
+    - install
+    - wheels
+  command: >
+    {{ remote_venv }}/bin/pip wheel
+    --find-links {{ remote_dist_dir }}
+    --cache-dir {{ remote_pip_cache_dir }}
+    --wheel-dir {{ remote_pip_wheel_dir }}
+    bycycle.webapi
+
+- name: Uninstall old package versions
+  tags:
+    - install
+  pip:
+    name:
+      - bycycle.core
+      - bycycle.webapi
+    state: absent
+    virtualenv: "{{ remote_venv }}"
+
+- name: Install packages
+  tags:
+    - install
+  pip:
+    name:
+      - bycycle.webapi
+    state: present
+    virtualenv: "{{ remote_venv }}"
+    extra_args: --find-links {{ remote_pip_wheel_dir }} --no-compile --no-index
+
+- name: Clean up old builds and link to new release
+  tags:
+    - link
+  deploy_helper:
+    state: finalize
+    clean: true
+    path: "{{ deploy_helper.project_path }}"
+    releases_path: "{{ deploy_helper.releases_path }}"
+    release: "{{ deploy_helper.new_release }}"
+    current_path: "{{ deploy_helper.current_path }}"
+    keep_releases: 3
+  notify:
+    - "restart uwsgi"
+
+- name: Recursively set site directory owner, group, and permissions
+  tags:
+    - permissions
+  become: yes
+  become_user: root
+  file:
+    path: "{{ remote_site_root }}"
+    owner: "{{ site_user }}"
+    group: "www-data"
+    mode: "u=rwX,g=rwX,o="
+    follow: no
+    recurse: yes

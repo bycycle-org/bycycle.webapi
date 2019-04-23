@@ -1,0 +1,101 @@
+---
+
+# Back end
+
+- name: Remove build directory
+  tags:
+    - remove-build-directory
+  file:
+    path: "{{ build_dir }}"
+    state: absent
+
+- name: Remove build archive
+  tags:
+    - archive
+    - remove-build-archive
+  file:
+    path: "{{ build_archive }}"
+    state: absent
+
+- name: Create build directory structure
+  tags:
+    - prepare-build-dir
+  file:
+    path: "{{ build_dir }}/{{ item }}"
+    state: directory
+  with_items:
+    - dist
+
+- name: Add in-progress/unfinished marker to build directory
+  copy:
+    content: "DEPLOY_UNFINISHED"
+    dest: "{{ build_dir }}/DEPLOY_UNFINISHED"
+
+- name: Copy WSGI module to build directory
+  tags:
+    - prepare-copy-files
+  template:
+    src: "{{ wsgi_module }}"
+    dest: "{{ build_dir }}"
+
+- name: Copy settings file to build directory
+  tags:
+    - prepare-copy-files
+  template:
+    src: "{{ local_settings_file }}"
+    dest: "{{ build_dir }}"
+
+- name: Copy RunCommands module to build directory
+  tags:
+    - prepare-copy-files
+  copy:
+    src: "{{ root }}/commands.py"
+    dest: "{{ build_dir }}"
+
+- name: Copy RunCommands config to build directory
+  tags:
+    - prepare-copy-files
+  copy:
+    src: "{{ root }}/commands.yaml"
+    dest: "{{ build_dir }}"
+
+- name: Build source distributions
+  tags:
+    - build-distributions
+  command: python setup.py sdist -d {{ build_dir }}/dist
+  args:
+    chdir: "{{ item }}"
+  with_items:
+    - "{{ root }}"
+    - "{{ core_root }}"
+
+# Front end
+
+- name: Remove front end build directory
+  tags:
+    - prepare-frontend
+  file:
+    path: "{{ frontend_build_dir }}"
+    state: absent
+
+- name: Build front end
+  tags:
+    - prepare-frontend
+  command: npm run build
+  args:
+    chdir: "{{ frontend_root }}"
+
+- name: Copy front end build
+  tags:
+    - prepare-frontend
+  command: cp -R {{ frontend_build_dir }} {{ build_dir }}/frontend
+
+# Build archive
+
+- name: Create build archive
+  tags:
+    - archive
+    - create-build-archive
+  archive:
+    path: "{{ build_dir }}"
+    dest: "{{ build_archive }}"

@@ -1,0 +1,27 @@
+---
+- name: Provision
+  hosts:
+    - web
+  become: yes
+  roles:
+    - provision
+  tags:
+    - provision
+
+- name: Prepare
+  hosts:
+    - localhost
+  roles:
+    - prepare
+  tags:
+    - prepare
+
+- name: Deploy
+  hosts:
+    - web
+  become: yes
+  become_user: bycycle
+  roles:
+    - deploy
+  tags:
+    - deploy

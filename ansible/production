@@ -1,0 +1,5 @@
+[web]
+bycycle.org
+
+[web:vars]
+ansible_python_interpreter = /usr/bin/python3
