@@ -30,6 +30,10 @@ def includeme(config: Configurator):
         add_mvt_view(config, Street, properties=('id', 'name'))
         add_mvt_view(config, Intersection, properties=('id',))
 
+    add_mvt_view(
+        config, Street, layer_name='bike', properties=('id', 'name', 'bicycle'),
+        where_clause="cycleway IS NOT NULL and cycleway NOT IN ('no', 'proposed')")
+
 
 def add_mvt_view(config, table, layer_name=None, **kwargs):
     if layer_name is None:
