@@ -27,6 +27,7 @@ MVT_STATEMENT = """
         {table}
       WHERE
         ST_Intersects("{column}", ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, {srid}))
+        {where_clause}
     ) AS q;
 """
 
@@ -34,7 +35,8 @@ MVT_STATEMENT = """
 MVT_CACHE_STATEMENT = f'SELECT "data" FROM "mvt_cache" WHERE "key" = :key'
 
 
-def make_mvt_view(table, column=None, layer_name=None, srid=None, properties=None):
+def make_mvt_view(table, layer_name=None, column=None, srid=None, properties=None,
+                  where_clause=None):
     if isinstance(table, str):
         if not properties:
             raise TypeError('properties must be specified when table is a string')
@@ -52,10 +54,15 @@ def make_mvt_view(table, column=None, layer_name=None, srid=None, properties=Non
         properties = properties or tuple(c.name for c in table.columns if c.name != column)
         table = table.name
 
-    column = column or 'geom'
     layer_name = layer_name or table
+    column = column or 'geom'
     srid = srid or 3857
+
+    base_cache_key = ','.join(
+        (layer_name, column, str(srid), '-'.join(properties), where_clause or ''))
+
     properties = ', '.join('"%s"' % name for name in properties)
+    where_clause = f'AND {where_clause}' if where_clause else ''
     statement = MVT_STATEMENT.strip().format_map(locals())
 
     def view(request):
@@ -66,7 +73,7 @@ def make_mvt_view(table, column=None, layer_name=None, srid=None, properties=Non
         y = urlvars['y']
         z = urlvars['z']
 
-        cache_key = ','.join((table, column, x, y, z))
+        cache_key = ','.join((base_cache_key, x, y, z))
         cached_record = dbsession.execute(MVT_CACHE_STATEMENT, params={'key': cache_key})
         data = cached_record.scalar()
 
