@@ -5,8 +5,6 @@ from bycycle.core.geometry import is_coord
 from bycycle.core.model import Entity, Intersection
 from bycycle.core.model.util import get_extent
 
-from tangled.decorators import cached_property
-
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +91,7 @@ class ServiceResource:
             'mapbox_access_token': mapbox_access_token,
         }
 
-    @cached_property
+    @property
     def _default_bbox(self):
         cls = self.__class__
         if not hasattr(cls, '_default_bbox_value'):
