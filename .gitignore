@@ -1,2 +1,4 @@
 /ansible/*.retry
+/pip-wheel-metadata/
 /osm.data
+/poetry.lock

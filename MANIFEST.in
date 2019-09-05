@@ -1,8 +1,0 @@
-include CHANGELOG
-include LICENSE
-include Makefile
-include commands.yaml
-include commands.py
-include requirements.txt
-include *.ini
-recursive-include bycycle/webapi/templates *
