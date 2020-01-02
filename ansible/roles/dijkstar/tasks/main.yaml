@@ -1,0 +1,30 @@
+- name: Create Dijkstar virtualenv
+  tags:
+      - dijkstar-install
+  pip:
+    name:
+      - pip
+      - setuptools
+      - wheel
+    state: latest
+    virtualenv: /services/dijkstar
+    virtualenv_command: "/usr/bin/python3 -m venv"
+
+- name: Install Dijkstar
+  tags:
+      - dijkstar-install
+  pip:
+    name:
+      - Dijkstar[server]
+    state: present
+    version: "3.0a4"
+    virtualenv: /services/dijkstar
+    extra_args: --no-compile
+
+- name: Copy bycycle.core cost module
+  tags:
+      - dijkstar-install
+  copy:
+    src: "{{ core_root }}/bycycle/core/service/route/cost.py"
+    dest: "/services/dijkstar/lib/python3.6/site-packages/dijkstar_cost.py"
+  notify: "restart dijkstar"

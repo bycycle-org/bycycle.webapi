@@ -1,7 +1,7 @@
 ---
 - name: Restart Nginx
   listen: "restart nginx"
-  become: yes
+  become: true
   become_user: root
   service:
     name: nginx
@@ -9,8 +9,16 @@
 
 - name: Restart uWSGI
   listen: "restart uwsgi"
-  become: yes
+  become: true
   become_user: root
   service:
     name: uwsgi
+    state: restarted
+
+- name: Restart Dijkstar
+  listen: "restart dijkstar"
+  become: true
+  become_user: root
+  service:
+    name: dijkstar
     state: restarted

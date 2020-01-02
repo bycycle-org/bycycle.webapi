@@ -2,7 +2,7 @@
 - name: Provision
   hosts:
     - web
-  become: yes
+  become: true
   roles:
     - provision
   tags:
@@ -16,10 +16,20 @@
   tags:
     - prepare
 
+- name: Dijkstar
+  hosts:
+      - web
+  become: true
+  become_user: dijkstar
+  roles:
+      - dijkstar
+  tags:
+      - dijkstar
+
 - name: Deploy
   hosts:
     - web
-  become: yes
+  become: true
   become_user: bycycle
   roles:
     - deploy

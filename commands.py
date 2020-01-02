@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from runcommands import command
@@ -23,23 +24,25 @@ def provision(env='production', tags=(), skip_tags=(), echo=True):
 
 @command
 def upgrade(env='production', echo=True):
-    return provision(env=env, tags='provision-update-packages', echo=echo)
+    tags = ('provision-upgrade-packages', 'provision-apt-cleanup')
+    provision(env=env, tags=tags, echo=echo)
 
 
 # Deployment -----------------------------------------------------------
 
 
 @command(timed=True)
-def deploy(env='production',
+def deploy(env,
            version=None,
 
            # Corresponding tags will be included unless unset *or* any
            # tags are specified via --tags.
            prepare: 'Run preparation tasks (local)' = True,
+           dijkstar: 'Run Dijkstar tasks (remote)' = True,
            deploy: 'Run deployment tasks (remote)' = True,
 
            # Corresponding tags will be skipped unless set.
-           clean: 'Remove build directory' = False,
+           clean: 'Remove local build directory' = False,
            overwrite: 'Remove remote build directory' = False,
 
            tags: 'Run *only* tasks corresponding to these tags' = (),
@@ -47,22 +50,41 @@ def deploy(env='production',
 
            yes: 'Deploy without confirmation' = False,
            echo=True):
-    """Deploy a new version."""
+    """Deploy the byCycle web API and, if requested, the UI.
+
+    Typical usage::
+
+        run deploy -c
+
+    """
     version = version or git_version()
     tags = (tags,) if isinstance(tags, str) else tags
-    tags = tags or ('prepare', 'deploy')
     skip_tags = (skip_tags,) if isinstance(skip_tags, str) else skip_tags
-    yes = False if env == 'prod' else yes
+    yes = False if env == 'production' else yes
 
-    if not prepare:
-        skip_tags += ('prepare',)
-    if not deploy:
-        skip_tags += ('deploy',)
+    if tags:
+        prepare = 'prepare' in tags
+        dijkstar = 'dijkstar' in tags
+        deploy = 'deploy' in tags
+    else:
+        if prepare:
+            tags += ('prepare',)
+        if dijkstar:
+            tags += ('dijkstar',)
+        if deploy:
+            tags += ('deploy',)
+
     if not clean:
         skip_tags += ('remove-build-directory',)
     if not overwrite:
         skip_tags += ('overwrite',)
 
+    if not prepare:
+        printer.info('Not preparing')
+    if not dijkstar:
+        printer.info('Not running Dijkstar tasks')
+    if not deploy:
+        printer.info('Not deploying')
     if tags:
         printer.info('Selected tags: %s' % ', '.join(tags))
     if skip_tags:
@@ -120,13 +142,14 @@ def get_ansible_args(env, *, root=None, tags=(), skip_tags=(), version=None, ext
 
 
 @command
-def nginx(command, raise_on_error=True):
-    remote(('systemctl', command, 'nginx.service'), sudo=True, raise_on_error=raise_on_error)
+def nginx(cmd, raise_on_error=True):
+    remote(('systemctl', cmd, 'nginx.service'), sudo=True, raise_on_error=raise_on_error)
 
 
 @command
 def push_nginx_config(host):
-    sync('etc/nginx/', '/etc/nginx/', host, sudo=True, mode='u=rw,g=r,o=r')
+    sync('ansible/roles/provision/files/etc/nginx/', '/etc/nginx/', host, sudo=True,
+         mode='u=rw,g=r,o=r')
 
 
 @command
@@ -135,11 +158,48 @@ def uwsgi(command, raise_on_error=True):
 
 
 @command
-def push_uwsgi_config(host, config_file, config_link, enable=True):
+def push_uwsgi_config(host):
     """Push uWSGI app config."""
-    sync(config_file.lstrip('/'), config_file, host, sudo=True, mode='u=rw,g=r,o=r')
-    if enable:
-        remote(('ln -sf', config_file, config_link), sudo=True)
+    path = 'etc/uwsgi/apps-enabled/bycycle.org.ini'
+    local_path = os.path.join('ansible/roles/provision/files', path)
+    remote_path = os.path.join('/', path)
+    sync(local_path, remote_path, host, sudo=True, mode='u=rw,g=r,o=r')
+
+
+@command
+def dijkstar(cmd):
+    remote(('systemctl', cmd, 'dijkstar.service'), sudo=True)
+
+
+# Data-loading ---------------------------------------------------------
+
+
+@command
+def remote_load_osm_data(fetch=True):
+    remote((
+        'pwd',
+        './venv/bin/run',
+        '-e', 'production',
+        'fetch-osm-data' if fetch else None,
+        'load-osm-data',
+    ), cd='~/current')
+    # remote_reload_graph()
+
+
+@command
+def remote_create_graph():
+    remote('./venv/bin/run -e production create-graph', cd='~/current')
+    remote_reload_graph()
+
+
+@command
+def remote_reload_graph(restart=False):
+    if restart:
+        dijkstar('restart')
+    else:
+        # XXX: Only works if `dijkstar serve --workers=1`; if workers is
+        #      greater than 1, run `dikstar('restart')` command instead.
+        remote('curl -X POST "http://localhost:8000/reload-graph"')
 
 
 # Local ----------------------------------------------------------------

@@ -1,7 +1,7 @@
 import logging
 
 from bycycle.core.exc import ByCycleError, InputError, NotFoundError
-from bycycle.core.geometry import is_coord
+from bycycle.core.geometry.util import is_coord
 from bycycle.core.model import Entity, Intersection
 from bycycle.core.model.util import get_extent
 

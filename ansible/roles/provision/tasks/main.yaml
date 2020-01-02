@@ -13,13 +13,35 @@
   timezone:
     name: America/Los_Angeles
 
-- name: Update packages
+- name: Upgrade packages
   tags:
-    - provision-update-packages
+    - provision-upgrade-packages
   apt:
-    update_cache: yes
-    upgrade: yes
-    force_apt_get: yes
+    force_apt_get: true
+    update_cache: true
+    upgrade: safe
+
+- name: Rebooting after upgrade (if required)
+  tags:
+    - provision-upgrade-packages
+  command:
+    cmd: reboot
+    removes: /var/run/reboot-required
+  async: 0
+  poll: 0
+  ignore_errors: true
+  register: restarted
+
+- name: Waiting for reboot...
+  tags:
+    - provision-upgrade-packages
+  local_action:
+    module: wait_for
+    delay: 30
+    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    port: 1046
+    search_regex: OpenSSH
+  when: restarted.changed
 
 - name: Install base packages
   tags:
@@ -53,7 +75,7 @@
 - name: Create application database user
   tags:
     - provision-postgres
-  become: yes
+  become: true
   become_user: postgres
   postgresql_user:
     name: "{{ database_user }}"
@@ -62,7 +84,7 @@
 - name: Create application database
   tags:
     - provision-postgres
-  become: yes
+  become: true
   become_user: postgres
   postgresql_db:
     name: "{{ database_name }}"
@@ -75,7 +97,7 @@
 - name: Enable postgis extension in application database
   tags:
     - provision-postgres
-  become: yes
+  become: true
   become_user: postgres
   postgresql_ext:
     name: postgis
@@ -107,15 +129,15 @@
     - provision-nginx
   copy:
     src: etc/nginx/nginx.conf
-    dest: /etc/nginx
+    dest: /etc/nginx/
   notify: "restart nginx"
 
 - name: Copy Nginx vhosts
   tags:
     - provision-nginx
   copy:
-    src: "etc/nginx/sites-available/{{ hostname }}.conf"
-    dest: "/etc/nginx/sites-enabled"
+    src: "etc/nginx/sites-enabled/{{ hostname }}.conf"
+    dest: /etc/nginx/sites-enabled/
   notify: "restart nginx"
 
 # uWSGI
@@ -143,8 +165,8 @@
   tags:
     - provision-uwsgi
   copy:
-    src: "etc/uwsgi/apps-available/{{ hostname }}.ini"
-    dest: "/etc/uwsgi/apps-enabled"
+    src: "etc/uwsgi/apps-enabled/{{ hostname }}.ini"
+    dest: /etc/uwsgi/apps-enabled/
   notify: "restart uwsgi"
 
 # SSL (Let's Encrypt)
@@ -219,10 +241,64 @@
 
 - name: APT Cleanup
   tags:
-    - provision-apt
+    - provision-apt-cleanup
   apt:
-    autoclean: yes
-    autoremove: yes
+    autoclean: true
+    autoremove: true
+
+# Services
+
+- name: Create directory for services
+  tags:
+      - provision-services
+      - provision-dijkstar
+  file:
+      path: /services
+      state: directory
+
+
+# Dijkstar Server
+
+- name: Create Dijkstar user and home directory
+  tags:
+      - provision-services
+      - provision-dijkstar
+  user:
+      name: dijkstar
+      home: /services/dijkstar
+      shell: /bin/bash
+
+- name: Set Dijkstar home directory permissions
+  tags:
+      - provision-services
+      - provision-dijkstar
+  file:
+      path: /services/dijkstar
+      mode: u=rwX,g=rwX,o=
+
+- name: Copy Dijkstar unit file
+  tags:
+    - provision-services
+    - provision-dijkstar
+  copy:
+    src: lib/systemd/system/dijkstar.service
+    dest: /lib/systemd/system/
+
+- name: Reload systemd manager configuration
+  tags:
+    - provision-services
+    - provision-dijkstar
+  systemd:
+    daemon_reload: yes
+
+- name: Enable dijkstar service at boot
+  tags:
+    - provision-services
+    - provision-dijkstar
+  systemd:
+    name: dijkstar
+    enabled: true
+    masked: false
 
 # Site
 
@@ -250,3 +326,12 @@
     path: "{{ remote_site_root }}"
     group: www-data
     mode: u=rwX,g=rwX,o=
+
+- name: Create bycycle data directory
+  tags:
+      - provision-site
+  file:
+      path: "{{ data_dir }}"
+      state: directory
+      owner: bycycle
+      group: bycycle

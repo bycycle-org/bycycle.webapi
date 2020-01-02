@@ -107,12 +107,53 @@
 - name: Recursively set site directory owner, group, and permissions
   tags:
     - permissions
-  become: yes
+  become: true
   become_user: root
   file:
     path: "{{ remote_site_root }}"
     owner: "{{ site_user }}"
     group: "www-data"
     mode: "u=rwX,g=rwX,o="
-    follow: no
-    recurse: yes
+    follow: false
+    recurse: true
+
+# Cron
+
+- name: Add cron HOME environment variable
+  tags:
+    - cron
+    - cron-bycycle
+  cron:
+    name: HOME
+    env: true
+    job: "{{ remote_site_root }}"
+
+- name: Add cron MAILTO environment variable
+  tags:
+    - cron
+    - cron-bycycle
+  cron:
+    name: MAILTO
+    env: true
+    job: self@wyattbaldwin.com
+
+- name: Add cron SHELL environment variable
+  tags:
+    - cron
+    - cron-bycycle
+  cron:
+    name: SHELL
+    env: true
+    job: /bin/bash
+
+- name: Add cron job for loading OSM data
+  tags:
+    - cron
+    - cron-bycycle
+  cron:
+    name: Load OSM data
+    hour: "4"
+    minute: "7"
+    job: >-
+      cd {{ remote_current_dir }} &&
+      ./venv/bin/run -e {{ env }} fetch-osm-data load-osm-data reload-graph

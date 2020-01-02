@@ -12,22 +12,20 @@ wsgi_module: "{{ root }}/application.wsgi"
 
 core_root: "{{ root }}/../bycycle.core"
 
-frontend_root: "{{ root }}/../bycycle.webui"
-frontend_build_dir: "{{ frontend_root }}/build"
-
 hostname: bycycle.org
 
 site_user: bycycle
 
+data_dir: "/var/{{ site_user }}"
+
 remote_site_root: "/sites/{{ hostname }}"
 remote_build_root: "{{ remote_site_root }}/builds"
+remote_current_dir: "{{ remote_site_root }}/current"
 
 remote_build_dir: "{{ remote_build_root }}/{{ version }}"
 remote_settings_file: "{{ remote_build_dir }}/{{ env }}.ini"
 remote_dist_dir: "{{ remote_build_dir }}/dist"
 remote_venv: "{{ remote_build_dir }}/venv"
-
-remote_frontend_dir: "{{ remote_build_dir }}/frontend/{{ version }}"
 
 remote_pip_root: "{{ remote_site_root }}/pip"
 remote_pip_cache_dir: "{{ remote_pip_root }}/cache"

@@ -1,4 +1,5 @@
 import logging
+from textwrap import dedent
 
 import mercantile
 
@@ -6,8 +7,9 @@ from pyramid.response import Response
 
 from zope.sqlalchemy import mark_changed
 
+from bycycle.core.geometry import WEB_SRID
 from bycycle.core.geometry.sqltypes import Geometry
-from bycycle.core.model import MVTCache
+from bycycle.core.model import MVTCache, Street
 
 
 log = logging.getLogger(__name__)
@@ -20,13 +22,16 @@ MVT_STATEMENT = """
       SELECT
         {properties},
         ST_AsMVTGeom(
-          "{column}",
+          ST_Transform("{column}", {web_srid}),
           ST_MakeBox2D(ST_Point(:minx, :miny), ST_Point(:maxx, :maxy))
         ) AS geom
       FROM
         {table}
       WHERE
-        ST_Intersects("{column}", ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, {srid}))
+        ST_Intersects(
+          ST_Transform("{column}", {web_srid}),
+          ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, {web_srid})
+        )
         {where_clause}
     ) AS q;
 """
@@ -35,8 +40,7 @@ MVT_STATEMENT = """
 MVT_CACHE_STATEMENT = f'SELECT "data" FROM "mvt_cache" WHERE "key" = :key'
 
 
-def make_mvt_view(table, layer_name=None, column=None, srid=None, properties=None,
-                  where_clause=None):
+def make_mvt_view(table, layer_name=None, column=None, properties=None, where_clause=None):
     if isinstance(table, str):
         if not properties:
             raise TypeError('properties must be specified when table is a string')
@@ -48,7 +52,6 @@ def make_mvt_view(table, layer_name=None, column=None, srid=None, properties=Non
             for c in table.columns:
                 if isinstance(c.type, Geometry):
                     column = c.name
-                    srid = srid or c.type.srid
                     break
 
         properties = properties or tuple(c.name for c in table.columns if c.name != column)
@@ -56,14 +59,14 @@ def make_mvt_view(table, layer_name=None, column=None, srid=None, properties=Non
 
     layer_name = layer_name or table
     column = column or 'geom'
-    srid = srid or 3857
 
     base_cache_key = ','.join(
-        (layer_name, column, str(srid), '-'.join(properties), where_clause or ''))
+        (layer_name, column, '-'.join(properties), where_clause or ''))
 
     properties = ', '.join('"%s"' % name for name in properties)
     where_clause = f'AND {where_clause}' if where_clause else ''
-    statement = MVT_STATEMENT.strip().format_map(locals())
+    web_srid = WEB_SRID
+    statement = dedent(MVT_STATEMENT.strip().format_map(locals()))
 
     def view(request):
         dbsession = request.dbsession
@@ -101,3 +104,10 @@ def make_mvt_view(table, layer_name=None, column=None, srid=None, properties=Non
 
     return view
 
+
+def street_bbox_view(request):
+    dbsession = request.dbsession
+    result = dbsession.execute(
+        f"""SELECT ST_AsGeoJSON(ST_Extent(geom)) AS bbox FROM {Street.__table__.name}""")
+    row = result.fetchone()
+    return Response(row.bbox.encode('utf-8'), content_type='application/json')
