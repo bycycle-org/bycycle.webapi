@@ -37,8 +37,8 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
-"bycycle.core" = { path = "../bycycle.core/" }
+python = ">=3.8,<3.9"
+"bycycle.core" = { path = "../bycycle.core/", develop = true }
 cornice = "^4.0.1"
 Mako = "^1.1.0"
 plaster_pastedeploy = "^0.7"

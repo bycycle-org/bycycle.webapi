@@ -1,0 +1,38 @@
+extends = "bycycle.core:commands.toml"
+
+[globals]
+package = "bycycle.webapi"
+settings_file = "{{ env }}.ini"
+host = "bycycle.org"
+run_as = "bycycle"
+
+[envs.production]
+bbox = [-122.836625, 45.432699, -122.472542, 45.652581]
+
+db.user = "bycycle"
+db.password = "bycycle"
+db.host = "localhost"
+db.port = 5432
+db.database = "bycycle"
+
+domain_name = "bycycle.org"
+deploy_user = "bycycle"
+deploy_root = "/sites/bycycle.org"
+
+[envs.production.args]
+fetch_osm_data.directory = "/var/bycycle"
+fetch_osm_data.log_to = "/var/bycycle/fetch-osm-data.log"
+
+load_osm_data.directory = "/var/bycycle"
+load_osm_data.graph_path = "/var/bycycle/graph.marshal"
+load_osm_data.log_to = "/var/bycycle/load-osm-data.log"
+
+create_graph.path = "/var/bycycle/graph.marshal"
+create_graph.log_to = "/var/bycycle/create-graph.log"
+
+reload_graph.log_to = "/var/bycycle/reload-graph.log"
+
+[ args ]
+provision.env = "production"
+upgrade.env = "production"
+deploy.env = "production"

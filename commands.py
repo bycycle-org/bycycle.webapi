@@ -207,4 +207,4 @@ def remote_reload_graph(restart=False):
 
 @command
 def dev_server(settings_file):
-    local(('pserve', '--reload', settings_file), shell=True)
+    local(('pserve', '--reload', settings_file))
