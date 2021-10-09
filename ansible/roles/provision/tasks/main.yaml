@@ -43,13 +43,33 @@
     search_regex: OpenSSH
   when: restarted.changed
 
-- name: Install base packages
+- name: Install packages
   tags:
     - provision-install-packages
   apt:
-    name:
-      - gcc
+    name: "{{ item }}"
     state: latest
+    force_apt_get: true
+  with_items:
+    - acl
+    - gcc
+    - gdal-bin
+    - libpq-dev
+    - openssl
+    - python3
+    - python3-dev
+    - python3-venv
+    - uwsgi
+    - uwsgi-plugin-python3
+
+- name: Enable uWSGI
+  tags:
+    - enable-uwsgi
+  service:
+    name: uwsgi
+    enabled: true
+
+# Configure BASH
 
 - name: Use vi keybindings
   tags:
@@ -60,122 +80,7 @@
       set -o vi
       bind -m vi-insert "\C-l":clear-screen
 
-# PostgreSQL
-
-- name: Install Postgres server
-  tags:
-    - provision-postgres
-  apt:
-    name:
-      - postgresql
-      - postgresql-10-postgis-2.4
-      - python3-psycopg2
-    state: latest
-
-- name: Create application database user
-  tags:
-    - provision-postgres
-  become: true
-  become_user: postgres
-  postgresql_user:
-    name: "{{ database_user }}"
-    password: "{{ database_password }}"
-
-- name: Create application database
-  tags:
-    - provision-postgres
-  become: true
-  become_user: postgres
-  postgresql_db:
-    name: "{{ database_name }}"
-    owner: "{{ database_user }}"
-    encoding: UTF-8
-    lc_collate: en_US.UTF-8
-    lc_ctype: en_US.UTF-8
-    template: template0
-
-- name: Enable postgis extension in application database
-  tags:
-    - provision-postgres
-  become: true
-  become_user: postgres
-  postgresql_ext:
-    name: postgis
-    db: "{{ database_name }}"
-
-# Nginx
-
-- name: Install Nginx
-  tags:
-    - provision-nginx
-  apt:
-    name: nginx
-    state: latest
-
-- name: Remove unused Nginx config
-  tags:
-    - provision-nginx
-  file:
-    path: "{{ item }}"
-    state: absent
-  with_items:
-    - /etc/nginx/sites-available
-    - /etc/nginx/snippets
-    - /var/www/html/index.nginx-debian.html
-  notify: "restart nginx"
-
-- name: Copy Nginx config
-  tags:
-    - provision-nginx
-  copy:
-    src: etc/nginx/nginx.conf
-    dest: /etc/nginx/
-  notify: "restart nginx"
-
-- name: Copy Nginx vhosts
-  tags:
-    - provision-nginx
-  copy:
-    src: "etc/nginx/sites-enabled/{{ hostname }}.conf"
-    dest: /etc/nginx/sites-enabled/
-  notify: "restart nginx"
-
-# uWSGI
-
-- name: Install uWSGI
-  tags:
-    - provision-uwsgi
-  apt:
-    name:
-      - "uwsgi"
-      - "uwsgi-plugin-python3"
-    state: latest
-
-- name: Remove unused uWSGI config
-  tags:
-    - provision-uwsgi
-  file:
-    path: "{{ item }}"
-    state: absent
-  with_items:
-    - /etc/uwsgi/apps-available
-  notify: "restart uwsgi"
-
-- name: Copy uWSGI app config
-  tags:
-    - provision-uwsgi
-  copy:
-    src: "etc/uwsgi/apps-enabled/{{ hostname }}.ini"
-    dest: /etc/uwsgi/apps-enabled/
-  notify: "restart uwsgi"
-
 # SSL (Let's Encrypt)
-
-- name: Add certbot apt repo
-  tags:
-    - provision-ssl
-  apt_repository:
-    repo: ppa:certbot/certbot
 
 - name: Install certbot
   tags:
@@ -183,13 +88,7 @@
   apt:
     name: certbot
     state: latest
-
-- name: Stop Nginx
-  tags:
-    - provision-ssl
-  service:
-    name: nginx
-    state: stopped
+    force_apt_get: true
 
 - name: Create cert
   tags:
@@ -199,8 +98,9 @@
     certonly
     --agree-tos
     --domain {{ hostname }}
-    --email letsencrypt@{{ hostname }}
+    --email letsencrypt@wyattbaldwin.com
     --standalone
+    --non-interactive
   args:
     creates: /etc/letsencrypt/live/{{ hostname }}/fullchain.pem
 
@@ -217,71 +117,128 @@
   openssl_dhparam:
     path: /etc/pki/nginx/{{ hostname }}.pem
     size: 2048
+    select_crypto_backend: openssl
 
-- name: Start Nginx
+# PostgreSQL
+
+- name: Install Postgres server
   tags:
-    - provision-ssl
-  service:
-    name: nginx
-    state: started
-
-# Python
-
-- name: Install Python
-  tags:
-    - provision-python
+    - provision-postgres
   apt:
-    name:
-      - "python3"
-      - "python3-dev"
-      - "python3-venv"
+    name: postgresql
     state: latest
+    force_apt_get: true
 
-# APT Cleanup
-
-- name: APT Cleanup
+- name: Install PostGIS
   tags:
-    - provision-apt-cleanup
+    - provision-postgres
   apt:
-    autoclean: true
-    autoremove: true
+    name: postgresql-12-postgis-3
+    state: latest
+    force_apt_get: true
+
+- name: Create application database user
+  tags:
+    - provision-postgres
+    - provision-postgres-user
+  become: true
+  become_user: postgres
+  environment:
+    PGPASSWORD: "{{ database_password }}"
+  command: /usr/bin/createuser --login {{ database_user }}
+  register: command_result
+  failed_when: "command_result.stderr and 'exists' not in command_result.stderr"
+
+- name: Create application database
+  tags:
+    - provision-postgres
+    - provision-postgres-database
+  become: true
+  become_user: postgres
+  command: /usr/bin/createdb --owner {{ database_user }} {{ database_name }} "byCycle database"
+  register: command_result
+  failed_when: "command_result.stderr and 'exists' not in command_result.stderr"
+
+- name: Enable postgis extension in application database
+  tags:
+    - provision-postgres
+    - provision-postgres-extensions
+  become: true
+  become_user: postgres
+  command: /usr/bin/psql -c "create extension postgis" {{ database_name }}
+  register: command_result
+  failed_when: "command_result.stderr and 'exists' not in command_result.stderr"
+
+# Nginx
+
+- name: Install Nginx
+  tags:
+    - provision-nginx
+  apt:
+    name: nginx
+    state: latest
+    force_apt_get: true
+
+- name: Remove unused Nginx config
+  tags:
+    - provision-nginx
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/nginx/fastcgi.conf
+    - /etc/nginx/fastcgi_params
+    - /etc/nginx/scgi_params
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled
+    - /etc/nginx/snippets
+    - /var/www/html/index.nginx-debian.html
+  notify: "restart nginx"
+
+- name: Copy Nginx config
+  tags:
+    - provision-nginx
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/
+  notify: "restart nginx"
 
 # Services
 
 - name: Create directory for services
   tags:
-      - provision-services
-      - provision-dijkstar
+    - provision-services
+    - provision-dijkstar
   file:
-      path: /services
-      state: directory
+    path: /services
+    state: directory
 
 
 # Dijkstar Server
 
 - name: Create Dijkstar user and home directory
   tags:
-      - provision-services
-      - provision-dijkstar
+    - provision-services
+    - provision-dijkstar
   user:
-      name: dijkstar
-      home: /services/dijkstar
-      shell: /bin/bash
+    name: dijkstar
+    home: /services/dijkstar
+    shell: /bin/bash
 
 - name: Set Dijkstar home directory permissions
   tags:
-      - provision-services
-      - provision-dijkstar
+    - provision-services
+    - provision-dijkstar
   file:
-      path: /services/dijkstar
-      mode: u=rwX,g=rwX,o=
+    path: /services/dijkstar
+    mode: u=rwX,g=rwX,o=
 
 - name: Copy Dijkstar unit file
   tags:
     - provision-services
     - provision-dijkstar
   copy:
-    src: lib/systemd/system/dijkstar.service
+    src: dijkstar.service
     dest: /lib/systemd/system/
 
 - name: Reload systemd manager configuration
@@ -300,16 +257,7 @@
     enabled: true
     masked: false
 
-# Site
-
-- name: Create directory for sites
-  tags:
-    - provision-site
-  file:
-    path: /sites
-    state: directory
-    owner: www-data
-    group: www-data
+# Site (directory containing site versions)
 
 - name: Create application user and home directory
   tags:
@@ -329,9 +277,9 @@
 
 - name: Create bycycle data directory
   tags:
-      - provision-site
+    - provision-site
   file:
-      path: "{{ data_dir }}"
-      state: directory
-      owner: bycycle
-      group: bycycle
+    path: "{{ data_dir }}"
+    state: directory
+    owner: bycycle
+    group: bycycle

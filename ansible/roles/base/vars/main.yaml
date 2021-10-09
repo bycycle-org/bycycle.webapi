@@ -1,7 +1,13 @@
 ---
 root: "{{ playbook_dir }}/.."
 
+package: "bycycle"
+site_user: "{{ package }}"
+hostname: bycycle.org
+
 local_settings_file: "{{ root }}/{{ env }}.ini"
+
+# Local ----------------------------------------------------------------
 
 build_root: "{{ root }}/build"
 build_dir: "{{ build_root }}/{{ version }}"
@@ -12,11 +18,9 @@ wsgi_module: "{{ root }}/application.wsgi"
 
 core_root: "{{ root }}/../bycycle.core"
 
-hostname: bycycle.org
-
-site_user: bycycle
-
 data_dir: "/var/{{ site_user }}"
+
+# Remote ---------------------------------------------------------------
 
 remote_site_root: "/sites/{{ hostname }}"
 remote_build_root: "{{ remote_site_root }}/builds"
@@ -31,8 +35,8 @@ remote_pip_root: "{{ remote_site_root }}/pip"
 remote_pip_cache_dir: "{{ remote_pip_root }}/cache"
 remote_pip_wheel_dir: "{{ remote_pip_root }}/wheels"
 
-database_user: bycycle
-database_password: bycycle
-database_host: localhost
+database_user: "{{ package }}"
+database_password: "{{ package }}"
+database_host: "localhost"
 database_port: 5432
-database_name: bycycle
+database_name: "{{ package }}"

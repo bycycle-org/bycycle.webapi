@@ -117,6 +117,76 @@
     follow: false
     recurse: true
 
+# Copy uWSGI app config and restart uWSGI
+
+- name: Copy uWSGI app config
+  tags:
+    - deploy-uwsgi
+  become: true
+  become_user: root
+  template:
+    src: "bycycle.ini.j2"
+    dest: "/etc/uwsgi/apps-enabled/{{ hostname }}.ini"
+
+- name: Restart uWSGI
+  tags:
+    - deploy-uwsgi
+  become: true
+  become_user: root
+  service:
+    name: uwsgi
+    state: restarted
+  async: 1000
+  poll: 0
+  register: uwsgi_restart
+
+- name: Check uWSGI restart
+  tags:
+    - deploy-uwsgi
+  become: true
+  become_user: root
+  async_status:
+    jid: "{{ uwsgi_restart.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 6
+  delay: 10
+
+# Copy Nginx app config and restart Nginx
+
+- name: Copy app Nginx config
+  tags:
+    - deploy-nginx
+  become: true
+  become_user: root
+  template:
+    src: "bycycle.conf.j2"
+    dest: "/etc/nginx/conf.d/{{ hostname }}.conf"
+
+- name: Restart Nginx
+  tags:
+    - deploy-nginx
+  become: true
+  become_user: root
+  service:
+    name: nginx
+    state: restarted
+  async: 1000
+  poll: 0
+  register: nginx_restart
+
+- name: Check Nginx restart
+  tags:
+    - deploy-nginx
+  become: true
+  become_user: root
+  async_status:
+    jid: "{{ nginx_restart.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 6
+  delay: 10
+
 # Cron
 
 - name: Add cron HOME environment variable

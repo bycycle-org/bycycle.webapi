@@ -26,5 +26,5 @@
       - dijkstar-install
   copy:
     src: "{{ core_root }}/bycycle/core/service/route/cost.py"
-    dest: "/services/dijkstar/lib/python3.6/site-packages/dijkstar_cost.py"
+    dest: "/services/dijkstar/lib/python3.8/site-packages/dijkstar_cost.py"
   notify: "restart dijkstar"

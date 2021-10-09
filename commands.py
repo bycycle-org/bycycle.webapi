@@ -18,7 +18,7 @@ def provision(env='production', tags=(), skip_tags=(), echo=True):
     if isinstance(tags, str):
         tags = (tags,)
     args = get_ansible_args(env, tags=tags, skip_tags=skip_tags)
-    printer.header(f'Provisioning {env}...')
+    printer.hr(f'Provisioning {env}...', color='header')
     return local(args, echo=echo)
 
 
@@ -50,7 +50,7 @@ def deploy(env,
 
            yes: 'Deploy without confirmation' = False,
            echo=True):
-    """Deploy the byCycle web API and, if requested, the UI.
+    """Deploy the byCycle web API.
 
     Typical usage::
 

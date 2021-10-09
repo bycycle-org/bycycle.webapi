@@ -6,7 +6,8 @@ Documentation=https://github.com/wylee/Dijkstar
 Type=simple
 User=dijkstar
 PIDFile=/run/dijkstar.pid
-ExecStart=/services/dijkstar/bin/dijkstar serve \
+ExecStart=/services/dijkstar/bin/dijkstar \
+          serve \
           --graph-file /var/bycycle/graph.marshal \
           --cost-func dijkstar_cost:cost_func \
           --root-path /graph

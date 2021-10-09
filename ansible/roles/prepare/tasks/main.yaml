@@ -64,7 +64,7 @@
   tags:
     - prepare-copy-files
   copy:
-    src: "{{ root }}/commands.yaml"
+    src: "{{ root }}/commands.toml"
     dest: "{{ build_dir }}"
 
 - name: Remove existing source distributions
