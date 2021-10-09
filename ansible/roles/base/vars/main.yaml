@@ -1,28 +1,24 @@
 ---
 root: "{{ playbook_dir }}/.."
 
-package: "bycycle"
-site_user: "{{ package }}"
-hostname: bycycle.org
-
-local_settings_file: "{{ root }}/{{ env }}.ini"
-
 # Local ----------------------------------------------------------------
+
+core_root: "{{ root }}/../bycycle.core"
+local_settings_file: "{{ root }}/{{ env }}.ini"
+wsgi_module: "{{ root }}/application.wsgi"
 
 build_root: "{{ root }}/build"
 build_dir: "{{ build_root }}/{{ version }}"
 build_archive_name: "{{ version }}.tgz"
 build_archive: "{{ build_root }}/{{ build_archive_name }}"
 
-wsgi_module: "{{ root }}/application.wsgi"
-
-core_root: "{{ root }}/../bycycle.core"
-
-data_dir: "/var/{{ site_user }}"
-
 # Remote ---------------------------------------------------------------
 
-remote_site_root: "/sites/{{ hostname }}"
+data_dir: "/var/{{ site_user }}"
+hostname: "bycycle.org"
+site_user: "bycycle"
+
+remote_site_root: "/sites/bycycle.org"
 remote_build_root: "{{ remote_site_root }}/builds"
 remote_current_dir: "{{ remote_site_root }}/current"
 
@@ -35,8 +31,8 @@ remote_pip_root: "{{ remote_site_root }}/pip"
 remote_pip_cache_dir: "{{ remote_pip_root }}/cache"
 remote_pip_wheel_dir: "{{ remote_pip_root }}/wheels"
 
-database_user: "{{ package }}"
-database_password: "{{ package }}"
+database_user: "{{ site_user }}"
+database_password: "{{ site_user }}"
 database_host: "localhost"
 database_port: 5432
-database_name: "{{ package }}"
+database_name: "{{ site_user }}"
