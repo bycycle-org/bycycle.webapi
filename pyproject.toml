@@ -37,22 +37,27 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.9"
-"bycycle.core" = { path = "../bycycle.core/", develop = true }
-cornice = "^4.0.1"
-Mako = "^1.1.0"
+"bycycle.core" = "*"
+cornice = "^6.0.0"
+Mako = "^1.1.5"
 plaster_pastedeploy = "^0.7"
-pyramid = "^1.10.4"
+pyramid = "^2.0"
 pyramid_mako = "^1.1.0"
 pyramid_retry = "^2.1"
 pyramid_sqlalchemy = "^1.6"
 pyramid_tm = "^2.3"
-transaction = "^3.0.0"
-"zope.sqlalchemy" = "^1.2"
-runcommands = "^1.0a48"
+transaction = "^3.0.1"
+"zope.sqlalchemy" = "^1.6"
+runcommands = "^1.0a68"
+plaster-pastedeploy = "^0.7"
+pyramid-mako = "^1.1.0"
+pyramid-retry = "^2.1.1"
+pyramid-tm = "^2.4"
 
 [tool.poetry.dev-dependencies]
 ansible = "*"
 bpython = "*"
+"bycycle.core" = { path = "../bycycle.core/", develop = true }
 coverage = "*"
 pyramid_debugtoolbar = "*"
 waitress = "*"
