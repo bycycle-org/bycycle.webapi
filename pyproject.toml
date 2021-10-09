@@ -30,9 +30,8 @@ include = [
     "LICENSE",
     "Makefile",
     "commands.py",
-    "commands.yaml",
+    "commands.toml",
     "*.ini",
-    "bycycle/webapi/commands.yaml",
     "bycycle/webapi/templates/**",
 ]
 
