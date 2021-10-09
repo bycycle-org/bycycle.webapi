@@ -15,10 +15,6 @@ db.host = "localhost"
 db.port = 5432
 db.database = "bycycle"
 
-domain_name = "bycycle.org"
-deploy_user = "bycycle"
-deploy_root = "/sites/bycycle.org"
-
 [envs.production.args]
 fetch_osm_data.directory = "/var/bycycle"
 fetch_osm_data.log_to = "/var/bycycle/fetch-osm-data.log"
