@@ -1,66 +1,54 @@
 [build-system]
-requires = ["poetry>=1.0.0"]
-build-backend = "poetry.masonry.api"
+requires = ["uv_build>=0.11.6"]
+build-backend = "uv_build"
 
-[tool.poetry]
+[tool.uv.build-backend]
+module-name = "bycycle.webapi"
+
+[project]
 name = "bycycle.webapi"
 version = "0.7.dev0"
 description = "byCycle web API"
-license = "GPL-3.0+"
-authors = ["Wyatt Baldwin <wyatt@bycycle.org>"]
+authors = [{ name = "Wyatt Baldwin", email = "code@wyattbaldwin.com" }]
+license = "GPL-3.0-or-later"
+
+requires-python = ">=3.14"
+
+dependencies = [
+    "bycycle.core",
+    "cornice>=6.0.0",
+    "Mako>=1.1.5",
+    "plaster_pastedeploy>=0.7",
+    "pyramid>=2.0",
+    "pyramid_mako>=1.1.0",
+    "pyramid_retry>=2.1",
+    "pyramid_tm>=2.3",
+    "transaction>=3.0.1",
+    "zope.sqlalchemy>=1.6",
+    "runcommands>=1.0a74.dev0",
+    "plaster-pastedeploy>=0.7",
+    "pyramid-mako>=1.1.0",
+    "pyramid-retry>=2.1.1",
+    "pyramid-tm>=2.4",
+]
+
+[dependency-groups]
+dev = [
+    "ansible",
+    "bycycle.core",
+    "coverage",
+    "pyramid_debugtoolbar",
+    "waitress",
+    "WebTest",
+]
+
+[tool.uv.sources]
+"bycycle.core" = { path = "../core", editable = true }
+"runcommands" = { path = "../../runcommands", editable = true }
+
+[project.urls]
 homepage = "https://bycycle.org/"
 repository = "https://github.com/bycycle-org/bycycle.webapi"
-
-keywords = [
-    "bicycle",
-    "bike",
-    "directions",
-    "routing",
-    "trip planner",
-]
-
-packages = [
-    { include = "bycycle" },
-]
-
-include = [
-    "AUTHORS",
-    "CHANGELOG",
-    "INSTALL",
-    "LICENSE",
-    "Makefile",
-    "commands.py",
-    "commands.toml",
-    "*.ini",
-    "bycycle/webapi/templates/**",
-]
-
-[tool.poetry.dependencies]
-python = ">=3.8,<3.9"
-"bycycle.core" = "*"
-cornice = "^6.0.0"
-Mako = "^1.1.5"
-plaster_pastedeploy = "^0.7"
-pyramid = "^2.0"
-pyramid_mako = "^1.1.0"
-pyramid_retry = "^2.1"
-pyramid_tm = "^2.3"
-transaction = "^3.0.1"
-"zope.sqlalchemy" = "^1.6"
-runcommands = "^1.0a68"
-plaster-pastedeploy = "^0.7"
-pyramid-mako = "^1.1.0"
-pyramid-retry = "^2.1.1"
-pyramid-tm = "^2.4"
-
-[tool.poetry.dev-dependencies]
-ansible = "*"
-bpython = "*"
-"bycycle.core" = { path = "../bycycle.core/", develop = true }
-coverage = "*"
-pyramid_debugtoolbar = "*"
-waitress = "*"
-WebTest = "*"
 
 [tool.poetry.plugins."paste.app_factory"]
 main = "bycycle.webapi:main"
