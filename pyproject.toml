@@ -16,6 +16,10 @@ requires-python = ">=3.14"
 
 dependencies = [
     "bycycle.core",
+    "org-djangokit-core>=0.0.5.dev0",
+    "org-djangokit-cli>=0.0.8.dev0",
+    "Django>=6.0.2",
+    # OLD
     "cornice>=6.0.0",
     "Mako>=1.1.5",
     "plaster_pastedeploy>=0.7",
@@ -35,7 +39,6 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ansible",
-    "bycycle.core",
     "coverage",
     "pyramid_debugtoolbar",
     "waitress",
@@ -44,6 +47,8 @@ dev = [
 
 [tool.uv.sources]
 "bycycle.core" = { path = "../core", editable = true }
+"org-djangokit-core" = { path = "../../djangokit/core", editable = true }
+"org-djangokit-cli" = { path = "../../djangokit/cli", editable = true }
 "runcommands" = { path = "../../runcommands", editable = true }
 
 [project.urls]

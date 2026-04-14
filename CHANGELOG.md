@@ -1,5 +1,4 @@
-0.5.0 (unreleased)
-------------------
+## 0.5.0 (unreleased)
 
 This is a cleaned up version of 0.4. The goal was to do only the minimum
 necessary to get the site back online (although I did just a tad more than
@@ -10,15 +9,15 @@ The major changes:
 - Things were a mess due to some aborted starts on upgrades, modernization,
   feature additions, and so forth. The first step was to clean that up.
 
-  - Fixed distribution name: byCycleTripPlanner => bycycle.tripplanner.
+    - Fixed distribution name: byCycleTripPlanner => bycycle.tripplanner.
 
-  - Removed .egg-info directory from repo (it's a generated directory).
+    - Removed .egg-info directory from repo (it's a generated directory).
 
-  - Copied templates and static files from the rb-0.4 release branch, since
-    those were the last known good, working versions.
+    - Copied templates and static files from the rb-0.4 release branch, since
+      those were the last known good, working versions.
 
-  - Removed TriMet stuff--at one point I had the idea that I'd try to add
-    a TriMet base layer to the map.
+    - Removed TriMet stuff--at one point I had the idea that I'd try to add
+      a TriMet base layer to the map.
 
 - Removed everything related to the Milwaukee, Wisconsin, region. I'd love to
   support more than just Portland, but that's just not feasible at this time.
@@ -53,9 +52,7 @@ The major changes:
 
 - Added this change log.
 
-
-Ancient History (<= 0.4)
-------------------------
+## Ancient History (<= 0.4)
 
 The last deployed version was 0.4, which was mainly code written before July
 of 2007.
