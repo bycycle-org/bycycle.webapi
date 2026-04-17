@@ -1,0 +1,35 @@
+# Public Settings
+#
+# IMPORTANT: DON'T INCLUDE SENSITIVE SETTINGS IN THIS FILE!
+#
+# These are settings that are shared across all environments and are
+# safe to include in version control.
+#
+# Environment-specific settings should be added to a non-versioned
+# .env.<env> file (e.g. .env.production).
+
+[django]
+PREPEND_INSTALLED_APPS = ["bycycle.core.apps.AppConfig"]
+APPEND_INSTALLED_APPS = ["django.contrib.gis"]
+DATABASES.default.ENGINE = "django.contrib.gis.db.backends.postgis"
+#STATICFILES_DIRS = [
+#    ["bootstrap/css", "node_modules/bootstrap/dist/css"],
+#    ["bootstrap-icons", "node_modules/bootstrap-icons/font"],
+#]
+STORAGES.default.BACKEND = "django.core.files.storage.FileSystemStorage"
+STORAGES.staticfiles.BACKEND = "djangokit.core.static.ManifestStaticFilesStorage"
+
+[djangokit]
+package = "bycycle.webapi"
+title = "byCycle"
+description = "byCycle - Get there by cycle!"
+#global_stylesheets = [
+#    "bootstrap/css/bootstrap-reboot.css",
+#    "bootstrap-icons/bootstrap-icons.css",
+#    "global.css",
+#]
+webmaster = "contact@bycycle.org"
+
+[djangokit.intercept_extensions]
+".json" = "application/json"
+".geojson" = "application/geo+json"

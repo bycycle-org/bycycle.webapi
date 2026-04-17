@@ -8,14 +8,13 @@ from .service import ServiceResource
 
 
 class DirectionsResource(ServiceResource):
-
     service_class = RouteService
 
     def get(self):
         data = super()._get()
         status = self.request.response.status_int
         if status == 200:
-            results = data['results']
+            results = data["results"]
 
             if len(results) == 1:
                 result = results[0]
@@ -36,60 +35,62 @@ class DirectionsResource(ServiceResource):
                 self._modify_result(result)
                 self._modify_lookup_result((result.start, result.end))
                 distance = result.distance
-                overall_distance['meters'] += distance['meters']
-                overall_distance['kilometers'] += distance['kilometers']
-                overall_distance['miles'] += distance['miles']
-                overall_distance['feet'] += distance['feet']
+                overall_distance["meters"] += distance["meters"]
+                overall_distance["kilometers"] += distance["kilometers"]
+                overall_distance["miles"] += distance["miles"]
+                overall_distance["feet"] += distance["feet"]
 
-            data.update({
-                'name': ' to '.join(name for name in names if name),
-                'start': start,
-                'end': end,
-                'distance': overall_distance,
-            })
+            data.update(
+                {
+                    "name": " to ".join(name for name in names if name),
+                    "start": start,
+                    "end": end,
+                    "distance": overall_distance,
+                }
+            )
 
         return data
 
     def _get_query(self):
         params = self.request.params
-        term = params.get('term', '').strip()
+        term = params.get("term", "").strip()
         if term:
-            waypoints = re.split('\s+to\s+', term, re.I)
+            waypoints = re.split("\s+to\s+", term, re.I)
             if len(waypoints) < 2:
                 raise InputError("That doesn't look like a valid directions request")
         else:
-            waypoints = params.get('waypoints', '').strip()
+            waypoints = params.get("waypoints", "").strip()
 
             if waypoints:
-                waypoints = waypoints.split(';')
+                waypoints = waypoints.split(";")
                 start, *rest = waypoints
                 end = rest[-1] if rest else None
             else:
-                start = params.get('from', '').strip()
-                end = params.get('to', '').strip()
+                start = params.get("from", "").strip()
+                end = params.get("to", "").strip()
 
             if start and end:
                 waypoints = [start, end]
             elif start:
-                raise InputError('Please enter a starting point')
+                raise InputError("Please enter a starting point")
             elif end:
-                raise InputError('Please enter a destination')
+                raise InputError("Please enter a destination")
             else:
-                raise InputError('Please enter something to search for')
+                raise InputError("Please enter something to search for")
 
         return waypoints
 
     def _get_options(self):
         params = self.request.params
-        points = params.get('points', '').strip()
+        points = params.get("points", "").strip()
         if points:
-            points = points.split(';')
+            points = points.split(";")
         else:
-            from_point = params.get('from_point', '').strip()
-            to_point = params.get('to_point', '').strip()
+            from_point = params.get("from_point", "").strip()
+            to_point = params.get("to_point", "").strip()
             points = (from_point, to_point)
         options = {
-            'points': points,
+            "points": points,
         }
         return options
 
@@ -99,7 +100,7 @@ class DirectionsResource(ServiceResource):
             results = exc.choices
             for result in results:
                 self._modify_lookup_result(result)
-            return {'results': results}
+            return {"results": results}
         return exc
 
     def _modify_result(self, result):
@@ -107,7 +108,7 @@ class DirectionsResource(ServiceResource):
         result.linestring = result.linestring.reproject()
         result.bounds = result.linestring.bounds
         for direction in result.directions:
-            direction['point'] = direction['point'].reproject()
+            direction["point"] = direction["point"].reproject()
 
     def _modify_lookup_result(self, result):
         """Convert lookup geometry to web projection (3857)."""

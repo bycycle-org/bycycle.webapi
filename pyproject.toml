@@ -19,30 +19,13 @@ dependencies = [
     "org-djangokit-core>=0.0.5.dev0",
     "org-djangokit-cli>=0.0.8.dev0",
     "Django>=6.0.2",
-    # OLD
-    "cornice>=6.0.0",
-    "Mako>=1.1.5",
-    "plaster_pastedeploy>=0.7",
-    "pyramid>=2.0",
-    "pyramid_mako>=1.1.0",
-    "pyramid_retry>=2.1",
-    "pyramid_tm>=2.3",
-    "transaction>=3.0.1",
-    "zope.sqlalchemy>=1.6",
     "runcommands>=1.0a74.dev0",
-    "plaster-pastedeploy>=0.7",
-    "pyramid-mako>=1.1.0",
-    "pyramid-retry>=2.1.1",
-    "pyramid-tm>=2.4",
 ]
 
 [dependency-groups]
 dev = [
     "ansible",
     "coverage",
-    "pyramid_debugtoolbar",
-    "waitress",
-    "WebTest",
 ]
 
 [tool.uv.sources]
@@ -54,6 +37,3 @@ dev = [
 [project.urls]
 homepage = "https://bycycle.org/"
 repository = "https://github.com/bycycle-org/bycycle.webapi"
-
-[tool.poetry.plugins."paste.app_factory"]
-main = "bycycle.webapi:main"

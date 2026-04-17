@@ -4,13 +4,12 @@ from bycycle.core.exc import ByCycleError, InputError, NotFoundError
 from bycycle.core.geometry.util import is_coord
 from bycycle.core.model import Entity, Intersection
 from bycycle.core.model.util import get_extent
-
+from django.conf import settings
 
 log = logging.getLogger(__name__)
 
 
 class ServiceResource:
-
     def __init__(self, request, context=None):
         self.request = request
         self.context = context
@@ -18,7 +17,7 @@ class ServiceResource:
     def _get(self):
         """Query service and return data."""
         data = {
-            'service': self.service_class.name,
+            "service": self.service_class.name,
         }
         service = self._get_service()
         try:
@@ -27,19 +26,19 @@ class ServiceResource:
             result = service.query(query, **options)
         except InputError as exc:
             self.request.response.status_int = 400
-            data['error'] = self._exc_as_dict(exc)
+            data["error"] = self._exc_as_dict(exc)
         except NotFoundError as exc:
             self.request.response.status_int = 404
-            data['error'] = self._exc_as_dict(exc)
+            data["error"] = self._exc_as_dict(exc)
         except ByCycleError as exc:
             extra_data = self._exc_handler(exc)
             if extra_data is exc:
                 raise exc
-            data['error'] = self._exc_as_dict(exc)
+            data["error"] = self._exc_as_dict(exc)
             data.update(extra_data)
         else:
-            data['term'] = query
-            data['results'] = [result] if isinstance(result, Entity) else result
+            data["term"] = query
+            data["results"] = [result] if isinstance(result, Entity) else result
         return data
 
     def _get_service(self):
@@ -58,45 +57,50 @@ class ServiceResource:
             InputError: On bad input
 
         """
-        center = self.request.params.get('center', '').strip()
+        center = self.request.params.get("center", "").strip()
         if center:
-            coords = center.split(',')
+            coords = center.split(",")
             coords = tuple(c.strip() for c in coords)
             coords = tuple(c for c in coords if c)
             if not (len(center) == 2 and all(is_coord(c for c in coords))):
-                raise InputError('center param must contain exactly 2 numbers (comma separated)')
+                raise InputError(
+                    "center param must contain exactly 2 numbers (comma separated)"
+                )
             center = tuple(float(c) for c in coords)
 
-        bbox = self.request.params.get('bbox', '').strip()
+        bbox = self.request.params.get("bbox", "").strip()
         if bbox:
-            coords = bbox.split(',')
+            coords = bbox.split(",")
             coords = tuple(c.strip() for c in coords)
             coords = tuple(c for c in coords if c)
             if not (len(coords) == 4 and all(is_coord(c for c in coords))):
-                raise InputError('bbox param must contain exactly 4 numbers (comma separated)')
+                raise InputError(
+                    "bbox param must contain exactly 4 numbers (comma separated)"
+                )
             if coords[0] > coords[2]:
-                raise InputError('bbox param minx must be less than maxx')
+                raise InputError("bbox param minx must be less than maxx")
             if coords[1] > coords[3]:
-                raise InputError('bbox param miny must be less than maxy')
+                raise InputError("bbox param miny must be less than maxy")
             bbox = tuple(float(c) for c in coords)
         else:
             bbox = self._default_bbox
 
-        settings = self.request.registry.settings
-        mapbox_access_token = settings.get('mapbox.access_token')
+        mapbox_access_token = settings.MAPBOX_ACCESS_TOKEN
 
         return {
-            'center': center or None,
-            'bbox': bbox or None,
-            'mapbox_access_token': mapbox_access_token,
+            "center": center or None,
+            "bbox": bbox or None,
+            "mapbox_access_token": mapbox_access_token,
         }
 
     @property
     def _default_bbox(self):
         cls = self.__class__
-        if not hasattr(cls, '_default_bbox_value'):
-            cls._default_bbox_value = get_extent(self.request.dbsession, Intersection).bbox
-            log.debug('Computed default BBOX for streets: %s', cls._default_bbox_value)
+        if not hasattr(cls, "_default_bbox_value"):
+            cls._default_bbox_value = get_extent(
+                self.request.dbsession, Intersection
+            ).bbox
+            log.debug("Computed default BBOX for streets: %s", cls._default_bbox_value)
         return cls._default_bbox_value
 
     def _get_query(self):
@@ -110,7 +114,7 @@ class ServiceResource:
             InputError: On bad input (missing or malformed data)
 
         """
-        return self.request.params.get('term', '').strip()
+        return self.request.params.get("term", "").strip()
 
     def _get_options(self):
         """Return keyword args for querying service.
@@ -132,9 +136,9 @@ class ServiceResource:
 
         """
         return {
-            'title': exc.title,
-            'explanation': exc.explanation,
-            'detail': exc.detail,
+            "title": exc.title,
+            "explanation": exc.explanation,
+            "detail": exc.detail,
         }
 
     def _exc_handler(self, exc):
